@@ -29,9 +29,10 @@ class Settings(BaseSettings):
     ]
 
     # Firebase Authentication
-    FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_PROJECT_ID: str = "qatra-web-app"
     FIREBASE_CLIENT_EMAIL: str = ""
     FIREBASE_PRIVATE_KEY: str = ""
+    FIREBASE_CREDENTIALS_PATH: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

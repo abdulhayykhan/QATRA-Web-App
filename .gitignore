@@ -6,6 +6,9 @@
 *.key
 *.cert
 secrets.json
+*service_account*.json
+*service-account*.json
+*firebase*.json
 
 # Python
 __pycache__/
