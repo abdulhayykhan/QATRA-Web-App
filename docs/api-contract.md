@@ -475,6 +475,13 @@ Marks a request as fulfilled or closed.
 
 ### 6.1 `POST /api/awareness/eligibility-check`
 Stateless 4-step eligibility quiz returning actionable result and statutory disclaimer.
+
+> **Note on 4-Step Structure**:
+> - **Step 1 (Input)**: Core criteria (`step1_age`, `step1_weight_kg`)
+> - **Step 2 (Input)**: Recent health conditions (`step2_has_recent_illness`)
+> - **Step 3 (Input)**: Recovery & cooldown status (`step3_donated_within_90_days`)
+> - **Step 4 (Output)**: Final Eligibility Result returned in the response payload (`result: "eligible" | "may_need_confirmation" | "not_eligible"`).
+
 - **Auth**: None (available to guests)
 - **Request Body**:
 ```json
@@ -497,7 +504,7 @@ Stateless 4-step eligibility quiz returning actionable result and statutory disc
 *(Alternative `result` values: `"may_need_confirmation"`, `"not_eligible"`).*
 
 ### 6.2 `GET /api/awareness/content`
-Browse educational library (articles, FAQs, myths vs facts).
+Browse educational library (articles, videos, FAQs, myths vs facts).
 - **Auth**: None
 - **Query Params**:
   - `category`: string (`basics`, `myths_facts`, `health_prep`, `cultural`)
@@ -509,6 +516,7 @@ Browse educational library (articles, FAQs, myths vs facts).
     "title": "Does donating blood cause permanent weakness?",
     "category": "myths_facts",
     "content_type": "myth_vs_fact",
+    "content_url": "https://www.youtube.com/watch?v=example",
     "myth": "Donating blood permanently decreases stamina and weakens immunity.",
     "fact": "The body replenishes fluid volume in 24-48 hours and red cells within weeks. Regular donation is healthy for adults.",
     "read_time_minutes": 2
@@ -552,7 +560,7 @@ User registers as a donor or volunteer for an upcoming event.
   "registration_id": 12,
   "event_id": 5,
   "status": "confirmed",
-  "message": "Registration confirmed. You will receive an SMS reminder."
+  "message": "Registration confirmed. An in-app confirmation and email notification have been sent."
 }
 ```
 
