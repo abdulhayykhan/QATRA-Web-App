@@ -149,7 +149,7 @@ Uploads hospital admission slip and triggers OCR processing for automated extrac
     "patient_mrn": "MRN-88291",
     "doctor_stamp_detected": true,
     "blood_group": "B+",
-    "units": 2
+    "units_needed": 2
   }
 }
 ```
@@ -368,41 +368,19 @@ Initiates masked proxy calling / in-app bridging without exposing real phone num
 ## 5. Feature 3: Social & Urgent Request Feed (PRD Section 5)
 *Owner: Mahrukh Baig*
 
-### 5.1 `POST /api/feed/requests`
-Creates a structured emergency blood request post.
-- **Auth**: Required (`verified_seeker`)
-- **Request Body**:
-```json
-{
-  "patient_name": "Taha Siddiqui",
-  "hospital_name": "Indus Hospital Korangi",
-  "hospital_address": "Sector 39, Korangi, Karachi",
-  "hospital_latitude": 24.8315,
-  "hospital_longitude": 67.1264,
-  "blood_group": "O-",
-  "component_type": "Whole Blood",
-  "units_needed": 2,
-  "urgency": "within_2_hours",
-  "search_radius_km": 10.0,
-  "admission_slip_url": "https://vault.supabase.co/slips/slip_103.jpg"
-}
-```
-- **Response**: `201 Created`
-```json
-{
-  "id": 103,
-  "status": "pending_verification",
-  "message": "Emergency request submitted for verification."
-}
-```
+> **Architectural Note on Request Lifecycle & Creation**:
+> - **Single Creation Point**: Per PRD Section 4 & FR 2.2, emergency blood requests are created **strictly** via `POST /api/auth/hospital-slip/upload` (owned by Saghir Ahmed). Every request is gated by hospital slip verification and OCR extraction before appearing publicly. The Feed module does **not** create raw requests; it provides the public query, discovery, and response interface for verified requests.
+> - **Automatic Request Auto-Close (FR 3.4)**: Whenever recorded donations meet the requirement (`units_fulfilled >= units_needed`), the internal backend service automatically transitions the request status to `"fulfilled"`. The manual close endpoint below serves as an override for seekers or desk admins.
 
-### 5.2 `GET /api/feed`
-Public feed with query filters (replaces unorganized WhatsApp broadcasts).
+### 5.1 `GET /api/feed`
+Public feed with query filters (replaces unorganized WhatsApp broadcasts per FR 3.2).
 - **Auth**: None (publicly viewable)
 - **Query Params**:
-  - `blood_group`: string (`A+`, `O-`, etc.)
-  - `urgency`: string (`within_2_hours`, `within_24_hours`)
-  - `location`: string (city / district)
+  - `blood_group`: string (optional, e.g. `A+`, `O-`)
+  - `urgency`: string (optional, `within_2_hours`, `within_24_hours`)
+  - `location`: string (optional city / district)
+  - `include_drive_events`: bool (optional, default `false` — toggles drive events alongside emergency requests per FR 3.2)
+  - `event_id`: int (optional, filters requests associated with a specific donation drive)
   - `page`: int (default 1)
   - `limit`: int (default 20)
 - **Response**: `200 OK`
@@ -413,7 +391,7 @@ Public feed with query filters (replaces unorganized WhatsApp broadcasts).
   "limit": 20,
   "items": [
     {
-      "id": 101,
+      "request_id": 101,
       "patient_name": "Ali Khan",
       "hospital_name": "Civil Hospital Karachi",
       "blood_group": "B+",
@@ -428,13 +406,31 @@ Public feed with query filters (replaces unorganized WhatsApp broadcasts).
 }
 ```
 
-### 5.3 `GET /api/feed/{request_id}`
+### 5.2 `GET /api/feed/{request_id}`
 Retrieves single request card details.
 - **Auth**: None
 - **Response**: `200 OK`
+```json
+{
+  "request_id": 101,
+  "patient_name": "Ali Khan",
+  "hospital_name": "Civil Hospital Karachi",
+  "hospital_address": "Mission Rd, New Karachi",
+  "hospital_latitude": 24.8569,
+  "hospital_longitude": 67.0112,
+  "blood_group": "B+",
+  "component_type": "Whole Blood",
+  "units_needed": 2,
+  "units_fulfilled": 0,
+  "urgency": "within_2_hours",
+  "status": "verified",
+  "search_radius_km": 10.0,
+  "created_at": "2026-09-08T02:00:00Z"
+}
+```
 
-### 5.4 `POST /api/feed/{request_id}/respond`
-"I Can Donate" one-tap response button from feed post.
+### 5.3 `POST /api/feed/{request_id}/respond`
+"I Can Donate" one-tap response button from feed post (FR 3.3).
 - **Auth**: Required (`verified_donor`)
 - **Response**: `200 OK`
 ```json
@@ -445,20 +441,27 @@ Retrieves single request card details.
 }
 ```
 
-### 5.5 `GET /api/feed/{request_id}/share`
-Generates structured metadata for sharing via direct URL or WhatsApp forward without garbled text.
+### 5.4 `GET /api/feed/{request_id}/share`
+Generates structured metadata for sharing via direct URL or WhatsApp forward without garbled text (FR 3.3).
 - **Auth**: None
 - **Response**: `200 OK`
 ```json
 {
+  "request_id": 101,
   "share_url": "https://qatra.pk/requests/101",
-  "whatsapp_text": "🚨 *URGENT BLOOD NEEDED (QATRA)*\nBlood Group: *B+*\nHospital: *Civil Hospital Karachi*\nUnits: *2*\nUrgency: *Within 2 Hours*\nVerify & Respond: https://qatra.pk/requests/101"
+  "whatsapp_text": "🚨 *URGENT BLOOD NEEDED (QATRA)*\nBlood Group: *B+*\nHospital: *Civil Hospital Karachi*\nUnits Needed: *2*\nUrgency: *Within 2 Hours*\nVerify & Respond: https://qatra.pk/requests/101"
 }
 ```
 
-### 5.6 `POST /api/feed/{request_id}/close`
-Marks a request as fulfilled or closed.
+### 5.5 `POST /api/feed/{request_id}/close`
+Manual override to close an active request (FR 3.4).
 - **Auth**: Required (`verified_seeker`, `admin`)
+- **Request Body**:
+```json
+{
+  "reason": "Fulfilled on-site by family donor"
+}
+```
 - **Response**: `200 OK`
 ```json
 {
@@ -466,6 +469,31 @@ Marks a request as fulfilled or closed.
   "status": "fulfilled",
   "message": "Request closed. Donors have been notified."
 }
+```
+
+---
+
+### 5.6 Shared Internal Notification Service (Section 5.3 & PRD FR 1.3)
+*Shared backend service between Feature 1 (Hareem: Map) and Feature 3 (Mahrukh: Feed).*
+
+Rather than a public REST route, this is an internal domain service located at `backend/app/services/notifications.py`:
+
+```python
+async def dispatch_blood_alert(
+    request_id: int,
+    blood_group: str,
+    hospital_name: str,
+    hospital_lat: float,
+    hospital_lon: float,
+    urgency: str,
+    is_rare: bool,
+    target_donor_ids: Optional[List[int]] = None,
+) -> Dict[str, Any]:
+    """
+    Shared dispatch engine:
+    1. Map Integration (Hareem): Dispatches targeted proximity push alerts to ranked donors.
+    2. Feed Integration (Mahrukh): Triggers immediate high-priority broadcast for rare groups (O-, AB-).
+    """
 ```
 
 ---

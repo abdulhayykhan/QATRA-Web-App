@@ -1,7 +1,7 @@
 """Emergency Blood Request Pydantic schemas."""
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from app.schemas.enums import BloodGroup, ComponentType, UrgencyTier, RequestStatus
 
 
@@ -32,6 +32,7 @@ class RequestUpdate(BaseModel):
 
 class RequestResponse(RequestBase):
     id: int
+    request_id: Optional[int] = None
     seeker_id: int
     units_fulfilled: int
     status: RequestStatus
@@ -40,6 +41,12 @@ class RequestResponse(RequestBase):
     ocr_confidence: Optional[float] = None
     created_at: datetime
     updated_at: datetime
+
+    @model_validator(mode="after")
+    def sync_request_id(self):
+        if self.request_id is None:
+            self.request_id = self.id
+        return self
 
     class Config:
         from_attributes = True
