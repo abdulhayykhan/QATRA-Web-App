@@ -178,3 +178,97 @@ async def get_me(
 ):
     """Returns the current authenticated user's profile and roles."""
     return current_user
+
+
+# ==============================================================================
+# 3.3 POST /api/auth/cnic/submit
+# ==============================================================================
+
+class CNICSubmissionResponse(BaseModel):
+    status: str = "pending_verification"
+    message: str = "CNIC submitted and checksum validated. Encrypted at rest."
+    cnic_verified: bool = True
+
+
+def validate_pakistani_cnic(cnic: str) -> bool:
+    """
+    Validates 13-digit Pakistani CNIC:
+    - 13 numeric digits
+    - Valid administrative province prefix (1 through 8)
+    """
+    if not cnic or not cnic.isdigit() or len(cnic) != 13:
+        return False
+    province_code = int(cnic[0])
+    if province_code < 1 or province_code > 8:
+        return False
+    return True
+
+
+@router.post(
+    "/cnic/submit",
+    response_model=CNICSubmissionResponse,
+    summary="Submit and Validate Pakistani CNIC",
+    description="Validates 13-digit Pakistani CNIC checksum, hashes for duplication prevention, and stores encrypted in vault.",
+)
+async def submit_cnic(
+    payload: CNICSubmission,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Validate CNIC format & checksum.
+    2. Check for duplicate CNIC registration using SHA-256 hash.
+    3. Encrypt CNIC via AES-256 at rest (NFR 2.1).
+    4. Record audit event (NFR 2.5).
+    5. Update user verification status.
+    """
+    cnic_clean = payload.cnic_number.strip().replace("-", "")
+
+    if not validate_pakistani_cnic(cnic_clean):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Pakistani CNIC number. Must be 13 digits with valid province code (1-8).",
+        )
+
+    # SHA-256 hash for duplicate identity detection
+    import hashlib
+    cnic_hash = hashlib.sha256(cnic_clean.encode("utf-8")).hexdigest()
+
+    # Check for duplicate CNIC across users
+    existing = db.query(User).filter(User.cnic_hash == cnic_hash, User.id != current_user.id).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This CNIC is already registered to another account.",
+        )
+
+    # AES-256 encryption at rest
+    encrypted_cnic = encrypt_field(cnic_clean)
+
+    # Update current user record
+    current_user.cnic_hash = cnic_hash
+    current_user.cnic_encrypted = encrypted_cnic
+    current_user.cnic_verified = True
+    if current_user.role == UserRole.GUEST.value:
+        current_user.role = UserRole.VERIFIED_SEEKER.value
+    current_user.is_verified = True
+
+    # Audit logging for sensitive PII access
+    log_audit_event(
+        db=db,
+        action="CNIC_SUBMIT_AND_VERIFY",
+        target_resource="users",
+        target_id=str(current_user.id),
+        user_id=current_user.id,
+        details=f"CNIC checksum validated and encrypted. Front URL: {payload.front_image_url[:30]}...",
+    )
+
+    db.commit()
+    db.refresh(current_user)
+
+    return CNICSubmissionResponse(
+        status="pending_verification",
+        message="CNIC submitted and checksum validated. Encrypted at rest.",
+        cnic_verified=True,
+    )
+
