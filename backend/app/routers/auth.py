@@ -21,9 +21,11 @@ from app.models.donor import Donor
 from app.models.request import Request
 from app.schemas.enums import UserRole
 from app.schemas.user import UserResponse, CNICSubmission
+from app.schemas.donor import DonorPreScreenSubmit
 from app.services.firebase_auth import verify_firebase_token
 from app.services.audit import log_audit_event
 from app.services.ocr import extract_hospital_slip_data
+from app.services.cooldown import calculate_donor_cooldown, evaluate_donor_prescreen
 
 
 router = APIRouter(tags=["Auth & Verification"])
@@ -496,6 +498,118 @@ async def verify_slip_decision(
         status=blood_request.status,
         verified_by_admin_id=current_admin.id,
     )
+
+
+# ==============================================================================
+# 3.7 GET /api/auth/donor/cooldown
+# ==============================================================================
+
+class DonorCooldownResponse(BaseModel):
+    is_on_cooldown: bool
+    last_donation_date: Optional[str] = None
+    cooldown_until: Optional[str] = None
+    days_remaining: int
+    status: str
+
+
+@router.get(
+    "/donor/cooldown",
+    response_model=DonorCooldownResponse,
+    summary="Donor 90-Day Cooldown Countdown Status",
+    description="Returns donor's current 90-day cooldown status, days remaining, and active eligibility (FR 2.4).",
+)
+async def get_donor_cooldown_status(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns live 90-day cooldown status for authenticated donor:
+    - If never donated: Eligible & Active (0 days remaining)
+    - If on cooldown: In Cooldown (X days remaining)
+    """
+    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    cooldown_info = calculate_donor_cooldown(donor)
+    return DonorCooldownResponse(**cooldown_info)
+
+
+# ==============================================================================
+# 3.8 POST /api/auth/donor/pre-screen
+# ==============================================================================
+
+class DonorPreScreenResponse(BaseModel):
+    pre_screening_passed: bool
+    eligibility: str
+    message: str
+
+
+@router.post(
+    "/donor/pre-screen",
+    response_model=DonorPreScreenResponse,
+    summary="Submit Donor Interactive Pre-Screening Checklist",
+    description="Scores donor readiness against standard medical criteria (Age 18-65, Weight >=50kg, Hb >=12.5, illness hold, tattoo deferral) per FR 2.5.",
+)
+async def submit_donor_prescreen(
+    payload: DonorPreScreenSubmit,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Score interactive health checklist.
+    2. Upsert Donor profile for user with pre_screening_passed flag.
+    3. Promote user role to 'verified_donor' if CNIC verified.
+    4. Log audit trail.
+    """
+    eval_result = evaluate_donor_prescreen(
+        age=payload.age,
+        weight_kg=payload.weight_kg,
+        hemoglobin_g_dl=payload.hemoglobin_g_dl,
+        has_recent_illness=payload.has_recent_illness,
+        has_recent_tattoo_or_surgery=payload.has_recent_tattoo_or_surgery,
+    )
+
+    passed = eval_result["passed"]
+
+    # Upsert donor record for current user
+    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    if not donor:
+        donor = Donor(
+            user_id=current_user.id,
+            blood_group="O+",  # Default placeholder, updated on profile edit or donation drive
+            is_available=passed,
+            pre_screening_passed=passed,
+            pre_screening_updated_at=datetime.now(timezone.utc),
+        )
+        db.add(donor)
+    else:
+        donor.pre_screening_passed = passed
+        donor.pre_screening_updated_at = datetime.now(timezone.utc)
+        if not passed:
+            donor.is_available = False
+
+    # If passed and user has verified CNIC, promote user role to verified_donor
+    if passed and current_user.cnic_verified:
+        current_user.role = UserRole.VERIFIED_DONOR.value
+
+    # Log audit event
+    log_audit_event(
+        db=db,
+        action="DONOR_PRE_SCREEN_SUBMIT",
+        target_resource="donors",
+        target_id=str(donor.id) if donor.id else str(current_user.id),
+        user_id=current_user.id,
+        details=f"Eligibility: {eval_result['eligibility']}, Passed: {passed}",
+    )
+
+    db.commit()
+    db.refresh(donor)
+    db.refresh(current_user)
+
+    return DonorPreScreenResponse(
+        pre_screening_passed=passed,
+        eligibility=eval_result["eligibility"],
+        message=eval_result["message"],
+    )
+
 
 
 
