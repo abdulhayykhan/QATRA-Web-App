@@ -10,14 +10,20 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api"
 
-    # Environment
+    # Environment & Security Secrets (Required from .env)
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    SECRET_KEY: str = "e83a9d7f4b2c1e0a8f9b6d5c4a3b2e1f0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a"
+    SECRET_KEY: str = ""
     ENCRYPTION_KEY_AES256: str = ""
 
     # Database (Supabase Postgres)
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/qatra"
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
+
+    # Hosted OCR Service (Optional API Key for OCR.space)
+    OCR_SPACE_API_KEY: str = ""
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
@@ -37,7 +43,7 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_PATH: str = ""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",

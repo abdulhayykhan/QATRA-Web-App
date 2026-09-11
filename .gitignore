@@ -90,5 +90,8 @@ Thumbs.db
 *.sublime-workspace
 *.sublime-project
 *.swp
-*.swo
 *~
+
+# Uploaded Media & Documents
+media/
+

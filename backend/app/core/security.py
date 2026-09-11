@@ -21,10 +21,16 @@ from app.services.firebase_auth import verify_firebase_token
 # ==============================================================================
 
 def get_aes_key() -> bytes:
-    """Derive 32-byte (256-bit) encryption key from configuration."""
-    raw_key = getattr(settings, "ENCRYPTION_KEY_AES256", None) or settings.SECRET_KEY
+    """
+    Derive dedicated 32-byte (256-bit) encryption key from ENCRYPTION_KEY_AES256.
+    Strictly fails if the dedicated key is not configured in the environment.
+    """
+    raw_key = settings.ENCRYPTION_KEY_AES256
     if not raw_key:
-        raw_key = "qatra-emergency-blood-default-aes256-key-32b"
+        raise RuntimeError(
+            "CRITICAL SECURITY ERROR: ENCRYPTION_KEY_AES256 environment variable is not configured. "
+            "Sensitive CNIC and health records cannot be safely encrypted or decrypted."
+        )
 
     if isinstance(raw_key, str):
         try:
@@ -79,6 +85,17 @@ ALGORITHM = "HS256"
 DEFAULT_EXPIRE_SECONDS = 86400  # 24 hours
 
 
+def get_jwt_secret() -> str:
+    """Retrieve application JWT secret key, strictly ensuring it is configured."""
+    secret = settings.SECRET_KEY
+    if not secret:
+        raise RuntimeError(
+            "CRITICAL SECURITY ERROR: SECRET_KEY environment variable is not configured. "
+            "Application session tokens cannot be safely signed or verified."
+        )
+    return secret
+
+
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """Generate signed JWT token containing subject user ID and claims."""
     to_encode = data.copy()
@@ -93,7 +110,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
         "exp": expire,
         "iss": "qatra-api",
     })
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, get_jwt_secret(), algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -103,7 +120,7 @@ def decode_access_token(token: str) -> Dict[str, Any]:
     Raises HTTPException(401) on invalid or expired token.
     """
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM], issuer="qatra-api")
+        payload = jwt.decode(token, get_jwt_secret(), algorithms=[ALGORITHM], issuer="qatra-api")
         return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(

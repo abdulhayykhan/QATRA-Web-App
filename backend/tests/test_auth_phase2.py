@@ -21,11 +21,31 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.core.database import SessionLocal
-from app.core.security import encrypt_field, decrypt_field, create_access_token
+from app.core.security import encrypt_field, decrypt_field, create_access_token, get_aes_key
+from app.core.config import settings
 from app.models.user import User
 from app.models.donor import Donor
 from app.models.request import Request
 from app.services.cooldown import calculate_donor_cooldown, evaluate_donor_prescreen
+
+
+def make_valid_pdf_with_text(text: str) -> bytes:
+    """Create a minimal syntactically valid PDF containing stream text for authentic pypdf extraction."""
+    stream_content = f"BT /F1 12 Tf 50 750 Td ({text}) Tj ET".encode("latin-1")
+    stream_len = len(stream_content)
+    pdf = (
+        b"%PDF-1.4\n"
+        b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n"
+        b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
+        b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj\n"
+        b"4 0 obj << /Length " + str(stream_len).encode("ascii") + b" >>\nstream\n"
+        + stream_content +
+        b"\nendstream\nendobj\n"
+        b"5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n"
+        b"xref\n0 6\n0000000000 65535 f \n"
+        b"trailer << /Size 6 /Root 1 0 R >>\nstartxref\n9\n%%EOF"
+    )
+    return pdf
 
 
 client = TestClient(app)
@@ -170,8 +190,8 @@ def test_hospital_slip_clear_auto_approval():
         },
     )
 
-    slip_content = b"Requisition Form: Civil Hospital Karachi. Patient MRN-99412. Doctor stamp signed. Blood Group B+, Units: 2."
-    fake_file = io.BytesIO(slip_content)
+    pdf_bytes = make_valid_pdf_with_text("Civil Hospital Karachi Patient MRN-99412 Doctor Stamp Signed Blood Group B+ Units: 2")
+    fake_file = io.BytesIO(pdf_bytes)
 
     res_upload = client.post(
         "/api/auth/hospital-slip/upload",
@@ -189,6 +209,14 @@ def test_hospital_slip_clear_auto_approval():
     assert body["ocr_confidence"] >= 0.85
     assert body["status"] == "verified"
     assert body["extracted_data"]["doctor_stamp_detected"] is True
+    assert "admission_slip_url" in body
+    assert body["admission_slip_url"].startswith("/api/auth/slips/")
+
+    # Verify that the slip file can be retrieved by an authenticated user
+    slip_url = body["admission_slip_url"]
+    res_file = client.get(slip_url, headers={"Authorization": f"Bearer {token}"})
+    assert res_file.status_code == 200
+    assert res_file.content == pdf_bytes
 
 
 def test_hospital_slip_blurred_escalation():
@@ -207,13 +235,13 @@ def test_hospital_slip_blurred_escalation():
         },
     )
 
-    slip_content = b"unclear blurred copy without visible stamp"
-    fake_file = io.BytesIO(slip_content)
+    pdf_bytes = make_valid_pdf_with_text("Generic document without medical data or stamps.")
+    fake_file = io.BytesIO(pdf_bytes)
 
     res_upload = client.post(
         "/api/auth/hospital-slip/upload",
         headers={"Authorization": f"Bearer {token}"},
-        files={"file": ("blurred_scan_sample.jpg", fake_file, "image/jpeg")},
+        files={"file": ("unclear_sample.pdf", fake_file, "application/pdf")},
         data={
             "patient_name": "Fatima Noor",
             "hospital_name": "JPMC Karachi",
@@ -225,6 +253,21 @@ def test_hospital_slip_blurred_escalation():
     body = res_upload.json()
     assert body["ocr_confidence"] < 0.85
     assert body["status"] == "pending_verification"
+
+
+def test_slip_endpoint_requires_authentication():
+    res = client.get("/api/auth/slips/nonexistent_slip.pdf")
+    assert res.status_code == 401
+
+
+def test_encryption_key_isolation_failure():
+    orig_key = settings.ENCRYPTION_KEY_AES256
+    try:
+        settings.ENCRYPTION_KEY_AES256 = ""
+        with pytest.raises(RuntimeError, match="CRITICAL SECURITY ERROR: ENCRYPTION_KEY_AES256"):
+            get_aes_key()
+    finally:
+        settings.ENCRYPTION_KEY_AES256 = orig_key
 
 
 # ==============================================================================
