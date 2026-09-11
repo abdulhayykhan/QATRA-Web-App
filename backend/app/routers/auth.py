@@ -2,7 +2,8 @@
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+import json
+from fastapi import APIRouter, Depends, HTTPException, status, Header, File, Form, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -22,6 +23,7 @@ from app.schemas.enums import UserRole
 from app.schemas.user import UserResponse, CNICSubmission
 from app.services.firebase_auth import verify_firebase_token
 from app.services.audit import log_audit_event
+from app.services.ocr import extract_hospital_slip_data
 
 
 router = APIRouter(tags=["Auth & Verification"])
@@ -271,4 +273,115 @@ async def submit_cnic(
         message="CNIC submitted and checksum validated. Encrypted at rest.",
         cnic_verified=True,
     )
+
+
+# ==============================================================================
+# 3.4 POST /api/auth/hospital-slip/upload
+# ==============================================================================
+
+class HospitalSlipUploadResponse(BaseModel):
+    request_id: int
+    ocr_confidence: float
+    status: str
+    extracted_data: Dict[str, Any]
+
+
+@router.post(
+    "/hospital-slip/upload",
+    response_model=HospitalSlipUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload Hospital Slip and Trigger OCR Pipeline",
+    description="Uploads hospital admission slip, extracts MRN/doctor stamp via OCR, and auto-approves (>=85%) or escalates (<85%).",
+)
+async def upload_hospital_slip(
+    file: UploadFile = File(..., description="Hospital admission slip (Image or PDF)"),
+    patient_name: str = Form(..., min_length=2, max_length=255),
+    hospital_name: str = Form(..., min_length=2, max_length=255),
+    blood_group: str = Form(..., description="e.g. A+, B+, O-, AB+"),
+    units_needed: int = Form(1, ge=1, le=20),
+    hospital_address: Optional[str] = Form(None),
+    hospital_latitude: Optional[float] = Form(24.8607),
+    hospital_longitude: Optional[float] = Form(67.0011),
+    urgency: Optional[str] = Form("within_24_hours"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Read uploaded slip file.
+    2. Run serverless-optimized OCR pipeline (extracts MRN, doctor stamp, confidence).
+    3. Auto-approve if confidence >= 0.85; route to desk escalation queue if < 0.85.
+    4. Save Emergency Request entity.
+    5. Log compliance audit event.
+    """
+    # Enforce role: verified seeker or admin (or user with verified CNIC)
+    if current_user.role not in [UserRole.VERIFIED_SEEKER.value, UserRole.ADMIN.value]:
+        if not current_user.cnic_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. CNIC verification is required before uploading emergency hospital slips.",
+            )
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is empty or unreadable.",
+        )
+
+    confidence, extracted_data = extract_hospital_slip_data(
+        file_bytes=file_bytes,
+        filename=file.filename or "admission_slip.jpg",
+        patient_name=patient_name,
+        hospital_name=hospital_name,
+        blood_group=blood_group,
+        units_needed=units_needed,
+    )
+
+    # Auto-approval rule (FR 2.2.3): >= 85% -> verified; < 85% -> pending_verification
+    request_status = "verified" if confidence >= 0.85 else "pending_verification"
+
+    # Create Request in database
+    slip_url = f"https://vault.supabase.co/slips/slip_{current_user.id}_{int(datetime.now(timezone.utc).timestamp())}_{file.filename}"
+
+    blood_request = Request(
+        seeker_id=current_user.id,
+        patient_name=patient_name,
+        patient_mrn=extracted_data.get("patient_mrn"),
+        hospital_name=hospital_name,
+        hospital_address=hospital_address or f"{hospital_name}, Karachi",
+        hospital_latitude=hospital_latitude or 24.8607,
+        hospital_longitude=hospital_longitude or 67.0011,
+        blood_group=blood_group,
+        component_type="Whole Blood",
+        units_needed=units_needed,
+        units_fulfilled=0,
+        urgency=urgency or "within_24_hours",
+        status=request_status,
+        search_radius_km=10.0,
+        expansion_count=0,
+        admission_slip_url=slip_url,
+        ocr_confidence=confidence,
+        ocr_extracted_data=json.dumps(extracted_data),
+    )
+    db.add(blood_request)
+    db.commit()
+    db.refresh(blood_request)
+
+    # Log audit event
+    log_audit_event(
+        db=db,
+        action="HOSPITAL_SLIP_UPLOAD_OCR",
+        target_resource="requests",
+        target_id=str(blood_request.id),
+        user_id=current_user.id,
+        details=f"Status: {request_status}, Confidence: {confidence}, MRN: {extracted_data.get('patient_mrn')}",
+    )
+
+    return HospitalSlipUploadResponse(
+        request_id=blood_request.id,
+        ocr_confidence=confidence,
+        status=request_status,
+        extracted_data=extracted_data,
+    )
+
 
