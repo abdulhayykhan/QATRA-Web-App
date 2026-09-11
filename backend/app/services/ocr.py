@@ -59,8 +59,12 @@ async def extract_text_from_hosted_ocr(file_bytes: bytes, filename: str) -> str:
     """
     Calls hosted OCR service (OCR.Space API) for image text extraction.
     Ensures zero bulky C-binary dependencies on Vercel serverless runtime.
+    Requires an authentic OCR_SPACE_API_KEY configured in the environment.
     """
-    api_key = settings.OCR_SPACE_API_KEY or "K88888888888957"
+    api_key = settings.OCR_SPACE_API_KEY
+    if not api_key:
+        return ""
+
     try:
         async with httpx.AsyncClient(timeout=8.0) as client:
             res = await client.post(

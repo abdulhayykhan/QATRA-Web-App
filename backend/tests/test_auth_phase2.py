@@ -48,6 +48,15 @@ def make_valid_pdf_with_text(text: str) -> bytes:
     return pdf
 
 
+def make_test_image() -> bytes:
+    """Create a minimal syntactically valid JPEG image for camera scan tests."""
+    from PIL import Image
+    img = Image.new("RGB", (200, 200), color=(240, 240, 240))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    return buf.getvalue()
+
+
 client = TestClient(app)
 
 
@@ -255,9 +264,116 @@ def test_hospital_slip_blurred_escalation():
     assert body["status"] == "pending_verification"
 
 
+def test_hospital_slip_camera_image_upload_and_verification(monkeypatch):
+    async def mock_ocr_call(file_bytes, filename):
+        return "Aga Khan University Hospital Patient MRN-44910 Doctor Stamp Signed Blood Group A+ Units: 2"
+
+    monkeypatch.setattr("app.services.ocr.extract_text_from_hosted_ocr", mock_ocr_call)
+
+    uid = f"test_seeker_img_{int(time.time())}"
+    res_login = client.post("/api/auth/firebase-login", json={"firebase_id_token": uid})
+    token = res_login.json()["access_token"]
+
+    cnic = f"42101{int(time.time()) % 10000000:07d}8"
+    client.post(
+        "/api/auth/cnic/submit",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "cnic_number": cnic,
+            "front_image_url": "https://vault.supabase.co/front.jpg",
+            "back_image_url": "https://vault.supabase.co/back.jpg",
+        },
+    )
+
+    img_bytes = make_test_image()
+    fake_file = io.BytesIO(img_bytes)
+
+    res_upload = client.post(
+        "/api/auth/hospital-slip/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("camera_slip.jpg", fake_file, "image/jpeg")},
+        data={
+            "patient_name": "Hamza Ali",
+            "hospital_name": "Aga Khan University Hospital",
+            "blood_group": "A+",
+            "units_needed": 2,
+        },
+    )
+    assert res_upload.status_code == 201
+    body = res_upload.json()
+    assert body["ocr_confidence"] >= 0.85
+    assert body["status"] == "verified"
+    assert body["extracted_data"]["doctor_stamp_detected"] is True
+    assert body["extracted_data"]["patient_mrn"] == "MRN-44910"
+
+
 def test_slip_endpoint_requires_authentication():
     res = client.get("/api/auth/slips/nonexistent_slip.pdf")
     assert res.status_code == 401
+
+
+def test_slip_endpoint_access_control_forbidden_for_wrong_user():
+    # User 1 (Seeker) uploads a slip
+    uid1 = f"test_owner_slip_{int(time.time())}"
+    res_login1 = client.post("/api/auth/firebase-login", json={"firebase_id_token": uid1})
+    token1 = res_login1.json()["access_token"]
+
+    cnic1 = f"42101{int(time.time()) % 10000000:07d}2"
+    client.post(
+        "/api/auth/cnic/submit",
+        headers={"Authorization": f"Bearer {token1}"},
+        json={
+            "cnic_number": cnic1,
+            "front_image_url": "https://vault.supabase.co/front.jpg",
+            "back_image_url": "https://vault.supabase.co/back.jpg",
+        },
+    )
+
+    pdf_bytes = make_valid_pdf_with_text("Civil Hospital Karachi Patient MRN-12001 Doctor Stamp Signed Blood Group B+ Units: 1")
+    fake_file = io.BytesIO(pdf_bytes)
+    res_upload = client.post(
+        "/api/auth/hospital-slip/upload",
+        headers={"Authorization": f"Bearer {token1}"},
+        files={"file": ("slip_owner.pdf", fake_file, "application/pdf")},
+        data={
+            "patient_name": "Owner Patient",
+            "hospital_name": "Civil Hospital Karachi",
+            "blood_group": "B+",
+            "units_needed": 1,
+        },
+    )
+    assert res_upload.status_code == 201
+    slip_url = res_upload.json()["admission_slip_url"]
+
+    # User 2 (different user) tries to access User 1's slip
+    uid2 = f"test_other_user_{int(time.time())}"
+    res_login2 = client.post("/api/auth/firebase-login", json={"firebase_id_token": uid2})
+    token2 = res_login2.json()["access_token"]
+
+    res_forbidden = client.get(slip_url, headers={"Authorization": f"Bearer {token2}"})
+    assert res_forbidden.status_code == 403
+    assert "Access denied" in res_forbidden.text
+
+    # User 1 (Owner) can access it
+    res_owner = client.get(slip_url, headers={"Authorization": f"Bearer {token1}"})
+    assert res_owner.status_code == 200
+
+    # Admin user can access it
+    uid_admin = f"test_admin_slip_{int(time.time())}"
+    res_admin_login = client.post("/api/auth/firebase-login", json={"firebase_id_token": uid_admin})
+    admin_id = res_admin_login.json()["user"]["id"]
+
+    db = SessionLocal()
+    admin_u = db.query(User).filter(User.id == admin_id).first()
+    admin_u.role = "admin"
+    db.commit()
+    db.close()
+
+    res_admin_login2 = client.post("/api/auth/firebase-login", json={"firebase_id_token": uid_admin})
+    admin_token = res_admin_login2.json()["access_token"]
+
+    res_admin = client.get(slip_url, headers={"Authorization": f"Bearer {admin_token}"})
+    assert res_admin.status_code == 200
 
 
 def test_encryption_key_isolation_failure():

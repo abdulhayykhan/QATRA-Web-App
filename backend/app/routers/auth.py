@@ -3,7 +3,8 @@ import json
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status, Header, File, Form, UploadFile
+import re
+from fastapi import APIRouter, Depends, HTTPException, status, Header, File, Form, UploadFile, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -27,7 +28,7 @@ from app.services.firebase_auth import verify_firebase_token
 from app.services.audit import log_audit_event
 from app.services.ocr import extract_hospital_slip_data, extract_hospital_slip_data_async
 from app.services.cooldown import calculate_donor_cooldown, evaluate_donor_prescreen
-from app.services.storage import save_slip_file, get_slip_file_path
+from app.services.storage import save_slip_file, save_slip_file_async, get_slip_file_path, get_slip_file_data_async
 
 
 router = APIRouter(tags=["Auth & Verification"])
@@ -333,8 +334,8 @@ async def upload_hospital_slip(
             detail="Uploaded file is empty or unreadable.",
         )
 
-    # Save actual uploaded file to storage (Issue 5)
-    saved_filename, slip_url, _ = save_slip_file(
+    # Save actual uploaded file to Supabase Storage and cache
+    saved_filename, slip_url, _ = await save_slip_file_async(
         file_bytes=file_bytes,
         original_filename=file.filename or "admission_slip.jpg",
         user_id=current_user.id,
@@ -403,31 +404,63 @@ async def upload_hospital_slip(
 @router.get(
     "/slips/{filename}",
     summary="Download / View Hospital Admission Slip Document",
-    description="Serves uploaded admission slip document. Restricted to authenticated users (admin or request owners).",
+    description="Serves uploaded admission slip document. Restricted strictly to admins or the request owner.",
 )
 async def get_slip_document(
     filename: str,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    """Securely stream hospital admission slip."""
-    file_path = get_slip_file_path(filename)
-    if not file_path or not file_path.exists():
+    """
+    Securely retrieve and stream hospital admission slip document.
+    Access Control:
+    - Admin users have full oversight access.
+    - Non-admin users are strictly authorized ONLY if they are the owner who uploaded the slip.
+    - Any unauthorized access attempt returns 403 Forbidden.
+    """
+    is_admin = (current_user.role == UserRole.ADMIN.value)
+    if not is_admin:
+        # 1. Check blood request record associated with this slip
+        blood_request = db.query(Request).filter(
+            Request.admission_slip_url.ilike(f"%{filename}%")
+        ).first()
+
+        if blood_request:
+            if blood_request.seeker_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied. You are not authorized to view this document.",
+                )
+        else:
+            # 2. Fallback: inspect user_id prefix from standard filename convention: slip_{user_id}_{ts}_{suffix}
+            match = re.match(r"^slip_(\d+)_", filename)
+            if match:
+                owner_id = int(match.group(1))
+                if owner_id != current_user.id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Access denied. You are not authorized to view this document.",
+                    )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied. You are not authorized to view this document.",
+                )
+
+    # Retrieve document bytes from local cache or Supabase Storage cloud
+    file_data = await get_slip_file_data_async(filename)
+    if not file_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Admission slip document not found on storage server.",
         )
 
-    ext = file_path.suffix.lower()
-    if ext == ".pdf":
-        media_type = "application/pdf"
-    elif ext in [".jpg", ".jpeg"]:
-        media_type = "image/jpeg"
-    elif ext == ".png":
-        media_type = "image/png"
-    else:
-        media_type = "application/octet-stream"
-
-    return FileResponse(path=str(file_path), media_type=media_type, filename=file_path.name)
+    content_bytes, media_type = file_data
+    return Response(
+        content=content_bytes,
+        media_type=media_type,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
 
 
 
