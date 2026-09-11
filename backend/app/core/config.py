@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+    SECRET_KEY: str = "e83a9d7f4b2c1e0a8f9b6d5c4a3b2e1f0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a"
+    ENCRYPTION_KEY_AES256: str = ""
 
     # Database (Supabase Postgres)
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/qatra"
