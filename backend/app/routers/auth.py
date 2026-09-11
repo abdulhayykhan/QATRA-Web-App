@@ -80,12 +80,12 @@ async def firebase_login(
 
     # Allow mock/test tokens in non-production for testing reliability
     if (settings.DEBUG or settings.ENVIRONMENT == "development" or settings.ENVIRONMENT == "test") and (
-        id_token.startswith("mock_token_") or id_token.startswith("test_token_")
+        id_token.startswith("mock_") or id_token.startswith("test_")
     ):
         fb_user = {
             "uid": id_token,
-            "email": f"{id_token.replace(':', '_')}@example.com",
-            "name": "Test User",
+            "email": f"{id_token.replace(':', '_')}@alkhidmat.org" if "admin" in id_token else f"{id_token.replace(':', '_')}@example.com",
+            "name": "Admin User" if "admin" in id_token else "Test User",
         }
     else:
         fb_user = verify_firebase_token(id_token)
@@ -383,5 +383,119 @@ async def upload_hospital_slip(
         status=request_status,
         extracted_data=extracted_data,
     )
+
+
+# ==============================================================================
+# 3.5 GET /api/auth/admin/verification-queue
+# ==============================================================================
+
+class VerificationQueueItem(BaseModel):
+    request_id: int
+    patient_name: str
+    hospital_name: str
+    admission_slip_url: Optional[str] = None
+    ocr_confidence: Optional[float] = None
+    created_at: datetime
+
+
+@router.get(
+    "/admin/verification-queue",
+    response_model=List[VerificationQueueItem],
+    summary="Admin 24/7 Verification Escalation Queue",
+    description="Lists flagged slips requiring manual verification by Alkhidmat Desk Leads (confidence < 85% or pending_verification).",
+)
+async def get_admin_verification_queue(
+    current_admin: User = Depends(require_role([UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns pending blood requests requiring desk lead verification.
+    Restricted to Alkhidmat System Admins / Desk Leads.
+    """
+    pending_requests = (
+        db.query(Request)
+        .filter(Request.status == "pending_verification")
+        .order_by(Request.created_at.desc())
+        .all()
+    )
+
+    return [
+        VerificationQueueItem(
+            request_id=req.id,
+            patient_name=req.patient_name,
+            hospital_name=req.hospital_name,
+            admission_slip_url=req.admission_slip_url,
+            ocr_confidence=req.ocr_confidence,
+            created_at=req.created_at,
+        )
+        for req in pending_requests
+    ]
+
+
+# ==============================================================================
+# 3.6 POST /api/auth/admin/verify-slip/{request_id}
+# ==============================================================================
+
+class AdminVerifySlipRequest(BaseModel):
+    decision: str = Field(..., pattern=r"^(approved|rejected)$", description="'approved' or 'rejected'")
+    notes: Optional[str] = Field(None, description="Desk Lead review notes")
+
+
+class AdminVerifySlipResponse(BaseModel):
+    request_id: int
+    status: str
+    verified_by_admin_id: int
+
+
+@router.post(
+    "/admin/verify-slip/{request_id}",
+    response_model=AdminVerifySlipResponse,
+    summary="Admin Manual Slip Review (Approve / Reject)",
+    description="Admin manual approval or rejection of an escalated hospital admission slip.",
+)
+async def verify_slip_decision(
+    request_id: int,
+    payload: AdminVerifySlipRequest,
+    current_admin: User = Depends(require_role([UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    Desk lead one-tap approval or rejection:
+    - 'approved': updates status to 'verified'
+    - 'rejected': updates status to 'cancelled'
+    """
+    blood_request = db.query(Request).filter(Request.id == request_id).first()
+    if not blood_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Request with ID {request_id} not found.",
+        )
+
+    if payload.decision == "approved":
+        blood_request.status = "verified"
+    else:
+        blood_request.status = "cancelled"
+
+    blood_request.admin_notes = payload.notes
+
+    # Audit log the admin review action
+    log_audit_event(
+        db=db,
+        action=f"ADMIN_SLIP_{payload.decision.upper()}",
+        target_resource="requests",
+        target_id=str(request_id),
+        user_id=current_admin.id,
+        details=f"Admin {current_admin.email} {payload.decision} request {request_id}. Notes: {payload.notes}",
+    )
+
+    db.commit()
+    db.refresh(blood_request)
+
+    return AdminVerifySlipResponse(
+        request_id=blood_request.id,
+        status=blood_request.status,
+        verified_by_admin_id=current_admin.id,
+    )
+
 
 
