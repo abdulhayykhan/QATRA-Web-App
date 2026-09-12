@@ -78,7 +78,7 @@ app.include_router(feed_router, prefix=f"{settings.API_V1_STR}/feed")
 
 
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from starlette.requests import Request
 
 frontend_dir = root_dir / "frontend"
@@ -125,6 +125,37 @@ async def pwa_service_worker():
             headers={"Service-Worker-Allowed": "/"},
         )
     return ""
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon_ico():
+    """Serve multi-resolution favicon.ico directly at root for browsers."""
+    ico_file = static_dir / "icons" / "favicon.ico"
+    if ico_file.exists():
+        return FileResponse(str(ico_file), media_type="image/x-icon")
+    png_file = static_dir / "icons" / "favicon.png"
+    if png_file.exists():
+        return FileResponse(str(png_file), media_type="image/png")
+    return Response(status_code=204)
+
+
+@app.get("/favicon.png", include_in_schema=False)
+async def favicon_png():
+    """Serve favicon.png directly at root."""
+    png_file = static_dir / "icons" / "favicon.png"
+    if png_file.exists():
+        return FileResponse(str(png_file), media_type="image/png")
+    return Response(status_code=204)
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+@app.get("/apple-touch-icon-precomposed.png", include_in_schema=False)
+async def apple_touch_icon():
+    """Serve apple-touch-icon at root for iOS WebClip bookmarks."""
+    ati_file = static_dir / "icons" / "apple-touch-icon.png"
+    if ati_file.exists():
+        return FileResponse(str(ati_file), media_type="image/png")
+    return Response(status_code=204)
 
 
 @app.get("/", tags=["Root"])

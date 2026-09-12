@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
   <title>QATRA — Security & Compliance Audit Trail</title>
 
   <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
   <link rel="icon" type="image/png" href="/static/icons/favicon.png">
   <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
@@ -14,7 +17,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <link rel="stylesheet" href="/static/css/tokens.css">
-  <link rel="stylesheet" href="/static/css/apple.css">
   <style>
     .audit-table-wrapper {
       background: var(--bg-surface);
@@ -46,6 +48,7 @@
       background: var(--bg-subtle);
     }
   </style>
+  <link rel="stylesheet" href="/static/css/apple.css">
 </head>
 <body>
   <div class="app-container wide-view">
@@ -61,10 +64,10 @@
       <!-- Desktop Navigation Bar (Hidden on Mobile) -->
       <nav class="desktop-nav">
         <a href="/index.html">Home</a>
-        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
-        <a href="/seeker/map.html">🗺️ Live Map</a>
-        <a href="/seeker/request.html">🩸 Request Blood</a>
-        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/seeker/feed.html">Appeals Feed</a>
+        <a href="/seeker/map.html">Live Map</a>
+        <a href="/seeker/request.html">Request Blood</a>
+        <a href="/donor/register.html">Register Donor</a>
         <a href="/admin/verification.html">🛡️ Verification Desk</a>
         <a href="/admin/drives.html">🎪 Drives Desk</a>
         <a href="/admin/audit.html" class="active">🔒 Audit Trail</a>

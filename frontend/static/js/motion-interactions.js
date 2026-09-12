@@ -224,7 +224,7 @@ function patchToastAnimations() {
 function setupCardEntrance() {
   if (reducedMotion) return;
 
-  const cards = document.querySelectorAll('.card, .path-card, .feature-item');
+  const cards = document.querySelectorAll('.card, .path-card, .service-card, .feature-item, .alkhidmat-desk-card');
   if (!cards.length) return;
 
   const io = new IntersectionObserver((entries) => {
@@ -267,8 +267,8 @@ function setupHeaderScroll() {
     requestAnimationFrame(() => {
       const scrolled = window.scrollY > 10;
       header.style.boxShadow = scrolled
-        ? '0 1px 0 rgba(255,255,255,0.8) inset, 0 4px 24px rgba(0,0,0,0.1)'
-        : '0 1px 0 rgba(255,255,255,0.8) inset, 0 1px 12px rgba(0,0,0,0.06)';
+        ? '0 1px 0 rgba(255,255,255,0.8) inset, 0 4px 24px rgba(0,0,0,0.08)'
+        : '0 1px 0 rgba(255,255,255,0.8) inset, 0 1px 12px rgba(0,0,0,0.04)';
       ticking = false;
     });
   }, { passive: true });
@@ -280,9 +280,11 @@ function setupHeaderScroll() {
 
 function init() {
   // Press springs on interactive cards (lighter scale for larger surfaces)
-  addPressSpring('.path-card', 0.97);
-  addPressSpring('.feature-item', 0.95);
-  addPressSpring('.card[href]', 0.98);  // only clickable cards
+  addPressSpring('.path-card', 0.98);
+  addPressSpring('.service-card', 0.98);
+  addPressSpring('.feature-item', 0.96);
+  addPressSpring('.btn-hero', 0.97);
+  addPressSpring('.card[href]', 0.98);
 
   // Button spring
   addButtonSpring();

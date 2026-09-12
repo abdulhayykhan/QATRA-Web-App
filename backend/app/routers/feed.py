@@ -66,7 +66,7 @@ def format_request_as_feed_item(req: Request) -> FeedItemResponse:
 def format_event_as_feed_item(event: Event) -> FeedItemResponse:
     """Formats an upcoming blood drive Event ORM model into a feed card (FR 3.2)."""
     return FeedItemResponse(
-        created_at=event.created_at,
+        created_at=event.created_at or datetime.now(timezone.utc),
         item_type="blood_drive",
         event_id=event.id,
         title=event.title,
@@ -166,14 +166,15 @@ def get_feed(
         for ev in events:
             items.append(format_event_as_feed_item(ev))
 
-    # Unified ranking: Within 2 hours priority first, then newest first
+    # Unified ranking: Targeted event first (if filtered by event_id), then within 2 hours, then newest first
     def get_feed_sort_key(item: FeedItemResponse):
+        is_targeted_event = bool(event_id and item.event_id == event_id)
         is_urgent_2h = item.urgency == "within_2_hours"
         created = item.created_at
         if created and created.tzinfo is None:
             created = created.replace(tzinfo=timezone.utc)
         ts = created.timestamp() if created else 0.0
-        return (0 if is_urgent_2h else 1, -ts)
+        return (0 if is_targeted_event else (1 if is_urgent_2h else 2), -ts)
 
     items.sort(key=get_feed_sort_key)
 

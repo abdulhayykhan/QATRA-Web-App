@@ -196,9 +196,9 @@ body {
 .desktop-nav {
   display: none;
   align-items: center;
-  gap: 6px;
-  margin: 0 20px;
-  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 16px;
+  flex-wrap: nowrap;
 }
 
 @media (min-width: 1024px) {
