@@ -51,6 +51,8 @@ nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
+*.db
+*.sqlite*
 
 # Node / Frontend
 node_modules/
