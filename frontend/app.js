@@ -90,7 +90,7 @@ function runProximityDispatchPipeline(hospital) {
     const rareBloodGroups = ['O-', 'AB-', 'A-', 'B-'];
     const isRareType = rareBloodGroups.includes(targetBlood);
 
-    let currentRadius = 10; 
+    let currentRadius = 5; 
     const maxRadiusLimit = 15; 
     let finalMatchedDonorsList = [];
 
