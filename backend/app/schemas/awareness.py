@@ -122,7 +122,28 @@ class EventRegistrationResponse(BaseModel):
     message: str = "Registration confirmed. An in-app confirmation and email notification have been sent."
     registration_type: str = "donor"
     registered_at: datetime
+class EventCreateRequest(BaseModel):
+    title: str = Field(..., min_length=3, max_length=255)
+    event_type: str = Field("blood_drive", description="blood_drive or awareness_session")
+    date_time: datetime
+    location_name: str = Field(..., min_length=2, max_length=255)
+    address: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    description: Optional[str] = None
+    slots_total: int = Field(100, ge=1)
 
+
+class UserRegistrationListItem(BaseModel):
+    registration_id: int
+    event_id: int
+    event_title: str
+    event_type: str
+    date_time: datetime
+    location_name: str
+    registration_type: str
+    status: str
+    registered_at: datetime
 
 # ==============================================================================
 # 4. Post-Donation Health Feedback Schemas (FR 4.4)

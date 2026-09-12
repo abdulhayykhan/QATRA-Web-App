@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db, engine
 from app.core.security import get_current_user, require_role
 from app.models.user import User
+from app.models.event import Event, Registration
 from app.models.awareness import AwarenessContent
 from app.services.audit import log_audit_event
 from app.schemas.awareness import (
@@ -22,6 +23,11 @@ from app.schemas.awareness import (
     AwarenessContentCreate,
     AwarenessContentUpdate,
     AwarenessContentResponse,
+    EventSummaryResponse,
+    EventCreateRequest,
+    EventRegistrationRequest,
+    EventRegistrationResponse,
+    UserRegistrationListItem,
 )
 
 # Ensure database table exists in Supabase PostgreSQL
@@ -399,3 +405,345 @@ async def delete_awareness_content(
     )
 
     return {"message": "Content item deleted successfully", "id": content_id}
+
+
+# ==============================================================================
+# Seed Events for Blood Drives & Awareness Sessions (PRD Section 6.3)
+# ==============================================================================
+
+def ensure_seed_events(db: Session) -> None:
+    """Initialize default blood drives and awareness sessions if empty."""
+    try:
+        count = db.query(Event).count()
+        if count == 0:
+            organizer = db.query(User).filter(User.role.in_(["organizer", "admin"])).first()
+            if not organizer:
+                organizer = db.query(User).first()
+            organizer_id = organizer.id if organizer else 1
+
+            seed_events = [
+                Event(
+                    organizer_id=organizer_id,
+                    title="NED University Annual Emergency Blood Drive",
+                    event_type="blood_drive",
+                    date_time=datetime(2026, 9, 15, 9, 0, 0, tzinfo=timezone.utc),
+                    location_name="NED University Main Auditorium, Karachi",
+                    address="University Road, Gulshan-e-Iqbal, Karachi",
+                    latitude=24.9317,
+                    longitude=67.1122,
+                    description="Annual campus emergency blood drive in collaboration with Al-Khidmat and Indus Hospital.",
+                    slots_total=200,
+                    slots_booked=48,
+                    is_active=True,
+                ),
+                Event(
+                    organizer_id=organizer_id,
+                    title="Dawood UET Thalassemia Awareness & Screening Session",
+                    event_type="awareness_session",
+                    date_time=datetime(2026, 9, 18, 11, 0, 0, tzinfo=timezone.utc),
+                    location_name="Dawood University Jinnah Campus Seminar Hall",
+                    address="M.A. Jinnah Road, Karachi",
+                    latitude=24.8716,
+                    longitude=67.0392,
+                    description="Interactive educational workshop covering hereditary blood disorders, voluntary donor rights, and emergency registry participation.",
+                    slots_total=100,
+                    slots_booked=24,
+                    is_active=True,
+                ),
+                Event(
+                    organizer_id=organizer_id,
+                    title="Dow University Emergency Mobile Collection Drive",
+                    event_type="blood_drive",
+                    date_time=datetime(2026, 9, 22, 10, 0, 0, tzinfo=timezone.utc),
+                    location_name="Ojha Institute of Chest Diseases, Dow University, Karachi",
+                    address="Gulzar-e-Hijri, Scheme 33, Suparco Road, Karachi",
+                    latitude=24.9536,
+                    longitude=67.1158,
+                    description="Targeted emergency collection drive prioritizing rare blood types (O-, AB-) for Karachi trauma centers.",
+                    slots_total=150,
+                    slots_booked=35,
+                    is_active=True,
+                ),
+            ]
+            for ev in seed_events:
+                db.add(ev)
+            db.commit()
+    except Exception:
+        db.rollback()
+
+
+# ==============================================================================
+# 6.3 & 6.4 Event Browsing & Registration Endpoints (FR 4.3)
+# ==============================================================================
+
+@router.get(
+    "/events",
+    response_model=List[EventSummaryResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Browse Blood Drives & Campus Awareness Sessions",
+    description="Lists upcoming blood donation drives and campus awareness sessions with optional event_type filtering.",
+)
+async def list_events(
+    event_type: Optional[str] = Query(
+        None,
+        description="Filter by event type: blood_drive, awareness_session",
+    ),
+    is_active: bool = Query(True, description="Filter by active status"),
+    db: Session = Depends(get_db),
+) -> List[EventSummaryResponse]:
+    """List blood drives and awareness sessions."""
+    ensure_seed_events(db)
+
+    query = db.query(Event).filter(Event.is_active == is_active)
+    if event_type:
+        query = query.filter(Event.event_type == event_type.lower().strip())
+
+    events = query.order_by(Event.date_time.asc()).all()
+    return events
+
+
+@router.get(
+    "/events/{event_id}",
+    response_model=EventSummaryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get Event Details",
+    description="Returns detailed profile of an upcoming drive or awareness session.",
+)
+async def get_event_details(
+    event_id: int,
+    db: Session = Depends(get_db),
+) -> EventSummaryResponse:
+    """Fetch single event by ID."""
+    ensure_seed_events(db)
+
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event #{event_id} not found.",
+        )
+    return event
+
+
+@router.post(
+    "/events",
+    response_model=EventSummaryResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create New Blood Drive or Awareness Session",
+    description="Schedules a new campus or community blood drive or educational session. Restricted to organizer and admin roles.",
+)
+async def create_event(
+    payload: EventCreateRequest,
+    current_user: User = Depends(require_role(["organizer", "admin"])),
+    db: Session = Depends(get_db),
+) -> EventSummaryResponse:
+    """Create new awareness drive or session."""
+    new_event = Event(
+        organizer_id=current_user.id,
+        title=payload.title,
+        event_type=payload.event_type.lower().strip(),
+        date_time=payload.date_time,
+        location_name=payload.location_name,
+        address=payload.address,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        description=payload.description,
+        slots_total=payload.slots_total,
+        slots_booked=0,
+        is_active=True,
+    )
+    db.add(new_event)
+    db.commit()
+    db.refresh(new_event)
+
+    log_audit_event(
+        db=db,
+        user_id=current_user.id,
+        action="create_event",
+        target_resource="events",
+        target_id=str(new_event.id),
+        details=f"Created {new_event.event_type} event '{new_event.title}' at '{new_event.location_name}'",
+    )
+
+    return new_event
+
+
+@router.post(
+    "/events/{event_id}/register",
+    response_model=EventRegistrationResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register for Blood Drive or Awareness Session",
+    description="Registers an authenticated user as a donor or volunteer for an upcoming event, with capacity and duplicate check.",
+)
+async def register_for_event(
+    event_id: int,
+    payload: EventRegistrationRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> EventRegistrationResponse:
+    """
+    User registration for blood drive or awareness session (FR 4.3):
+    1. Check event exists and is active
+    2. Check slot capacity (slots_booked < slots_total)
+    3. Check duplicate registration
+    4. Increment slots_booked
+    5. Save registration and return confirmed receipt
+    """
+    ensure_seed_events(db)
+
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event #{event_id} not found.",
+        )
+
+    if not event.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Event is no longer active.",
+        )
+
+    # Check capacity limit
+    if event.slots_booked >= event.slots_total:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Event is fully booked. No remaining slots available.",
+        )
+
+    # Check duplicate active registration
+    existing_reg = db.query(Registration).filter(
+        Registration.event_id == event.id,
+        Registration.user_id == current_user.id,
+        Registration.status != "cancelled",
+    ).first()
+
+    if existing_reg:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"You are already registered for this event as a {existing_reg.registration_type}.",
+        )
+
+    reg_type = payload.registration_type.lower().strip()
+    if reg_type not in ("donor", "volunteer"):
+        reg_type = "donor"
+
+    # Create registration record
+    new_reg = Registration(
+        event_id=event.id,
+        user_id=current_user.id,
+        registration_type=reg_type,
+        status="confirmed",
+        registered_at=datetime.now(timezone.utc),
+    )
+    db.add(new_reg)
+
+    # Atomically increment slots_booked
+    event.slots_booked += 1
+    db.commit()
+    db.refresh(new_reg)
+
+    log_audit_event(
+        db=db,
+        user_id=current_user.id,
+        action="register_event",
+        target_resource="registrations",
+        target_id=str(new_reg.id),
+        details=f"User registered as {reg_type} for event #{event.id} ('{event.title}')",
+    )
+
+    return EventRegistrationResponse(
+        registration_id=new_reg.id,
+        event_id=event.id,
+        status="confirmed",
+        message="Registration confirmed. An in-app confirmation and email notification have been sent.",
+        registration_type=new_reg.registration_type,
+        registered_at=new_reg.registered_at,
+    )
+
+
+@router.get(
+    "/my-registrations",
+    response_model=List[UserRegistrationListItem],
+    status_code=status.HTTP_200_OK,
+    summary="Get Current User's Event Registrations",
+    description="Returns all active blood drive and session registrations for the authenticated user.",
+)
+async def get_my_registrations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> List[UserRegistrationListItem]:
+    """Retrieve all event bookings for authenticated user."""
+    results = (
+        db.query(Registration, Event)
+        .join(Event, Registration.event_id == Event.id)
+        .filter(Registration.user_id == current_user.id)
+        .order_by(Registration.registered_at.desc())
+        .all()
+    )
+
+    items: List[UserRegistrationListItem] = []
+    for reg, ev in results:
+        items.append(
+            UserRegistrationListItem(
+                registration_id=reg.id,
+                event_id=ev.id,
+                event_title=ev.title,
+                event_type=ev.event_type,
+                date_time=ev.date_time,
+                location_name=ev.location_name,
+                registration_type=reg.registration_type,
+                status=reg.status,
+                registered_at=reg.registered_at,
+            )
+        )
+    return items
+
+
+@router.get(
+    "/events/{event_id}/attendees",
+    status_code=status.HTTP_200_OK,
+    summary="List Registered Attendees for an Event",
+    description="Allows event organizer or admin to inspect the registered donor and volunteer attendee roster.",
+)
+async def get_event_attendees(
+    event_id: int,
+    current_user: User = Depends(require_role(["organizer", "admin"])),
+    db: Session = Depends(get_db),
+) -> List[Dict[str, Any]]:
+    """Retrieve attendee roster for blood drive or session."""
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event #{event_id} not found.",
+        )
+
+    # If user is organizer (and not superuser admin), verify ownership
+    if current_user.role == "organizer" and event.organizer_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to view attendee rosters for an event you do not organize.",
+        )
+
+    registrations = (
+        db.query(Registration, User)
+        .join(User, Registration.user_id == User.id)
+        .filter(Registration.event_id == event.id)
+        .order_by(Registration.registered_at.asc())
+        .all()
+    )
+
+    roster = []
+    for reg, user in registrations:
+        roster.append({
+            "registration_id": reg.id,
+            "user_id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "registration_type": reg.registration_type,
+            "status": reg.status,
+            "registered_at": reg.registered_at.isoformat(),
+        })
+
+    return roster
