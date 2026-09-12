@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <title>QATRA — Donor Hub & Cooldown Dashboard</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+  <style>
+    .donor-profile-header {
+      background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-crimson) 100%);
+      color: #fff;
+      padding: var(--space-lg) var(--space-md);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-md);
+      box-shadow: var(--shadow-md);
+    }
+    .status-toggle-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-normal);
+    }
+    .status-toggle-card.locked {
+      background: var(--bg-canvas);
+      border-color: var(--border-color-strong);
+      opacity: 0.85;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--border-color-strong);
+      transition: .3s;
+      border-radius: var(--radius-full);
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider {
+      background-color: var(--color-success);
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+    input:disabled + .toggle-slider {
+      background-color: #D1D5DB;
+      cursor: not-allowed;
+    }
+    .cooldown-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      margin-bottom: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .cooldown-ring-wrapper {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto var(--space-md) auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cooldown-ring-svg {
+      transform: rotate(-90deg);
+      width: 120px;
+      height: 120px;
+    }
+    .cooldown-ring-bg {
+      fill: none;
+      stroke: var(--bg-subtle);
+      stroke-width: 8;
+    }
+    .cooldown-ring-progress {
+      fill: none;
+      stroke: var(--primary-red);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 339.292;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.8s ease;
+    }
+    .cooldown-ring-content {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .cooldown-ring-days {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text-main);
+    }
+    .cooldown-ring-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+    .emergency-alert-card {
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--primary-red);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: var(--space-sm);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cooldown-notice-card {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+    .health-feedback-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+    .health-tip-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .health-tip-item:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with Logo and Responsive Desktop Navigation -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/donor/eligibility.html">✅ Eligibility</a>
+        <a href="/donor/awareness.html">📚 Awareness</a>
+        <a href="/admin/drives.html">🎪 Drives</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <button id="logout-btn" class="btn btn-sm btn-outline" style="width: auto; padding: 4px 10px; font-size: 12px;">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <div class="split-desktop">
+        <!-- Left Sidebar Column: Profile, Status, Cooldown & Quick Actions -->
+        <div class="split-sidebar">
+          <!-- Profile Header (Wireframe Pg. 14) -->
+          <div class="donor-profile-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h2 id="donor-name" style="color: #fff; margin-bottom: 2px; font-size: 1.25rem;">Alkhidmat Donor</h2>
+                <div id="donor-email" style="font-size: 12px; opacity: 0.9;">donor@alkhidmat.org</div>
+              </div>
+              <span id="donor-blood-badge" class="badge" style="background: rgba(255,255,255,0.25); color: #fff; font-size: 16px; font-weight: 800; padding: 4px 10px;">O+</span>
+            </div>
+            <div style="margin-top: var(--space-md); display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+              <span id="donor-eligibility-badge" class="badge badge-success" style="font-size: 11px;">Eligible to Donate ✅</span>
+              <span id="donor-role-badge" class="badge" style="background: rgba(0,0,0,0.25); color: #fff; font-size: 11px;">Verified Donor</span>
+              <span id="donor-cnic-badge" class="badge" style="background: rgba(0,0,0,0.25); color: #fff; font-size: 11px;">CNIC: Verified 🔒</span>
+              <span id="donation-count-badge" class="badge" style="background: rgba(0,0,0,0.25); color: #fff; font-size: 11px;">Donations: 0</span>
+            </div>
+          </div>
+
+          <!-- Available to Donate Switch (Wireframe Pg. 14 & 19) -->
+          <div class="status-toggle-card" id="status-toggle-card">
+            <div style="padding-right: 12px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <h3 style="font-size: 14.5px; font-weight: 700; margin-bottom: 2px;">Available to Donate</h3>
+                <span id="lock-icon" style="display: none; font-size: 14px;">🔒</span>
+              </div>
+              <p id="toggle-desc" style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">
+                Broadcasts your proximity to emergency blood requests in Karachi
+              </p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="availability-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- 90-Day Cooldown Tracker Card (Wireframe Pg. 14 & 19) -->
+          <div class="cooldown-card" id="cooldown-widget">
+            <!-- SVG Circular Ring -->
+            <div class="cooldown-ring-wrapper">
+              <svg class="cooldown-ring-svg" viewBox="0 0 120 120">
+                <circle class="cooldown-ring-bg" cx="60" cy="60" r="54" />
+                <circle class="cooldown-ring-progress" id="cooldown-svg-progress" cx="60" cy="60" r="54" />
+              </svg>
+              <div class="cooldown-ring-content">
+                <span class="cooldown-ring-days" id="cooldown-days-display">0</span>
+                <span class="cooldown-ring-label" id="cooldown-ring-label">Days Left</span>
+              </div>
+            </div>
+
+            <h3 id="cooldown-status-title" style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">
+              Eligible to Donate
+            </h3>
+            <p id="cooldown-status-text" style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md); line-height: 1.4;">
+              Your 90-day cooldown period is clear. You are actively eligible for whole blood donation.
+            </p>
+
+            <!-- Simulated Donation / Record Blood Draw Trigger (Wireframe Pg. 18) -->
+            <button type="button" id="btn-record-donation" class="btn btn-secondary btn-sm" style="font-size: 12px; margin: 0 auto; display: inline-flex; align-items: center; gap: 6px;">
+              <span>🩸</span> <span>Record Completed Donation</span>
+            </button>
+          </div>
+
+          <!-- Quick Actions Grid -->
+          <h3 style="font-size: 14px; font-weight: 700; margin: var(--space-md) 0 var(--space-sm);">Quick Actions</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg);">
+            <a href="/donor/eligibility.html" class="btn btn-secondary" style="justify-content: flex-start; text-decoration: none;">
+              <span>📋</span> <span>Retake 4-Step Eligibility Quiz</span>
+            </a>
+            <a href="/donor/awareness.html" class="btn btn-secondary" style="justify-content: flex-start; text-decoration: none;">
+              <span>🎪</span> <span>Browse Upcoming Blood Drives & Sessions</span>
+            </a>
+            <a href="/seeker/map.html" class="btn btn-secondary" style="justify-content: flex-start; text-decoration: none;">
+              <span>🗺️</span> <span>Open Live Proximity Blood Map</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right Main Column: Emergency Alerts & Health Guidance -->
+        <div class="split-main">
+          <!-- Cooldown Mode Specific Notice (Wireframe Pg. 19) -->
+          <div id="cooldown-paused-notice" class="cooldown-notice-card" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span style="font-size: 18px;">🛡️</span>
+              <h4 style="font-size: 13px; font-weight: 700; color: #92400E; margin: 0;">Emergency Alerts Paused</h4>
+            </div>
+            <p style="font-size: 12px; color: #78350F; margin-bottom: 8px; line-height: 1.4;">
+              Your emergency broadcast dispatch is temporarily paused while your red blood cells and iron replenish.
+            </p>
+            <a href="/donor/awareness.html" class="btn btn-sm btn-primary" style="font-size: 12px; text-decoration: none; display: inline-block;">
+              Browse Educational Resources & Myth Busters 📚
+            </a>
+          </div>
+
+          <!-- Local Emergency Alerts Section (Wireframe Pg. 14) -->
+          <div id="emergency-alerts-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 style="font-size: 14px; font-weight: 700;">🚨 Local Emergency Alerts</h3>
+              <a href="/seeker/feed.html" style="font-size: 12px; color: var(--primary-red); text-decoration: none; font-weight: 600;">View Feed →</a>
+            </div>
+            <div id="alerts-container">
+              <!-- Dynamic Alert Cards rendered by JS -->
+              <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;">
+                Loading local hospital emergencies...
+              </div>
+            </div>
+          </div>
+
+          <!-- Post-Donation Health Instructions & Care (FR 4.4 / Wireframe 18 & 19) -->
+          <div class="health-feedback-card" id="health-guidance-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 18px;">🩺</span>
+                <h4 style="font-size: 13.5px; font-weight: 700; margin: 0;">Clinical Recovery Guidance</h4>
+              </div>
+              <span id="screening-outcome-pill" class="badge badge-success" style="font-size: 10.5px;">Screening: Passed</span>
+            </div>
+            <div id="health-instructions-list">
+              <!-- Loaded from /api/awareness/donor/health-feedback -->
+              <div class="health-tip-item">
+                <span>💧</span>
+                <span>Drink 500ml of extra fluids (water, electrolytes) over the next 24-48 hours.</span>
+              </div>
+              <div class="health-tip-item">
+                <span>🏋️</span>
+                <span>Avoid strenuous gym workouts or heavy physical lifting for the rest of the day.</span>
+              </div>
+              <div class="health-tip-item">
+                <span>🩹</span>
+                <span>Keep the venipuncture bandage dry and intact for at least 4 hours.</span>
+              </div>
+              <div class="health-tip-item">
+                <span>🥗</span>
+                <span>Eat iron-rich meals (spinach, lentils, red meat) to accelerate red cell renewal.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Donation Complete & Cooldown Activation Modal (Wireframe Pg. 18) -->
+    <div id="donation-complete-modal" class="modal-overlay">
+      <div class="modal-content" style="text-align: center;">
+        <button class="modal-close" id="modal-close-donation">✕</button>
+        <div style="font-size: 48px; margin-bottom: 6px;">🎉</div>
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; color: var(--color-success);">
+          Donation Complete!
+        </h3>
+        <p style="font-size: 13.5px; color: var(--text-main); margin-bottom: var(--space-md);">
+          Thank you for donating a unit of whole blood. Your generosity helps save up to <strong>3 lives</strong> in Karachi trauma wards.
+        </p>
+
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; text-align: left; margin-bottom: var(--space-md); font-size: 12.5px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>Blood Unit:</span>
+            <strong>1 Unit Whole Blood (450ml)</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>Cooldown Interval:</span>
+            <strong style="color: var(--primary-red);">90 Days Activated</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Next Eligible Date:</span>
+            <strong id="modal-next-date">Calculating...</strong>
+          </div>
+        </div>
+
+        <div style="text-align: left; background: var(--color-success-light); border: 1px solid var(--color-success); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: var(--space-md);">
+          <div style="font-weight: 700; font-size: 12px; color: var(--color-success); margin-bottom: 4px;">
+            Immediate Post-Donation Care:
+          </div>
+          <ul style="font-size: 12px; color: #14532D; margin-left: 18px; line-height: 1.4;">
+            <li>Rest for 10-15 minutes and enjoy your refreshments.</li>
+            <li>Drink 500ml extra fluids over the next 24 hours.</li>
+            <li>Leave bandage on for 4 hours.</li>
+          </ul>
+        </div>
+
+        <button type="button" id="btn-modal-ack-cooldown" class="btn btn-primary" style="width: 100%;">
+          View My Cooldown Dashboard 🛡️
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/donor/awareness.html">
+        <span class="nav-icon">📚</span>
+        <span>Awareness</span>
+      </a>
+      <a href="/donor/dashboard.html" class="active">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/donor-dashboard.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>

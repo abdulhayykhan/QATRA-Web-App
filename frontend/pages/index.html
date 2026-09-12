@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <title>QATRA — Emergency Blood Response Platform</title>
+  
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+  <style>
+    .hero-section {
+      text-align: center;
+      padding: var(--space-2xl) var(--space-md);
+      background: linear-gradient(180deg, var(--primary-red-subtle) 0%, var(--bg-surface) 100%);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      margin-bottom: var(--space-lg);
+    }
+    @media (min-width: 768px) {
+      .hero-section {
+        padding: var(--space-2xl) var(--space-xl);
+      }
+    }
+    .hero-logo-img {
+      height: 76px;
+      width: auto;
+      margin-bottom: var(--space-sm);
+      filter: drop-shadow(0 4px 12px rgba(201, 42, 42, 0.2));
+      animation: pulse 2.5s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary-red);
+      letter-spacing: -0.5px;
+    }
+    .hero-tagline {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: var(--space-xs);
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+    .path-card {
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      transition: all var(--transition-fast);
+      background: var(--bg-surface);
+      height: 100%;
+    }
+    .path-card:hover {
+      border-color: var(--primary-red);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .path-card.emergency {
+      border-color: var(--primary-red-light);
+      background: var(--primary-red-subtle);
+    }
+    .path-card.emergency:hover {
+      border-color: var(--primary-red);
+    }
+    .path-icon {
+      font-size: 36px;
+      flex-shrink: 0;
+    }
+    .path-text h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .path-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 0;
+      line-height: 1.4;
+    }
+    .feature-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .feature-item:hover {
+      border-color: var(--primary-red);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      font-size: 26px;
+      margin-bottom: var(--space-xs);
+    }
+    .feature-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #FFFFFF;
+      color: #374151;
+      border: 1px solid var(--border-color-strong);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-fast);
+    }
+    .google-btn:hover {
+      background: #F9FAFB;
+      border-color: #D1D5DB;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: var(--space-md);
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      max-width: 420px;
+      width: 100%;
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      animation: fadeIn 0.2s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with Logo and Responsive Desktop Navigation -->
+    <header class="app-header">
+      <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+        <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+        <span>QATRA</span>
+      </a>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html" class="active">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/donor/eligibility.html">✅ Eligibility</a>
+        <a href="/donor/awareness.html">📚 Awareness</a>
+        <a href="/admin/drives.html">🎪 Drives</a>
+      </nav>
+
+      <div class="header-actions" id="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" id="btn-header-install" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <button id="btn-header-login" class="btn btn-sm btn-primary">Sign In</button>
+        <div id="user-header-menu" style="display: none; align-items: center; gap: 6px;">
+          <a id="header-profile-link" href="/donor/dashboard.html" class="btn btn-sm btn-outline">👤 <span id="header-user-name">Profile</span></a>
+          <button id="btn-header-logout" class="btn btn-sm btn-secondary" style="padding: 4px 8px; font-size: 11px;">✕</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <img src="/media/logo.png" alt="QATRA Brand Logo" class="hero-logo-img" />
+        <h1 class="hero-title">QATRA</h1>
+        <p class="hero-tagline">Alkhidmat Foundation Emergency Blood Response Platform — Connecting Verified Seekers with Proximity-Matched Donors in Real Time.</p>
+      </section>
+
+      <!-- Primary Action Paths (Side-by-Side on Tablet/Desktop) -->
+      <div style="margin-bottom: var(--space-xl);">
+        <h2 style="font-size: 18px; margin-bottom: var(--space-md); font-weight: 700;">How can we help you today?</h2>
+
+        <div class="grid-responsive-2" style="margin-bottom: var(--space-lg);">
+          <!-- Path 1: Emergency Seeker -->
+          <a href="/seeker/request.html" class="path-card emergency">
+            <div class="path-icon">🚨</div>
+            <div class="path-text">
+              <h3 style="color: var(--primary-red);">Need Blood Urgently</h3>
+              <p>Upload hospital slip, verify patient requirement, and broadcast to nearby verified donors across Karachi.</p>
+            </div>
+          </a>
+
+          <!-- Path 2: Donor Registration & Eligibility -->
+          <a href="/donor/register.html" class="path-card">
+            <div class="path-icon">❤️</div>
+            <div class="path-text">
+              <h3>Register as a Donor</h3>
+              <p>Sign in with Google, verify your Pakistani CNIC, and receive proximity-matched emergency blood alerts.</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- Explore Features Grid (4 Columns on Desktop, 2 on Mobile) -->
+        <h2 style="font-size: 18px; margin-bottom: var(--space-md); font-weight: 700;">Explore Platform Services</h2>
+        <div class="grid-responsive-4" style="margin-bottom: var(--space-xl);">
+          <a href="/seeker/map.html" class="feature-item">
+            <div class="feature-icon">🗺️</div>
+            <div class="feature-title">Live Map</div>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Nearby requests & radius</p>
+          </a>
+
+          <a href="/seeker/feed.html" class="feature-item">
+            <div class="feature-icon">📢</div>
+            <div class="feature-title">Urgent Feed</div>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Citywide blood appeals</p>
+          </a>
+
+          <a href="/donor/eligibility.html" class="feature-item">
+            <div class="feature-icon">📋</div>
+            <div class="feature-title">Eligibility Quiz</div>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">4-step health screening</p>
+          </a>
+
+          <a href="/donor/awareness.html" class="feature-item">
+            <div class="feature-icon">📚</div>
+            <div class="feature-title">Awareness</div>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Myths, facts & drives</p>
+          </a>
+        </div>
+
+        <!-- Admin Desk Banner -->
+        <div class="card" style="background: var(--bg-subtle);">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div>
+              <h3 style="font-size: 15px;">Alkhidmat 24/7 Verification Queue & Drive Desk</h3>
+              <p style="font-size: 13px; margin-bottom: 0; color: var(--text-muted);">Hospital slip OCR review, CNIC validation queue, and campus donation drives management.</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <a href="/admin/verification.html" class="btn btn-sm btn-secondary" style="width: auto;">Verification Desk</a>
+              <a href="/admin/drives.html" class="btn btn-sm btn-outline" style="width: auto;">Drives Desk</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation (Mobile Only, hidden on Desktop) -->
+    <nav class="bottom-nav">
+      <a href="/index.html" class="active">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Google Auth & Sign-In Modal -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center; max-width: 400px; padding: var(--space-xl) var(--space-lg);">
+      <button class="modal-close" id="modal-close-auth">✕</button>
+      <img src="/media/logo.png" alt="QATRA" style="height: 52px; width: auto; margin: 0 auto 12px auto; display: block;" />
+      <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Welcome to QATRA</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-lg);">
+        Sign in to access real-time blood emergency dispatches, manage your donor status, or verify hospital slips.
+      </p>
+
+      <button type="button" id="modal-google-btn" class="google-btn" style="margin-bottom: var(--space-md);">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: var(--space-md);">
+        Or choose account test role:
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xs); margin-bottom: var(--space-md);">
+        <button type="button" id="role-donor-btn" class="btn btn-sm btn-secondary" style="font-size: 11.5px;">❤️ Donor User</button>
+        <button type="button" id="role-admin-btn" class="btn btn-sm btn-secondary" style="font-size: 11.5px;">🛡️ Desk Lead (Admin)</button>
+      </div>
+
+      <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+        🔒 Zero-password authentication. Protected by Alkhidmat patient privacy protocol & AES-256 encryption.
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA & Auth Modules -->
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/auth-modal.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>

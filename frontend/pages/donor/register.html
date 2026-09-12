@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <title>QATRA — Donor Onboarding & Verification</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+  <style>
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+      position: relative;
+    }
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 20px;
+      right: 20px;
+      height: 2px;
+      background: var(--border-color);
+      z-index: 1;
+    }
+    .step-node {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .step-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 2px solid var(--border-color-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      transition: all var(--transition-fast);
+    }
+    .step-node.active .step-circle {
+      background: var(--primary-red);
+      color: #fff;
+      border-color: var(--primary-red);
+    }
+    .step-node.completed .step-circle {
+      background: var(--color-success);
+      color: #fff;
+      border-color: var(--color-success);
+    }
+    .step-node.active span {
+      color: var(--primary-red);
+    }
+    .step-content {
+      display: none;
+    }
+    .step-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #FFFFFF;
+      color: #374151;
+      border: 1px solid var(--border-color-strong);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-fast);
+    }
+    .google-btn:hover {
+      background: #F9FAFB;
+      border-color: #D1D5DB;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-sm);
+      background: var(--bg-surface);
+      cursor: pointer;
+    }
+    .checkbox-item input {
+      margin-top: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with Logo and Responsive Desktop Navigation -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html" class="active">❤️ Register Donor</a>
+        <a href="/donor/eligibility.html">✅ Eligibility</a>
+        <a href="/donor/awareness.html">📚 Awareness</a>
+        <a href="/admin/drives.html">🎪 Drives</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <span class="badge badge-standard">Registration</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <div class="form-container-md">
+        <!-- Progress Stepper -->
+        <div class="stepper">
+        <div class="step-node active" id="step-node-1">
+          <div class="step-circle">1</div>
+          <span>Sign In</span>
+        </div>
+        <div class="step-node" id="step-node-2">
+          <div class="step-circle">2</div>
+          <span>Profile</span>
+        </div>
+        <div class="step-node" id="step-node-3">
+          <div class="step-circle">3</div>
+          <span>CNIC</span>
+        </div>
+        <div class="step-node" id="step-node-4">
+          <div class="step-circle">4</div>
+          <span>Screening</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: Google Sign-In -->
+      <section id="step-1" class="step-content active">
+        <div style="text-align: center; margin-bottom: var(--space-xl);">
+          <div style="font-size: 42px; margin-bottom: var(--space-sm);">🛡️</div>
+          <h2>Join the Emergency Registry</h2>
+          <p>Sign in with your Google account to create your verified donor profile. No phone OTP required.</p>
+        </div>
+
+        <button type="button" id="google-signin-btn" class="google-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div style="margin-top: var(--space-lg); text-align: center; font-size: 12px; color: var(--text-muted);">
+          By continuing, you agree to Alkhidmat Foundation's voluntary donation guidelines and privacy protocol.
+        </div>
+      </section>
+
+      <!-- STEP 2: Profile Details -->
+      <section id="step-2" class="step-content">
+        <h2>Personal & Blood Profile</h2>
+        <p>Tell us your blood group so we only dispatch alerts relevant to your biological compatibility.</p>
+
+        <form id="profile-form">
+          <div class="form-group">
+            <label class="form-label" for="donor-fullname">Full Name *</label>
+            <input type="text" id="donor-fullname" class="form-input" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+            <div class="form-group">
+              <label class="form-label" for="donor-blood-group">Blood Group *</label>
+              <select id="donor-blood-group" class="form-select" required>
+                <option value="O+">O+ (Common)</option>
+                <option value="O-">O- (Universal Red Cells)</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+ (Universal Plasma)</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="donor-age">Age (Years) *</label>
+              <input type="number" id="donor-age" class="form-input" min="18" max="65" value="24" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="donor-gender">Gender *</label>
+            <select id="donor-gender" class="form-select">
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="O">Other</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top: var(--space-md);">Next: CNIC Verification →</button>
+        </form>
+      </section>
+
+      <!-- STEP 3: CNIC Validation -->
+      <section id="step-3" class="step-content">
+        <h2>CNIC Identity Verification</h2>
+        <p>Your 13-digit Pakistani CNIC is validated and encrypted using AES-256 vault protection (NFR 2.1). Plain numbers are never exposed publicly.</p>
+
+        <form id="cnic-form">
+          <div class="form-group">
+            <label class="form-label" for="cnic-input">Pakistani CNIC (13 digits) *</label>
+            <input type="text" id="cnic-input" class="form-input" placeholder="42101-1234567-1" maxlength="15" required>
+            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+              <span id="cnic-hint" style="font-size: 11px; color: var(--text-muted);">Format: 5 digits - 7 digits - 1 digit</span>
+              <span id="cnic-province-tag" style="font-size: 11px; font-weight: 600; color: var(--primary-red);"></span>
+            </div>
+          </div>
+
+          <label class="form-label">CNIC Document Photos (Front & Back)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
+            <div class="card" id="front-upload-box" style="border: 2px dashed var(--border-color-strong); text-align: center; padding: 14px 8px; cursor: pointer; background: var(--bg-canvas);">
+              <input type="file" id="cnic-front-file" accept="image/*,.pdf" style="display: none;">
+              <div id="front-placeholder">
+                <div style="font-size: 24px; margin-bottom: 4px;">🪪</div>
+                <strong style="font-size: 12px; display: block;">Front Side</strong>
+                <span style="font-size: 10.5px; color: var(--text-muted);">Tap to upload photo</span>
+              </div>
+              <img id="front-preview-img" style="display: none; max-width: 100%; max-height: 90px; object-fit: cover; border-radius: var(--radius-sm); margin: 0 auto;" alt="Front Preview">
+            </div>
+
+            <div class="card" id="back-upload-box" style="border: 2px dashed var(--border-color-strong); text-align: center; padding: 14px 8px; cursor: pointer; background: var(--bg-canvas);">
+              <input type="file" id="cnic-back-file" accept="image/*,.pdf" style="display: none;">
+              <div id="back-placeholder">
+                <div style="font-size: 24px; margin-bottom: 4px;">📄</div>
+                <strong style="font-size: 12px; display: block;">Back Side</strong>
+                <span style="font-size: 10.5px; color: var(--text-muted);">Tap to upload photo</span>
+              </div>
+              <img id="back-preview-img" style="display: none; max-width: 100%; max-height: 90px; object-fit: cover; border-radius: var(--radius-sm); margin: 0 auto;" alt="Back Preview">
+            </div>
+          </div>
+
+          <input type="hidden" id="cnic-front-url" value="">
+          <input type="hidden" id="cnic-back-url" value="">
+
+          <div class="card" style="background: var(--bg-canvas); padding: 10px 12px; margin-bottom: var(--space-md); border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-muted);">
+              <span>🔒</span>
+              <span>AES-256 encrypted at rest & SHA-256 hashed for duplicate protection (PRD 4.1).</span>
+            </div>
+          </div>
+
+          <button type="submit" id="cnic-submit-btn" class="btn btn-primary" style="margin-top: var(--space-xs);">Validate CNIC & Proceed →</button>
+        </form>
+      </section>
+
+      <!-- STEP 4: Pre-Screening Checklist -->
+      <section id="step-4" class="step-content">
+        <h2>Health Pre-Screening Checklist</h2>
+        <p>WHO clinical safety standards (FR 2.5) requires passing these 5 vital safety checks before joining the live dispatch pool.</p>
+
+        <form id="prescreen-form">
+          <label class="checkbox-item">
+            <input type="checkbox" id="check-weight" checked>
+            <div>
+              <strong>Body Weight >= 50 kg</strong>
+              <div style="font-size: 12px; color: var(--text-muted);">Minimum weight requirement for a safe standard 450ml donation.</div>
+            </div>
+          </label>
+
+          <label class="checkbox-item">
+            <input type="checkbox" id="check-hb" checked>
+            <div>
+              <strong>Hemoglobin >= 12.5 g/dL</strong>
+              <div style="font-size: 12px; color: var(--text-muted);">Adequate iron reserves to prevent donor fatigue or lightheadedness.</div>
+            </div>
+          </label>
+
+          <label class="checkbox-item">
+            <input type="checkbox" id="check-no-illness" checked>
+            <div>
+              <strong>No Fever / Flu in Past 14 Days</strong>
+              <div style="font-size: 12px; color: var(--text-muted);">Free from active viral, bacterial, or respiratory infections.</div>
+            </div>
+          </label>
+
+          <label class="checkbox-item">
+            <input type="checkbox" id="check-no-surgery" checked>
+            <div>
+              <strong>No Tattoos or Major Surgery in Past 6 Months</strong>
+              <div style="font-size: 12px; color: var(--text-muted);">Standard clinical deferral window protecting recipients from bloodborne risks.</div>
+            </div>
+          </label>
+
+          <button type="submit" id="finish-registration-btn" class="btn btn-success" style="margin-top: var(--space-md);">
+            Complete Registration & Activate Donor Profile ✅
+          </button>
+        </form>
+      </section>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/register.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>

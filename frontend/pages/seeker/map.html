@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <title>QATRA — Live Map & Proximity Matching</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    .map-wrapper {
+      position: relative;
+      height: calc(100vh - 125px);
+      width: 100%;
+      overflow: hidden;
+    }
+    @media (min-width: 1024px) {
+      .map-wrapper {
+        height: calc(100vh - 75px);
+      }
+    }
+    #live-map {
+      height: 100%;
+      width: 100%;
+      z-index: 10;
+    }
+    .map-controls-top {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .search-input-wrapper {
+      position: relative;
+      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-md);
+    }
+    .search-input {
+      padding-left: 38px;
+      background-color: var(--bg-surface);
+      font-size: 14px;
+      border: 1px solid var(--border-color);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+    .radius-chips-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+    .radius-chip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-full);
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+    }
+    .radius-chip.active {
+      background-color: var(--primary-red);
+      color: var(--text-white);
+      border-color: var(--primary-red);
+    }
+    .dropdown-suggestions {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-top: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+    }
+    .dropdown-item {
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+    .dropdown-item:hover {
+      background-color: var(--primary-red-subtle);
+      color: var(--primary-red);
+    }
+    .gps-btn {
+      position: absolute;
+      bottom: 240px;
+      right: 14px;
+      z-index: 20;
+      width: 44px;
+      height: 44px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform var(--transition-fast);
+    }
+    .gps-btn:active {
+      transform: scale(0.92);
+    }
+    /* Summary Sheet Card (Wireframe pg. 16) */
+    .summary-card {
+      position: absolute;
+      bottom: 16px;
+      left: 12px;
+      right: 12px;
+      z-index: 25;
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      transition: transform var(--transition-normal);
+      max-width: 516px;
+      margin: 0 auto;
+    }
+    .card-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border-color-strong);
+      border-radius: var(--radius-full);
+      margin: 0 auto var(--space-sm) auto;
+    }
+    .summary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-xs);
+    }
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-xs);
+      background: var(--bg-canvas);
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      margin: var(--space-sm) 0;
+      text-align: center;
+      font-size: 12px;
+    }
+    .metric-value {
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 14px;
+    }
+    /* Geo-Fenced Push Notification Modal (Wireframe pg. 15) */
+    .alert-modal-content {
+      border-top: 6px solid var(--primary-red);
+      text-align: center;
+    }
+    .alert-siren-icon {
+      font-size: 40px;
+      margin-bottom: var(--space-xs);
+      animation: alert-flash 1s infinite alternate;
+    }
+    @keyframes alert-flash {
+      from { transform: scale(1); filter: drop-shadow(0 0 2px red); }
+      to { transform: scale(1.15); filter: drop-shadow(0 0 10px red); }
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container wide-view">
+    <!-- Header with Logo and Responsive Desktop Navigation -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html" class="active">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/donor/eligibility.html">✅ Eligibility</a>
+        <a href="/donor/awareness.html">📚 Awareness</a>
+        <a href="/admin/drives.html">🎪 Drives</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <a href="/seeker/status.html" class="btn btn-sm btn-secondary" style="width: auto;">My Request</a>
+        <a href="/seeker/request.html" class="btn btn-sm btn-primary" style="width: auto;">+ New Request</a>
+      </div>
+    </header>
+
+    <!-- Map Container -->
+    <div class="map-wrapper">
+      <!-- Search & Radius Chips Overlay -->
+      <div class="map-controls-top">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="hospital-search-input" class="form-input search-input" placeholder="Search hospital in Karachi (JPMC, Civil, AKUH)..." autocomplete="off">
+        </div>
+        <div id="hospital-suggestions" class="dropdown-suggestions hidden"></div>
+
+        <!-- Radius Rings Toggle (FR 1.3.2) -->
+        <div class="radius-chips-bar">
+          <button class="radius-chip active" data-radius="15">All Radius (15 km)</button>
+          <button class="radius-chip" data-radius="10">10 km Zone</button>
+          <button class="radius-chip" data-radius="5">5 km Urban</button>
+        </div>
+      </div>
+
+      <!-- Leaflet Map Canvas -->
+      <div id="live-map"></div>
+
+      <!-- Live GPS Center Button -->
+      <button id="gps-center-btn" class="gps-btn" title="Center on My Location">📍</button>
+
+      <!-- Expandable Summary Sheet Card (Wireframe pg. 16) -->
+      <div id="request-summary-card" class="summary-card hidden">
+        <div class="card-handle"></div>
+        <div class="summary-header">
+          <div>
+            <h3 id="card-hospital-name" style="font-size: 15px;">Civil Hospital Karachi</h3>
+            <span id="card-urgency-badge" class="badge badge-critical">Within 2 Hours</span>
+          </div>
+          <span id="card-blood-badge" class="badge badge-blood">B+</span>
+        </div>
+
+        <div class="metrics-row">
+          <div>
+            <div class="metric-value" id="card-distance">2.4 km</div>
+            <div style="color: var(--text-muted);">Distance</div>
+          </div>
+          <div>
+            <div class="metric-value" id="card-eta">14 mins</div>
+            <div style="color: var(--text-muted);">Est. ETA</div>
+          </div>
+          <div>
+            <div class="metric-value" id="card-donors">2 units</div>
+            <div style="color: var(--text-muted);">Units Needed</div>
+          </div>
+        </div>
+
+        <div id="card-actions-row" style="display: flex; gap: var(--space-sm); margin-top: var(--space-sm);">
+          <button id="card-accept-btn" class="btn btn-primary" style="font-size: 13px;">Accept Dispatch</button>
+          <button id="card-decline-btn" class="btn btn-secondary" style="font-size: 13px; width: auto;">Decline</button>
+          <button id="card-share-btn" class="btn btn-secondary btn-sm" style="width: 44px; padding: 0;" title="Share WhatsApp">📤</button>
+        </div>
+
+        <div id="card-matched-row" class="hidden" style="margin-top: var(--space-sm);">
+          <a id="card-coordinate-btn" href="#" class="btn btn-success" style="font-size: 13px;">📞 Open Masked Coordination Screen</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Geo-Fenced Push Notification Alert Modal (Wireframe pg. 15) -->
+    <div id="proximity-alert-modal" class="modal-overlay">
+      <div class="modal-content alert-modal-content">
+        <div class="alert-siren-icon">🚨</div>
+        <h2 style="font-size: 18px; color: var(--primary-red); margin-bottom: 4px;">URGENT PROXIMITY ALERT</h2>
+        <p style="font-size: 13px; margin-bottom: var(--space-md);">An emergency blood request matches your blood group within 5 km!</p>
+
+        <div class="card card-highlight" style="text-align: left; padding: 12px; margin-bottom: var(--space-md);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span id="modal-hospital-name" style="font-weight: 700; font-size: 14px;">Civil Hospital Karachi</span>
+            <span id="modal-blood-badge" class="badge badge-blood">B+</span>
+          </div>
+          <div style="font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span>Distance: <b id="modal-distance">2.4 km away</b></span>
+            <span id="modal-urgency-badge" class="badge badge-critical">Within 2 Hours</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: var(--space-sm);">
+          <button id="modal-accept-btn" class="btn btn-primary">Accept Dispatch</button>
+          <button id="modal-decline-btn" class="btn btn-secondary" style="width: auto;">Decline</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html" class="active">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/seeker/status.html">
+        <span class="nav-icon">⏳</span>
+        <span>Status</span>
+      </a>
+      <a href="/donor/register.html">
+        <span class="nav-icon">👤</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/map.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>

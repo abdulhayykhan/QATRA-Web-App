@@ -1,0 +1,814 @@
+/* ============================================================================
+   QATRA — Apple Design System (v3.0)
+   Pure White · SF Pro Stack · iOS-grade Glass Chrome
+   Spring-ready · Reduced-motion · Accessibility-complete
+   NO DARK MODE — White theme only.
+   ============================================================================ */
+
+/* ============================================================================
+   0. FORCE WHITE — Override any inherited dark-mode tokens
+   ============================================================================ */
+
+:root {
+  color-scheme: light only;
+  --bg-canvas:   #F2F2F7;   /* iOS system grouped background */
+  --bg-surface:  #FFFFFF;
+  --bg-subtle:   #F2F2F7;
+  --text-main:   #1C1C1E;   /* iOS label */
+  --text-muted:  #8E8E93;   /* iOS secondary label */
+  --text-light:  #AEAEB2;   /* iOS tertiary label */
+  --border-color: rgba(60, 60, 67, 0.12);  /* iOS separator */
+  --border-color-strong: rgba(60, 60, 67, 0.22);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light;
+}
+
+body {
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #F2F2F7 !important;
+  color: #1C1C1E !important;
+  min-height: 100vh;
+  /* Apple's warm white canvas */
+  background-image: none !important;
+}
+
+/* ============================================================================
+   1. TYPOGRAPHY — SF Pro optical scale, tight-tracked display text
+   ============================================================================ */
+
+h1, h2, h3, h4 {
+  color: #1C1C1E !important;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  font-optical-sizing: auto;
+}
+
+h2 {
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+p {
+  line-height: 1.65;
+  letter-spacing: 0;
+  color: #3C3C43 !important;
+}
+
+/* ============================================================================
+   2. APP CONTAINER — Pure white, no outer shadows
+   ============================================================================ */
+
+.app-container {
+  background: #F2F2F7 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.app-content {
+  background: transparent !important;
+  padding-top: 20px !important;
+}
+
+@media (min-width: 1024px) {
+  .app-content { padding-top: 32px !important; }
+}
+
+/* ============================================================================
+   3. GLASS HEADER — iOS frosted glass navigation bar
+   Apple HIG: translucent + content scrolls beneath it
+   ============================================================================ */
+
+.app-header {
+  background: rgba(242, 242, 247, 0.85) !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.18) !important;
+  box-shadow: none !important;
+  /* Subtle scroll-edge gradient replaces hard border */
+  outline: none !important;
+}
+
+/* Scroll-edge gradient mask below header */
+.app-header::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.06) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.app-header .brand {
+  color: var(--primary-red) !important;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.025em;
+}
+
+/* ============================================================================
+   4. DESKTOP NAV — Refined pill-style links
+   ============================================================================ */
+
+.desktop-nav a {
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: #3C3C43 !important;
+  border-radius: 10px;
+  padding: 6px 12px;
+  transition: background 120ms ease, color 120ms ease;
+  opacity: 1;
+}
+
+.desktop-nav a:hover {
+  background: rgba(201, 42, 42, 0.08) !important;
+  color: var(--primary-red) !important;
+}
+
+.desktop-nav a.active {
+  background: rgba(201, 42, 42, 0.1) !important;
+  color: var(--primary-red) !important;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   5. GLASS BOTTOM NAV — iOS tab bar treatment
+   ============================================================================ */
+
+.bottom-nav {
+  background: rgba(249, 249, 251, 0.92) !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.18) !important;
+  box-shadow: none !important;
+  padding: 8px 4px max(12px, env(safe-area-inset-bottom)) !important;
+}
+
+.bottom-nav a {
+  color: #8E8E93 !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 12px;
+  padding: 6px 8px;
+  transition: color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav a.active {
+  color: var(--primary-red) !important;
+  background: rgba(201, 42, 42, 0.08) !important;
+}
+
+.bottom-nav .nav-icon {
+  font-size: 22px !important;
+  display: block;
+  margin-bottom: 1px;
+  transition: transform 140ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bottom-nav a.active .nav-icon {
+  transform: scale(1.12);
+}
+
+/* ============================================================================
+   6. CARDS — No borders. Shadow-only depth. iOS-style inset groups.
+   Apple uses white cards floating on a gray canvas — not bordered boxes.
+   ============================================================================ */
+
+.card {
+  background: #FFFFFF !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04) !important;
+  outline: none !important;
+  transition: transform 200ms cubic-bezier(0.25,0.46,0.45,0.94),
+              box-shadow 200ms cubic-bezier(0.25,0.46,0.45,0.94) !important;
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.09), 0 12px 32px rgba(0,0,0,0.07) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* iOS-style grouped inset card with subtle bg */
+.card[style*="background: var(--bg-subtle)"],
+.card[style*="background:var(--bg-subtle)"],
+.card[style*="background:#F"] {
+  background: #F2F2F7 !important;
+  box-shadow: none !important;
+  border: 0.5px solid rgba(60,60,67,0.12) !important;
+}
+
+/* Card accent left-border variants */
+.card-highlight { border-left: 3px solid var(--primary-red) !important; border-radius: 16px !important; }
+.card-success   { border-left: 3px solid var(--color-success) !important; border-radius: 16px !important; }
+.card-warning   { border-left: 3px solid var(--color-warning) !important; border-radius: 16px !important; }
+
+/* ============================================================================
+   7. PATH CARDS (Landing CTAs) — Large, premium, shadow-floating
+   ============================================================================ */
+
+.path-card {
+  background: #FFFFFF !important;
+  border: none !important;
+  border-radius: 20px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.05) !important;
+  outline: none !important;
+  transition: transform 200ms cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 200ms ease !important;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  padding: 20px !important;
+}
+
+.path-card:hover {
+  transform: translateY(-4px) scale(1.01) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1), 0 20px 48px rgba(0,0,0,0.08) !important;
+}
+
+.path-card:active {
+  transform: scale(0.97) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out !important;
+}
+
+.path-card.emergency {
+  background: linear-gradient(140deg, #FFF5F5 0%, #FFECEC 100%) !important;
+}
+
+/* ============================================================================
+   8. FEATURE ITEMS (Grid links) — iOS app-icon-like tiles
+   ============================================================================ */
+
+.feature-item {
+  background: #FFFFFF !important;
+  border: none !important;
+  border-radius: 18px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04) !important;
+  outline: none !important;
+  transition: transform 200ms cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 200ms ease !important;
+  padding: 18px 12px !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.feature-item:hover {
+  transform: translateY(-3px) scale(1.03) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.07) !important;
+}
+
+.feature-item:active {
+  transform: scale(0.95) !important;
+  transition: transform 60ms ease-out !important;
+}
+
+.feature-icon { font-size: 30px !important; margin-bottom: 8px !important; }
+.feature-title { font-size: 13px !important; font-weight: 600 !important; letter-spacing: -0.01em; color: #1C1C1E !important; }
+
+/* ============================================================================
+   9. BUTTONS — iOS-style. Instant pointer-down scale, spring return.
+   ============================================================================ */
+
+.btn {
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  border-radius: 12px !important;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  will-change: transform;
+  transition: background-color 120ms ease,
+              border-color 120ms ease,
+              opacity 120ms ease !important;
+}
+
+.btn:active {
+  transform: scale(0.96) !important;
+  transition: transform 70ms ease-out !important;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #D93030 0%, #C92A2A 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(201,42,42,0.28),
+              0 1px 0 rgba(255,255,255,0.15) inset !important;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #E03535 0%, #C92A2A 100%) !important;
+  box-shadow: 0 4px 16px rgba(201,42,42,0.35),
+              0 1px 0 rgba(255,255,255,0.15) inset !important;
+}
+
+.btn-secondary {
+  background: rgba(116,116,128,0.12) !important;
+  color: #1C1C1E !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.btn-secondary:hover {
+  background: rgba(116,116,128,0.18) !important;
+}
+
+.btn-outline {
+  border: 1.5px solid var(--primary-red) !important;
+  background: transparent !important;
+  color: var(--primary-red) !important;
+  box-shadow: none !important;
+}
+
+.btn-outline:hover {
+  background: rgba(201,42,42,0.06) !important;
+}
+
+.btn-sm {
+  border-radius: 10px !important;
+  font-size: 12.5px !important;
+  padding: 6px 14px !important;
+  width: auto !important;
+}
+
+/* ============================================================================
+   10. FORMS — iOS-style inputs with focus glow
+   ============================================================================ */
+
+.form-input,
+.form-select,
+.form-textarea {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(60,60,67,0.18) !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  padding: 12px 15px !important;
+  color: #1C1C1E !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #C7C7CC !important;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--primary-red) !important;
+  box-shadow: 0 0 0 4px rgba(201,42,42,0.14) !important;
+  outline: none !important;
+  background: #FFFFFF !important;
+}
+
+.form-label {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #1C1C1E !important;
+  letter-spacing: 0.01em !important;
+  margin-bottom: 6px !important;
+}
+
+/* ============================================================================
+   11. MODALS — Bottom sheet on mobile (iOS-native), center card on desktop
+   ============================================================================ */
+
+.modal-overlay {
+  background: rgba(0,0,0,0.32) !important;
+  backdrop-filter: blur(8px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(180%) !important;
+}
+
+.modal-content,
+.modal-card {
+  background: rgba(242,242,247,0.98) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
+  border: 0.5px solid rgba(255,255,255,0.8) !important;
+  outline: none !important;
+}
+
+/* Mobile: full-width bottom sheet */
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-content,
+  .modal-card {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: var(--space-lg) var(--space-md) max(var(--space-xl), env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Drag handle */
+  .modal-content::before,
+  .modal-card::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: rgba(60,60,67,0.28);
+    border-radius: 2px;
+    margin: -6px auto 16px;
+  }
+}
+
+.modal-close {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: rgba(116,116,128,0.16) !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  color: #3C3C43 !important;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.modal-close:hover {
+  background: rgba(116,116,128,0.24) !important;
+}
+
+/* ============================================================================
+   12. TOASTS — Frosted glass pill toasts
+   ============================================================================ */
+
+#toast-container {
+  top: 72px !important;
+  right: 16px !important;
+}
+
+.toast {
+  border-radius: 14px !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.005em;
+  border: 0.5px solid rgba(255,255,255,0.2) !important;
+  padding: 11px 16px !important;
+}
+
+/* ============================================================================
+   13. BADGES — iOS-style pill badges
+   ============================================================================ */
+
+.badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 100px !important;
+  padding: 3px 10px !important;
+}
+
+.badge-blood {
+  font-size: 13px !important;
+  letter-spacing: -0.01em !important;
+  padding: 4px 12px !important;
+  background: rgba(201,42,42,0.1) !important;
+  color: #821515 !important;
+  border: 0.5px solid rgba(201,42,42,0.18) !important;
+}
+
+/* ============================================================================
+   14. PROGRESS BARS — Thin, gradient, rounded
+   ============================================================================ */
+
+.progress-bar-container {
+  height: 5px !important;
+  background: rgba(116,116,128,0.14) !important;
+  border-radius: 100px !important;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  border-radius: 100px !important;
+  background: linear-gradient(90deg, var(--primary-red), #E05555) !important;
+  transition: width 0.7s cubic-bezier(0.25,0.46,0.45,0.94) !important;
+}
+
+.progress-bar-fill.success {
+  background: linear-gradient(90deg, var(--color-success), #44C068) !important;
+}
+
+/* ============================================================================
+   15. HERO SECTION — Clean white hero with large display type
+   ============================================================================ */
+
+.hero-section {
+  background: #FFFFFF !important;
+  border-radius: 0 0 24px 24px !important;
+  padding: 48px 24px 36px !important;
+  margin-bottom: 8px !important;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+/* Subtle top-right glow */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(201,42,42,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-logo-img {
+  height: 80px !important;
+  width: auto !important;
+  filter: drop-shadow(0 4px 16px rgba(201,42,42,0.22)) !important;
+  animation: qatra-hero-in 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards !important;
+  display: block !important;
+  margin: 0 auto var(--space-sm) !important;
+}
+
+@keyframes qatra-hero-in {
+  from { opacity: 0; transform: scale(0.65) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+
+.hero-title {
+  font-size: clamp(2.4rem, 6vw, 4rem) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 0.98 !important;
+  /* iOS-style gradient text */
+  background: linear-gradient(145deg, #C92A2A 0%, #8B1111 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  margin: 0 0 8px !important;
+}
+
+.hero-tagline {
+  font-size: clamp(0.9rem, 2.2vw, 1.05rem) !important;
+  line-height: 1.55 !important;
+  letter-spacing: 0 !important;
+  color: #8E8E93 !important;
+  max-width: 520px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* ============================================================================
+   16. PWA INSTALL BANNER — iOS-style action card
+   ============================================================================ */
+
+.pwa-install-banner {
+  background: rgba(255,255,255,0.96) !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  border: 0.5px solid rgba(60,60,67,0.12) !important;
+  border-left: 3px solid var(--primary-red) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06) !important;
+  border-radius: 18px !important;
+}
+
+/* ============================================================================
+   17. GOOGLE SIGN-IN BUTTON
+   ============================================================================ */
+
+.google-btn {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(60,60,67,0.18) !important;
+  border-radius: 12px !important;
+  color: #1C1C1E !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+  transition: background 120ms ease, box-shadow 120ms ease !important;
+}
+
+.google-btn:hover {
+  background: #F9F9F9 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+.google-btn:active {
+  transform: scale(0.98) !important;
+  transition: transform 70ms ease-out !important;
+}
+
+/* ============================================================================
+   18. SCROLLBAR — Minimal, macOS-style thin overlay
+   ============================================================================ */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(60,60,67,0.18);
+  border-radius: 100px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(60,60,67,0.30);
+}
+
+/* ============================================================================
+   19. FOCUS & SELECTION — Brand-colored keyboard focus ring
+   ============================================================================ */
+
+:focus-visible {
+  outline: 2.5px solid var(--primary-red) !important;
+  outline-offset: 3px !important;
+  border-radius: 8px !important;
+}
+
+::selection {
+  background: rgba(201,42,42,0.18);
+  color: #1C1C1E;
+}
+
+/* ============================================================================
+   20. REDUCED MOTION — Opacity fades only, no springs or slides
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-logo-img {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .card, .path-card, .feature-item,
+  .btn, .bottom-nav a, .desktop-nav a,
+  .modal-content, .modal-card, .toast {
+    transition: opacity 180ms ease, background-color 180ms ease,
+                border-color 180ms ease !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .btn:active, .path-card:active, .feature-item:active {
+    transform: none !important;
+    opacity: 0.7 !important;
+  }
+}
+
+/* ============================================================================
+   21. REDUCED TRANSPARENCY — Solid surfaces
+   ============================================================================ */
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-header {
+    background: #F2F2F7 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-bottom: 1px solid rgba(60,60,67,0.2) !important;
+  }
+
+  .bottom-nav {
+    background: #F9F9FB !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-top: 1px solid rgba(60,60,67,0.18) !important;
+  }
+
+  .modal-overlay {
+    background: rgba(0,0,0,0.5) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .modal-content, .modal-card {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(60,60,67,0.18) !important;
+  }
+
+  .toast {
+    backdrop-filter: none !important;
+    background: #1C1C1E !important;
+  }
+}
+
+/* ============================================================================
+   22. INLINE STYLE OVERRIDES — Target per-page inline styles that fight apple.css
+   ============================================================================ */
+
+/* Feed tabs — iOS segment control */
+.feed-tabs-container,
+[class*="tabs-container"] {
+  background: rgba(116,116,128,0.12) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 3px !important;
+}
+
+/* Active tab pill */
+.feed-tab-btn.active,
+[class*="tab-btn"].active {
+  background: #FFFFFF !important;
+  color: var(--primary-red) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.06) !important;
+  border-radius: 8px !important;
+}
+
+/* Search inputs */
+.search-filter-input,
+[class*="search-input"] {
+  background: rgba(116,116,128,0.1) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+}
+
+.search-filter-input:focus,
+[class*="search-input"]:focus {
+  background: #FFFFFF !important;
+  box-shadow: 0 0 0 3.5px rgba(201,42,42,0.16) !important;
+  border: none !important;
+}
+
+/* Filter chips — iOS-style pills */
+.filter-chip,
+[class*="chip"] {
+  border-radius: 100px !important;
+  border: none !important;
+  background: rgba(116,116,128,0.1) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  padding: 6px 14px !important;
+}
+
+/* Wizard / step progress bars */
+.step-progress,
+.wizard-progress,
+[class*="progress"] {
+  background: rgba(116,116,128,0.12) !important;
+  border-radius: 100px !important;
+}
+
+/* Admin table rows */
+table {
+  border-radius: 12px !important;
+  overflow: hidden;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  background: rgba(242,242,247,0.9) !important;
+  color: #8E8E93 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  border-bottom: 0.5px solid rgba(60,60,67,0.14) !important;
+}
+
+tbody tr {
+  background: #FFFFFF !important;
+  border-bottom: 0.5px solid rgba(60,60,67,0.1) !important;
+  transition: background 100ms ease;
+}
+
+tbody tr:hover {
+  background: rgba(201,42,42,0.03) !important;
+}
+
+tbody tr:last-child {
+  border-bottom: none !important;
+}
+
+tbody td {
+  color: #1C1C1E !important;
+}

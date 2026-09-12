@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <title>QATRA — Donor Matchmaker & Masked Call</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+  <style>
+    .match-header-card {
+      background: linear-gradient(180deg, var(--primary-red-subtle) 0%, var(--bg-surface) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      margin-bottom: var(--space-md);
+    }
+    .pulse-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--primary-red-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-md) auto;
+      font-size: 32px;
+      animation: pulse 1.5s infinite;
+    }
+    .status-steps {
+      display: flex;
+      justify-content: space-between;
+      margin: var(--space-md) 0;
+      position: relative;
+    }
+    .status-steps::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 20px;
+      right: 20px;
+      height: 2px;
+      background: var(--border-color);
+      z-index: 1;
+    }
+    .donor-match-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .proxy-call-box {
+      background: var(--bg-surface);
+      border: 2px solid var(--color-success);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      margin-top: var(--space-md);
+      animation: fadeIn 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with Logo and Responsive Desktop Navigation -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html" class="active">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/donor/eligibility.html">✅ Eligibility</a>
+        <a href="/donor/awareness.html">📚 Awareness</a>
+        <a href="/admin/drives.html">🎪 Drives</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <span class="badge badge-critical" id="match-urgency-tag">Searching</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <div class="form-container-md">
+      <!-- Radar Status Card -->
+      <div class="match-header-card">
+        <div class="pulse-ring" id="radar-icon">📡</div>
+        <h2 id="radar-title" style="margin-bottom: 2px;">Searching Nearby Donors...</h2>
+        <p id="radar-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">
+          Scanning 5km to 15km radius rings in Karachi for compatible blood types.
+        </p>
+
+        <div style="display: flex; justify-content: space-around; font-size: 12px; background: var(--bg-canvas); padding: 10px; border-radius: var(--radius-md);">
+          <div>
+            <div style="font-size: 16px; font-weight: 700;" id="stat-alerted">8</div>
+            <div style="color: var(--text-muted);">Donors Alerted</div>
+          </div>
+          <div>
+            <div style="font-size: 16px; font-weight: 700;" id="stat-accepted">1</div>
+            <div style="color: var(--text-muted);">Accepted</div>
+          </div>
+          <div>
+            <div style="font-size: 16px; font-weight: 700;" id="stat-radius">10 km</div>
+            <div style="color: var(--text-muted);">Scan Radius</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Responding Donors List -->
+      <h3 style="font-size: 14px; margin-bottom: var(--space-sm);">Matched Donors En Route</h3>
+      <div id="matched-donors-list">
+        <div class="donor-match-card">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 28px;">🚗</div>
+            <div>
+              <strong style="font-size: 14px;">Anonymous Donor #D-402</strong>
+              <div style="font-size: 12px; color: var(--text-muted);">
+                📍 3.4 km away • ⏱️ ETA: ~14 mins
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-success" id="call-proxy-btn" style="width: auto;">
+            📞 Masked Call
+          </button>
+        </div>
+      </div>
+
+      <!-- Masked Proxy Contact Dialog -->
+      <div id="proxy-call-container" class="proxy-call-box" style="display: none;">
+        <div style="font-size: 32px; margin-bottom: 4px;">🛡️</div>
+        <h3>Privacy-Preserving Contact (NFR 2.3)</h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: var(--space-md);">
+          Neither party's personal phone number is revealed. Calls route via Alkhidmat's secure virtual bridge.
+        </p>
+
+        <div style="background: var(--bg-canvas); padding: 12px; border-radius: var(--radius-md); font-family: monospace; font-size: 18px; font-weight: 700; color: var(--color-success); margin-bottom: var(--space-sm);" id="proxy-virtual-number">
+          +92-21-3000-0000
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: var(--space-md);" id="proxy-timer">
+          Session expires in: 9 mins 58 secs
+        </div>
+
+        <div style="display: flex; gap: var(--space-sm);">
+          <a href="tel:+922130000000" class="btn btn-success" style="flex: 1;">Dial Virtual Bridge 📞</a>
+          <button id="close-proxy-btn" class="btn btn-secondary btn-sm" style="width: 80px;">Done</button>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div style="margin-top: var(--space-lg);">
+        <a href="/donor/confirm.html" class="btn btn-outline" style="text-align: center;">
+          Mark Donation Complete & Close Request ✅
+        </a>
+      </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html" class="active">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/match.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>

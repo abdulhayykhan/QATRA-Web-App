@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <title>QATRA — Security & Compliance Audit Trail</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+  <style>
+    .audit-table-wrapper {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+    table.audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    table.audit-table th {
+      background: var(--bg-canvas);
+      padding: 12px 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+    }
+    table.audit-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    table.audit-table tr:hover {
+      background: var(--bg-subtle);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container wide-view">
+    <!-- Header with Logo and Responsive Desktop Navigation -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/admin/verification.html">🛡️ Verification Desk</a>
+        <a href="/admin/drives.html">🎪 Drives Desk</a>
+        <a href="/admin/audit.html" class="active">🔒 Audit Trail</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <button id="refresh-audit-btn" class="btn btn-sm btn-secondary" style="width: auto;">🔄 Refresh</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <div style="margin-bottom: var(--space-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-sm);">
+        <div>
+          <h2>Tamper-Evident Access Logs</h2>
+          <p style="font-size: 13px; margin-bottom: 0;">Logs all CNIC, hospital slip, and biometric/health screening access events.</p>
+        </div>
+        <div>
+          <span class="badge badge-success">AES-256 Vault Protected 🔒</span>
+        </div>
+      </div>
+
+      <div class="audit-table-wrapper">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Resource</th>
+              <th>Target ID</th>
+              <th>User ID</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="audit-table-body">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                Fetching audit compliance records...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/admin-audit.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>

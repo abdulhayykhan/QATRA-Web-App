@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">`n  <meta name="color-scheme" content="light">
+  <title>QATRA — Alkhidmat 24/7 Verification Queue</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+  <style>
+    .queue-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+    @media (min-width: 768px) {
+      .queue-layout {
+        grid-template-columns: 340px 1fr;
+      }
+    }
+    .queue-list {
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .queue-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .queue-card:hover, .queue-card.selected {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+    }
+    .detail-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    .slip-viewer-box {
+      width: 100%;
+      min-height: 320px;
+      max-height: 520px;
+      background: #1A1A1A;
+      border-radius: var(--radius-md);
+      margin: var(--space-md) 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .slip-image-view {
+      max-width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+      display: block;
+    }
+    .slip-frame-view {
+      width: 100%;
+      height: 480px;
+      border: none;
+      background: #fff;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: var(--space-md);
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      max-width: 480px;
+      width: 100%;
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-lg);
+      animation: fadeIn 0.2s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container wide-view">
+    <!-- Header with Logo and Responsive Desktop Navigation -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/admin/verification.html" class="active">🛡️ Verification Desk</a>
+        <a href="/admin/drives.html">🎪 Drives Desk</a>
+        <a href="/admin/audit.html">🔒 Audit Trail</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <span class="badge badge-critical" id="pending-count-badge">0 Pending</span>
+        <div id="admin-user-info" style="font-size: 12px; color: var(--text-muted); display: none;"></div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <div class="queue-layout">
+        <!-- Left: Queue Item List -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+            <h3 style="font-size: 14px;">Escalation Queue (<span id="queue-header-count">0</span>)</h3>
+            <button id="refresh-queue-btn" class="btn btn-sm btn-secondary" style="width: auto;">🔄 Refresh</button>
+          </div>
+          <div id="queue-items-list" class="queue-list">
+            <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading pending queue...</div>
+          </div>
+        </div>
+
+        <!-- Right: Detail & Verification Panel -->
+        <div id="detail-panel" class="detail-panel">
+          <div id="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            <div style="font-size: 40px; margin-bottom: 8px;">📋</div>
+            <p>Select a pending hospital slip from the queue on the left to inspect doctor stamp, MRN, and patient requisition.</p>
+          </div>
+
+          <div id="detail-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h2 id="detail-hospital-name" style="margin-bottom: 2px;">Civil Hospital Karachi</h2>
+                <div style="font-size: 13px; color: var(--text-muted);">
+                  Patient: <strong id="detail-patient-name" style="color: var(--text-main);">Zainab Bibi</strong>
+                  <span style="margin: 0 4px;">•</span>
+                  <span>Request #<strong id="detail-request-id">102</strong></span>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <span id="detail-blood-badge" class="badge badge-blood">O-</span>
+                <div style="font-size: 11px; margin-top: 4px;" id="detail-urgency">Critical (2h)</div>
+              </div>
+            </div>
+
+            <!-- OCR Confidence Meter -->
+            <div style="margin-top: var(--space-md); padding: 12px; background: var(--bg-canvas); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span style="font-weight: 600;">Automated OCR Confidence Score:</span>
+                <strong id="detail-confidence-text" style="color: var(--color-warning);">78%</strong>
+              </div>
+              <div class="progress-bar-container" style="height: 8px; background: var(--border-color); border-radius: var(--radius-full); overflow: hidden;">
+                <div class="progress-bar-fill" id="detail-confidence-fill" style="width: 78%; height: 100%; background-color: var(--color-warning);"></div>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;" id="detail-confidence-explanation">
+                ⚠️ Flagged for manual Desk Lead verification because OCR confidence is below the 85% safety threshold (FR 2.2.3).
+              </div>
+            </div>
+
+            <!-- Document Image/PDF Viewer Container -->
+            <div class="slip-viewer-box" id="slip-viewer-box">
+              <div id="viewer-loading" style="color: #bbb; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                <span>Document fetching from secure vault... ⏳</span>
+              </div>
+              <img id="detail-slip-img" class="slip-image-view" src="" alt="Hospital Slip Document" style="display: none;">
+              <iframe id="detail-slip-frame" class="slip-frame-view" style="display: none;"></iframe>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: -6px; margin-bottom: var(--space-md);">
+              <span style="font-size: 11px; color: var(--text-muted);">🔒 Document streamed via authenticated vault bearer protocol</span>
+              <a id="btn-open-fullscreen" href="#" target="_blank" class="btn btn-sm btn-outline" style="font-size: 11.5px; width: auto; display: none;">
+                🔍 View Full Size
+              </a>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: var(--space-md);">
+              <button id="approve-btn" class="btn btn-success" style="flex: 1;">
+                ✅ Approve & Broadcast to Donors
+              </button>
+              <button id="reject-btn" class="btn btn-outline" style="border-color: var(--color-danger); color: var(--color-danger); flex: 1;">
+                ❌ Reject as Invalid
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Review Confirmation Modal -->
+    <div id="admin-review-modal" class="modal-overlay">
+      <div class="modal-card">
+        <h3 id="modal-title" style="font-size: 16px; margin-bottom: var(--space-xs);">Review Admission Slip</h3>
+        <p id="modal-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">
+          Please document your verification audit notes before broadcasting.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="review-notes-input">Desk Lead Audit Notes *</label>
+          <textarea id="review-notes-input" class="form-input" rows="3" placeholder="e.g. Doctor stamp and MRN verified via hospital directory."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: var(--space-sm); margin-top: var(--space-md);">
+          <button id="modal-cancel-btn" type="button" class="btn btn-secondary" style="width: auto;">Cancel</button>
+          <button id="modal-confirm-btn" type="button" class="btn btn-primary" style="width: auto;">Confirm Action</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Authentication Gate Modal -->
+    <div id="admin-gate-modal" class="modal-overlay">
+      <div class="modal-card" style="text-align: center;">
+        <div style="font-size: 40px; margin-bottom: 8px;">🛡️</div>
+        <h3 style="font-size: 18px; margin-bottom: 4px;">Alkhidmat Desk Access Required</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-lg);">
+          The 24/7 Verification Queue is restricted strictly to authorized Alkhidmat Foundation Desk Leads and System Administrators.
+        </p>
+        <button id="btn-admin-login" type="button" class="btn btn-primary" style="width: 100%; margin-bottom: var(--space-sm);">
+          Sign In as Alkhidmat Desk Lead
+        </button>
+        <a href="/index.html" class="btn btn-secondary" style="width: 100%; text-decoration: none;">
+          Return to Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/admin-verification.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>
