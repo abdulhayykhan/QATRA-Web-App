@@ -6,6 +6,9 @@
 *.key
 *.cert
 secrets.json
+*service_account*.json
+*service-account*.json
+*firebase*.json
 
 # Python
 __pycache__/
@@ -87,5 +90,8 @@ Thumbs.db
 *.sublime-workspace
 *.sublime-project
 *.swp
-*.swo
 *~
+
+# Uploaded Media & Documents
+media/
+

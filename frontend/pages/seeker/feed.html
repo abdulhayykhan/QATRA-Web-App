@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Real-Time Blood Appeals & Awareness Feed</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    /* Feed Screen Styles (PRD Section 5 & Wireframe pg 22) */
+    .feed-header-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .feed-tabs-container {
+      display: flex;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-full);
+      padding: 4px;
+      margin-bottom: var(--space-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .feed-tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+    }
+
+    .feed-tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--primary-red);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-filter-bar {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    .search-filter-input {
+      flex: 1;
+      padding: 8px 14px;
+      font-size: 13px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color-strong);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .search-filter-input:focus {
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 2px var(--primary-red-light);
+    }
+
+    .filter-chips-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: var(--space-md);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .filter-chips-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip-btn {
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-color-strong);
+      background: var(--bg-surface);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .chip-btn:hover {
+      border-color: var(--primary-red);
+    }
+
+    .chip-btn.active {
+      background: var(--primary-red);
+      color: #FFFFFF;
+      border-color: var(--primary-red);
+    }
+
+    .skeleton-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      animation: skeleton-pulse 1.4s infinite ease-in-out;
+    }
+
+    @keyframes skeleton-pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 0.3; }
+      100% { opacity: 0.6; }
+    }
+
+    .skeleton-line {
+      height: 12px;
+      background: var(--border-color-strong);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+
+    /* Awareness Section Grid */
+    .awareness-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .awareness-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: transform var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .awareness-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-red);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .awareness-card-icon {
+      font-size: 26px;
+      margin-bottom: 4px;
+    }
+
+    .awareness-card-title {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .awareness-card-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" style="text-decoration: none; font-size: 18px; color: var(--text-main);" title="Back to Home">←</a>
+        <div>
+          <span class="feed-header-title">Live Appeals & Feed</span>
+          <div style="font-size: 11px; color: var(--text-muted);">Real-time emergency blood requests</div>
+        </div>
+      </div>
+      <a href="/seeker/request.html" class="btn btn-sm btn-primary" style="width: auto; padding: 6px 14px;">
+        + Request
+      </a>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-content">
+      <!-- Dual Feed Tabs: Urgent vs Awareness (PRD Wireframe pg 22) -->
+      <div class="feed-tabs-container">
+        <button type="button" class="feed-tab-btn active" id="tab-urgent" data-type="urgent">
+          <span>🚨</span>
+          <span>Urgent Requests</span>
+        </button>
+        <button type="button" class="feed-tab-btn" id="tab-awareness" data-type="awareness">
+          <span>🎪</span>
+          <span>Awareness & Drives</span>
+        </button>
+      </div>
+
+      <!-- Search & Filters Container (Active in Urgent tab) -->
+      <div id="urgent-filter-section">
+        <div class="search-filter-bar">
+          <input type="text" id="hospital-search-input" class="search-filter-input" placeholder="🔍 Search hospital, patient, or district...">
+        </div>
+
+        <!-- Filter Chips: Blood Groups & Urgency -->
+        <div class="filter-chips-scroll" id="blood-filter-chips">
+          <button type="button" class="chip-btn active" data-blood="">All Blood</button>
+          <button type="button" class="chip-btn" data-blood="O-">O- (Universal)</button>
+          <button type="button" class="chip-btn" data-blood="B+">B+</button>
+          <button type="button" class="chip-btn" data-blood="A+">A+</button>
+          <button type="button" class="chip-btn" data-blood="O+">O+</button>
+          <button type="button" class="chip-btn" data-blood="AB-">AB-</button>
+          <button type="button" class="chip-btn" data-blood="A-">A-</button>
+          <button type="button" class="chip-btn" data-blood="B-">B-</button>
+          <button type="button" class="chip-btn" data-blood="AB+">AB+</button>
+          <button type="button" class="chip-btn" data-urgency="within_2_hours">⚡ Critical (2h)</button>
+        </div>
+      </div>
+
+      <!-- Awareness Hub Quick Cards (Active in Awareness tab) -->
+      <div id="awareness-hub-section" style="display: none;">
+        <div class="awareness-cards-grid">
+          <a href="/donor/awareness.html" class="awareness-card">
+            <div class="awareness-card-icon">🎪</div>
+            <div class="awareness-card-title">Blood Drives</div>
+            <p class="awareness-card-subtitle">Upcoming campus & city events</p>
+          </a>
+
+          <a href="/donor/awareness.html#myths" class="awareness-card">
+            <div class="awareness-card-icon">💡</div>
+            <div class="awareness-card-title">Myths vs Facts</div>
+            <p class="awareness-card-subtitle">Evidence-based donor info</p>
+          </a>
+
+          <a href="/donor/eligibility.html" class="awareness-card">
+            <div class="awareness-card-icon">📋</div>
+            <div class="awareness-card-title">Eligibility Quiz</div>
+            <p class="awareness-card-subtitle">4-step quick screening</p>
+          </a>
+
+          <a href="/donor/awareness.html#tips" class="awareness-card">
+            <div class="awareness-card-icon">🍎</div>
+            <div class="awareness-card-title">Health & Prep</div>
+            <p class="awareness-card-subtitle">Pre and post-donation care</p>
+          </a>
+        </div>
+      </div>
+
+      <!-- Live Stream Container -->
+      <div id="feed-stream-container">
+        <!-- Skeleton place-holders initially -->
+        <div class="skeleton-card">
+          <div class="skeleton-line" style="width: 60%;"></div>
+          <div class="skeleton-line" style="width: 40%;"></div>
+          <div class="skeleton-line" style="width: 80%; height: 20px; margin-top: 12px;"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-line" style="width: 50%;"></div>
+          <div class="skeleton-line" style="width: 35%;"></div>
+          <div class="skeleton-line" style="width: 75%; height: 20px; margin-top: 12px;"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Global Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html" class="active">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/feed.js"></script>
+</body>
+</html>

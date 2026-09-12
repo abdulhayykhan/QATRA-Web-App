@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Awareness Library & Blood Drives</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .search-bar-wrapper {
+      margin-bottom: var(--space-md);
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border: 1px solid var(--border-color-strong);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: var(--bg-surface);
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+    .search-input:focus {
+      border-color: var(--primary-red);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    .category-pills {
+      display: flex;
+      gap: var(--space-xs);
+      overflow-x: auto;
+      padding-bottom: var(--space-sm);
+      margin-bottom: var(--space-md);
+      scrollbar-width: none;
+    }
+    .category-pills::-webkit-scrollbar {
+      display: none;
+    }
+    .cat-pill {
+      padding: 7px 15px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color-strong);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+    .cat-pill:hover {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+    }
+    .cat-pill.active {
+      background: var(--primary-red);
+      color: #fff;
+      border-color: var(--primary-red);
+    }
+    .myth-fact-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: var(--space-md);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-fast);
+    }
+    .myth-fact-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .myth-box {
+      background: var(--primary-red-subtle);
+      border-left: 4px solid var(--primary-red);
+      padding: 12px 16px;
+      font-size: 14px;
+    }
+    .fact-box {
+      background: var(--color-success-light);
+      border-left: 4px solid var(--color-success);
+      padding: 12px 16px;
+      font-size: 14px;
+    }
+    .article-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-fast);
+    }
+    .article-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .event-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: var(--border-color);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary-red);
+      border-radius: var(--radius-full);
+      transition: width var(--transition-normal);
+    }
+    .registration-card {
+      border-left: 4px solid var(--color-info);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/donor/dashboard.html" style="text-decoration: none; font-size: 18px; color: var(--text-main);">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Awareness Library & Drives</span>
+      </div>
+      <a href="/donor/eligibility.html" class="badge badge-standard" style="text-decoration: none; font-size: 11px;">
+        Quiz 🩺
+      </a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Search Input -->
+      <div class="search-bar-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" class="search-input" placeholder="Search myths, health guides, or campus drives...">
+      </div>
+
+      <!-- Category Pills -->
+      <div class="category-pills" id="category-pills">
+        <div class="cat-pill active" data-cat="">All Content</div>
+        <div class="cat-pill" data-cat="myths_facts">💡 Myths vs Facts</div>
+        <div class="cat-pill" data-cat="basics">🩸 Donation 101</div>
+        <div class="cat-pill" data-cat="health_prep">🥗 Prep & Diet</div>
+        <div class="cat-pill" data-cat="cultural">🤝 Cultural & Gender</div>
+        <div class="cat-pill" data-cat="events">🎪 Campus Drives</div>
+        <div class="cat-pill" data-cat="my_registrations">🎟️ My Bookings</div>
+      </div>
+
+      <!-- Feed Container -->
+      <div id="awareness-container">
+        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+          Loading educational resources...
+        </div>
+      </div>
+    </main>
+
+    <!-- Event Registration Modal -->
+    <div id="register-modal" class="modal-overlay">
+      <div class="modal-content">
+        <button class="modal-close" id="modal-close-btn" aria-label="Close modal">✕</button>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <span style="font-size: 20px;">🎪</span>
+          <h3 id="modal-event-title" style="font-size: 1.15rem; font-weight: 700; margin: 0;">Blood Drive Registration</h3>
+        </div>
+        <p id="modal-event-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">
+          Confirm your slot for on-site donation or volunteer coordination.
+        </p>
+
+        <form id="event-reg-form">
+          <div class="form-group" style="margin-bottom: var(--space-md);">
+            <label class="form-label" style="font-weight: 600; font-size: 13px;">Event Date & Venue</label>
+            <div id="modal-event-details" style="font-size: 13px; background: var(--bg-canvas); padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+              Loading details...
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: var(--space-lg);">
+            <label class="form-label" for="reg-role" style="font-weight: 600; font-size: 13px;">Participate As</label>
+            <select id="reg-role" class="form-select" style="width: 100%; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border-color-strong); font-size: 14px;">
+              <option value="donor">🩸 Whole Blood Donor</option>
+              <option value="volunteer">🤝 Session Volunteer / Desk Support</option>
+            </select>
+            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
+              Volunteers assist with registrations and refreshments for donors.
+            </span>
+          </div>
+
+          <button type="submit" id="confirm-reg-btn" class="btn btn-primary" style="width: 100%;">
+            Confirm My Slot 🎟️
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/donor/awareness.html" class="active">
+        <span class="nav-icon">📚</span>
+        <span>Awareness</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/awareness.js"></script>
+</body>
+</html>

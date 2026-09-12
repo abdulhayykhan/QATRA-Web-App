@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Donor Eligibility Quiz</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .quiz-progress {
+      display: flex;
+      gap: 8px;
+      margin-bottom: var(--space-lg);
+    }
+    .quiz-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--border-color);
+      border-radius: var(--radius-full);
+      transition: background var(--transition-normal);
+    }
+    .quiz-progress-bar.active {
+      background: var(--primary-red);
+    }
+    .quiz-step {
+      display: none;
+    }
+    .quiz-step.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    .quiz-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    .radio-card-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      margin: var(--space-md) 0;
+    }
+    .radio-card {
+      border: 1.5px solid var(--border-color-strong);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      background: var(--bg-surface);
+    }
+    .radio-card:hover {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+    }
+    .radio-card input[type="radio"],
+    .radio-card input[type="checkbox"] {
+      accent-color: var(--primary-red);
+      width: 18px;
+      height: 18px;
+    }
+    .radio-card.selected {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+      font-weight: 600;
+    }
+    .result-box {
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      margin-bottom: var(--space-md);
+    }
+    .result-box.eligible {
+      background: var(--color-success-light);
+      border: 2px solid var(--color-success);
+    }
+    .result-box.warning {
+      background: var(--color-warning-light);
+      border: 2px solid var(--color-warning);
+    }
+    .result-box.deferred {
+      background: var(--color-danger-light);
+      border: 2px solid var(--color-danger);
+    }
+    .step-breakdown-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      text-align: left;
+    }
+    .step-breakdown-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+    }
+    .step-breakdown-row:last-child {
+      border-bottom: none;
+    }
+    .disclaimer-card {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-top: var(--space-md);
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/donor/dashboard.html" style="text-decoration: none; font-size: 18px; color: var(--text-main);">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Donor Eligibility Quiz</span>
+      </div>
+      <a href="/donor/awareness.html" style="font-size: 12px; color: var(--primary-red); font-weight: 600; text-decoration: none;">Library</a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Step Indicator -->
+      <div class="quiz-progress">
+        <div class="quiz-progress-bar active" id="bar-1" title="Step 1: Physical Baseline"></div>
+        <div class="quiz-progress-bar" id="bar-2" title="Step 2: Recent Health"></div>
+        <div class="quiz-progress-bar" id="bar-3" title="Step 3: Cooldown Interval"></div>
+        <div class="quiz-progress-bar" id="bar-4" title="Step 4: Clinical Outcome"></div>
+      </div>
+
+      <!-- STEP 1: Basic Demographics & Physical Baseline -->
+      <section id="step-1" class="quiz-step active">
+        <div class="quiz-card">
+          <span class="badge badge-gray" style="margin-bottom: 8px;">Step 1 of 4: Physical Baseline</span>
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">Age & Body Weight</h2>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: var(--space-md);">
+            National clinical standards mandate minimum circulating blood volume parameters to guarantee donor safety.
+          </p>
+
+          <div class="form-group" style="margin-bottom: var(--space-md);">
+            <label class="form-label" for="quiz-age" style="font-weight: 600; font-size: 13px;">Age (Years)</label>
+            <input type="number" id="quiz-age" class="form-input" min="15" max="90" value="23" placeholder="Enter age in years">
+            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">Standard voluntary donor age range is 18 to 65 years.</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: var(--space-lg);">
+            <label class="form-label" for="quiz-weight" style="font-weight: 600; font-size: 13px;">Body Weight (kg)</label>
+            <input type="number" id="quiz-weight" class="form-input" min="30" max="250" value="65" placeholder="Enter weight in kg">
+            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">Minimum requirement is 50 kg (110 lbs) for 450ml donation.</span>
+          </div>
+
+          <button type="button" id="btn-next-1" class="btn btn-primary" style="width: 100%;">Next: Health Status →</button>
+        </div>
+      </section>
+
+      <!-- STEP 2: Recent Health & Illness -->
+      <section id="step-2" class="quiz-step">
+        <div class="quiz-card">
+          <span class="badge badge-gray" style="margin-bottom: 8px;">Step 2 of 4: Health Assessment</span>
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">Recent Illness & Infection</h2>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: var(--space-md);">
+            Have you experienced fever, flu, active bacterial/viral infection, or taken antibiotics within the past 14 days?
+          </p>
+
+          <div class="radio-card-group">
+            <label class="radio-card selected" id="opt-illness-no">
+              <input type="radio" name="illness-choice" value="no" checked>
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">No, I am completely healthy</div>
+                <div style="font-size: 12px; color: var(--text-muted);">No fever, flu, or antibiotic usage in the last 14 days.</div>
+              </div>
+            </label>
+            <label class="radio-card" id="opt-illness-yes">
+              <input type="radio" name="illness-choice" value="yes">
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">Yes, recent illness or antibiotics</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Experienced fever, throat infection, dengue/flu, or took antibiotics.</div>
+              </div>
+            </label>
+          </div>
+
+          <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-md);">
+            <button type="button" id="btn-back-2" class="btn btn-secondary" style="width: 100px;">← Back</button>
+            <button type="button" id="btn-next-2" class="btn btn-primary" style="flex: 1;">Next: Cooldown Interval →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3: Donation Cooldown Interval -->
+      <section id="step-3" class="quiz-step">
+        <div class="quiz-card">
+          <span class="badge badge-gray" style="margin-bottom: 8px;">Step 3 of 4: Recovery Interval</span>
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">Donation History & 90-Day Cooldown</h2>
+          <p style="color: var(--text-muted); font-size: 14px; margin-bottom: var(--space-md);">
+            Have you donated whole blood within the last 90 days (3 months)?
+          </p>
+
+          <div class="radio-card-group">
+            <label class="radio-card selected" id="opt-cooldown-no">
+              <input type="radio" name="cooldown-choice" value="no" checked>
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">No, not within the last 90 days</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Either first-time donor or last blood donation was over 3 months ago.</div>
+              </div>
+            </label>
+            <label class="radio-card" id="opt-cooldown-yes">
+              <input type="radio" name="cooldown-choice" value="yes">
+              <div>
+                <div style="font-weight: 600; font-size: 14px;">Yes, I donated within the last 90 days</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Currently in biological recovery window for red blood cell replenishment.</div>
+              </div>
+            </label>
+          </div>
+
+          <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-md);">
+            <button type="button" id="btn-back-3" class="btn btn-secondary" style="width: 100px;">← Back</button>
+            <button type="button" id="btn-submit-quiz" class="btn btn-primary" style="flex: 1;">Evaluate My Eligibility 🩺</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 4: Results, Stepper Breakdown & Disclaimer -->
+      <section id="step-4" class="quiz-step">
+        <div id="quiz-result-card" class="result-box eligible">
+          <div id="result-icon" style="font-size: 44px; margin-bottom: 8px;">🎉</div>
+          <div id="result-summary-badge" class="badge badge-success" style="margin-bottom: 8px; font-size: 12px;">Eligible to Proceed</div>
+          <h2 id="result-status-title" style="font-size: 1.3rem; font-weight: 700; margin-bottom: 6px;">You Meet Initial Criteria!</h2>
+          <p id="result-message-text" style="font-size: 14px; color: var(--text-main); margin-bottom: var(--space-md);">
+            Based on your answers, you are clinically eligible to proceed with voluntary donation.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md);">
+            <a href="/donor/awareness.html" id="result-action-primary" class="btn btn-primary" style="text-decoration: none;">
+              Find Upcoming Blood Drives 📍
+            </a>
+            <a href="/donor/dashboard.html" id="result-action-secondary" class="btn btn-secondary" style="text-decoration: none;">
+              Return to Donor Dashboard
+            </a>
+            <button type="button" id="btn-retake-quiz" class="btn btn-subtle" style="font-size: 13px; color: var(--text-muted); background: transparent; border: none; cursor: pointer; padding: 6px;">
+              🔄 Retake Eligibility Quiz
+            </button>
+          </div>
+        </div>
+
+        <!-- Stepper Indicators & Clinical Breakdown -->
+        <div class="step-breakdown-card">
+          <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">Clinical Checklist Breakdown</h4>
+          
+          <div class="step-breakdown-row" id="breakdown-step1">
+            <span style="font-weight: 500;">Step 1: Age & Weight (18–65 yrs, ≥50 kg)</span>
+            <span id="breakdown-step1-status" style="font-weight: 600; color: var(--color-success);">✅ Passed</span>
+          </div>
+          
+          <div class="step-breakdown-row" id="breakdown-step2">
+            <span style="font-weight: 500;">Step 2: Recent Infection / Antibiotics</span>
+            <span id="breakdown-step2-status" style="font-weight: 600; color: var(--color-success);">✅ Passed</span>
+          </div>
+
+          <div class="step-breakdown-row" id="breakdown-step3">
+            <span style="font-weight: 500;">Step 3: 90-Day Biological Cooldown</span>
+            <span id="breakdown-step3-status" style="font-weight: 600; color: var(--color-success);">✅ Passed</span>
+          </div>
+        </div>
+
+        <!-- Mandatory Statutory Medical Disclaimer (FR 4.1) -->
+        <div class="disclaimer-card">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <span style="font-size: 16px;">⚖️</span>
+            <h4 style="font-size: 12px; text-transform: uppercase; font-weight: 700; color: #92400E; margin: 0;">Statutory Medical Disclaimer</h4>
+          </div>
+          <p id="result-disclaimer-text" style="font-size: 12px; color: #78350F; line-height: 1.5; margin: 0;">
+            This quiz is for preliminary screening only. Final eligibility is determined on-site by qualified medical staff in accordance with national health standards.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/donor/awareness.html">
+        <span class="nav-icon">📚</span>
+        <span>Awareness</span>
+      </a>
+      <a href="/donor/dashboard.html" class="active">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/eligibility.js"></script>
+</body>
+</html>

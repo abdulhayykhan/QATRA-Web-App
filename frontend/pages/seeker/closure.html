@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Donation Confirmation & Closure</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    /* Closure Screen Styles (Wireframe pg 11) */
+    .closure-hero {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md) var(--space-md) var(--space-md);
+    }
+
+    .shield-badge-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-full);
+      background: var(--primary-red-light);
+      color: var(--primary-red);
+      font-size: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-sm);
+    }
+
+    .fulfillment-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .blood-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      background: var(--primary-red-subtle);
+      border: 1px solid var(--primary-red-light);
+      color: var(--primary-red);
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Star Rating Component */
+    .star-rating-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: var(--space-sm) 0 var(--space-md) 0;
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 32px;
+      color: var(--border-color-strong);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    .star-btn.active, .star-btn:hover {
+      color: #FFC107;
+      transform: scale(1.15);
+    }
+
+    .feedback-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/seeker/feed.html" style="text-decoration: none; font-size: 18px; color: var(--text-main);">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Donation Confirmation</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Shield Hero Banner (Wireframe pg 11) -->
+      <section class="closure-hero">
+        <div class="shield-badge-icon">🛡️</div>
+        <h1 style="font-size: 22px; margin-bottom: 4px;">Emergency Request Complete</h1>
+        <p style="font-size: 13px; color: var(--text-muted); max-width: 320px; margin: 0 auto;">
+          Thank you for coordinating life-saving speed. Help us complete the request lifecycle.
+        </p>
+      </section>
+
+      <!-- Request Fulfillment Card (Wireframe pg 11) -->
+      <div class="fulfillment-card" id="fulfillment-summary-card">
+        <div style="display: flex; gap: var(--space-md); align-items: center;">
+          <div class="blood-circle" id="closure-blood-group">O-</div>
+          <div style="flex: 1; min-width: 0;">
+            <h3 id="closure-headline" style="font-size: 16px; margin-bottom: 2px;">2 Units Fulfilled</h3>
+            <div id="closure-hospital-name" style="font-size: 13px; color: var(--text-muted);">JPMC Karachi</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: var(--space-sm); align-items: center; margin-top: var(--space-md); padding-top: var(--space-sm); border-top: 1px solid var(--border-color);">
+          <span style="font-size: 12px; color: var(--text-muted);">🕒 Completed today</span>
+          <span style="font-size: 12px; color: var(--color-success); font-weight: 600;">✓ Verified Transfer</span>
+        </div>
+      </div>
+
+      <!-- Feedback & Speed Rating (Wireframe pg 11) -->
+      <div class="feedback-box">
+        <div style="text-align: center; margin-bottom: var(--space-sm);">
+          <h3 style="font-size: 15px; margin-bottom: 2px;">How was the response speed?</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">
+            Your feedback helps us optimize emergency alert algorithms.
+          </p>
+        </div>
+
+        <!-- 5 Star Interactive Rating -->
+        <div class="star-rating-wrap" id="star-rating-container">
+          <button type="button" class="star-btn" data-star="1">★</button>
+          <button type="button" class="star-btn" data-star="2">★</button>
+          <button type="button" class="star-btn" data-star="3">★</button>
+          <button type="button" class="star-btn" data-star="4">★</button>
+          <button type="button" class="star-btn active" data-star="5">★</button>
+        </div>
+
+        <!-- Reason for Closure (FR 3.4 & Contract 5.5) -->
+        <div class="form-group" style="margin-top: var(--space-md);">
+          <label class="form-label" for="closure-reason-select">Reason for Closure *</label>
+          <select id="closure-reason-select" class="form-select">
+            <option value="Fulfilled on-site by family donor">Fulfilled on-site by family donor</option>
+            <option value="Fulfilled via QATRA verified donor match">Fulfilled via QATRA verified donor match</option>
+            <option value="Hospital blood bank arranged required units">Hospital blood bank arranged required units</option>
+            <option value="Patient condition stabilized">Patient condition stabilized</option>
+            <option value="custom">Other (Specify below)...</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="custom-reason-wrap" style="display: none;">
+          <input type="text" id="custom-reason-input" class="form-input" placeholder="Enter closure reason...">
+        </div>
+
+        <!-- Optional Thank You Note -->
+        <div class="form-group">
+          <label class="form-label" for="thank-you-note">Optional Thank-You Note</label>
+          <textarea id="thank-you-note" class="form-textarea" rows="3" placeholder="Write a message to the donors who responded or were alerted..."></textarea>
+        </div>
+      </div>
+
+      <!-- Action Button (Wireframe pg 11) -->
+      <button type="button" id="confirm-close-btn" class="btn btn-primary" style="padding: 14px; font-size: 15px;">
+        Confirm Fulfillment & Close Request
+      </button>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/closure.js"></script>
+</body>
+</html>

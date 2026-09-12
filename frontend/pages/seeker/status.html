@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Matchmaker Dashboard & Request Status</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .status-banner {
+      background: linear-gradient(135deg, var(--primary-red-dark) 0%, var(--primary-red) 100%);
+      color: var(--text-white);
+      padding: var(--space-lg) var(--space-md);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .radar-pulse-ring {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 110px;
+      height: 110px;
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      animation: radar-spin 6s linear infinite;
+    }
+    @keyframes radar-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .radar-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-sm);
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #40C057;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #40C057;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-sm);
+      margin: var(--space-md) 0;
+    }
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px 8px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-number {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary-red);
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    /* Donor Card (Wireframe pg. 9) */
+    .donor-match-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-sm);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-fast);
+      border-left: 4px solid var(--color-success);
+    }
+    .donor-match-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    .donor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-xs);
+    }
+    .donor-id {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-main);
+    }
+    .donor-metrics {
+      display: flex;
+      gap: var(--space-md);
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: var(--space-sm) 0;
+    }
+    .expansion-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--color-warning-light);
+      color: var(--color-warning);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      margin-top: var(--space-xs);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/seeker/map.html" style="text-decoration: none; font-size: 18px;">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Matchmaker Dashboard</span>
+      </div>
+      <a href="/seeker/map.html" class="btn btn-sm btn-outline" style="width: auto;">View Map</a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Active Search Status Banner (Wireframe pg. 8) -->
+      <section class="status-banner">
+        <div class="radar-pulse-ring"></div>
+        <div class="radar-indicator">
+          <span class="pulse-dot"></span>
+          <span>REQUEST PUBLISHED &amp; GEO-SEARCH ACTIVE</span>
+        </div>
+        <h1 style="color: var(--text-white); font-size: 20px; margin-bottom: 2px;" id="patient-name-display">
+          Loading Emergency Request...
+        </h1>
+        <p style="color: rgba(255,255,255,0.85); font-size: 13px; margin-bottom: var(--space-xs);" id="hospital-name-display">
+          Karachi Emergency Department
+        </p>
+        <div style="display: flex; gap: var(--space-sm); align-items: center;">
+          <span id="blood-group-badge" class="badge" style="background: white; color: var(--primary-red); font-size: 14px;">B+</span>
+          <span id="urgency-tier-badge" class="badge" style="background: rgba(255,255,255,0.25); color: white;">Within 2 Hours</span>
+        </div>
+      </section>
+
+      <!-- Fulfillment Progress Card -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-weight: 600; font-size: 13px;">Units Fulfillment Progress</span>
+          <span id="units-ratio-text" style="font-weight: 700; font-size: 13px; color: var(--primary-red);">0 / 2 Units</span>
+        </div>
+        <div class="progress-bar-container">
+          <div id="units-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+        <div id="radius-expansion-notice" class="expansion-badge">
+          <span>📡 Current Search Radius:</span> <b id="current-radius-text">10.0 km</b>
+        </div>
+      </div>
+
+      <!-- Real-Time Metrics Row -->
+      <div class="status-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="alerted-donors-count">0</div>
+          <div class="stat-label">Donors Alerted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="accepted-donors-count">0</div>
+          <div class="stat-label">Responses</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="closest-eta">--</div>
+          <div class="stat-label">Est. ETA</div>
+        </div>
+      </div>
+
+      <!-- Proximity-Ranked Matching Donors (Wireframe pg. 9) -->
+      <section style="margin-top: var(--space-md);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+          <h2 style="font-size: 15px; margin-bottom: 0;">Incoming Responding Donors</h2>
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Proximity-Ranked</span>
+        </div>
+
+        <!-- Donor Cards Container -->
+        <div id="donors-list-container">
+          <div class="card" style="text-align: center; padding: var(--space-lg); color: var(--text-muted);">
+            <div style="font-size: 32px; margin-bottom: var(--space-xs);">📡</div>
+            <p style="font-size: 13px; margin-bottom: 0;">Scanning eligible donors within active radius rings...<br>Targeted push notifications dispatched.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-lg);">
+        <button id="whatsapp-share-btn" class="btn btn-outline">
+          <span>📤 Share Appeal via WhatsApp Broadcast</span>
+        </button>
+        <button id="close-request-btn" class="btn btn-secondary" style="color: var(--text-muted); font-size: 13px;">
+          Close Request Override
+        </button>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/seeker/status.html" class="active">
+        <span class="nav-icon">⏳</span>
+        <span>Status</span>
+      </a>
+      <a href="/donor/register.html">
+        <span class="nav-icon">👤</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/status.js"></script>
+</body>
+</html>
