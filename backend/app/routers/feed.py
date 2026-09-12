@@ -159,6 +159,17 @@ def get_feed(
         for ev in events:
             items.append(format_event_as_feed_item(ev))
 
+    # Unified ranking: Within 2 hours priority first, then newest first
+    def get_feed_sort_key(item: FeedItemResponse):
+        is_urgent_2h = item.urgency == "within_2_hours"
+        created = item.created_at
+        if created and created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        ts = created.timestamp() if created else 0.0
+        return (0 if is_urgent_2h else 1, -ts)
+
+    items.sort(key=get_feed_sort_key)
+
     total = len(items)
     start = (page - 1) * limit
     end = start + limit
@@ -170,6 +181,7 @@ def get_feed(
         limit=limit,
         items=paginated_items,
     )
+
 
 
 # ==============================================================================
