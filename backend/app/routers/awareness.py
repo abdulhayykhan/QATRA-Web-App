@@ -5,8 +5,9 @@ Reference:
 - PRD Section 6 (Awareness Sessions & Eligibility Module)
 - API Contract Section 6
 """
+import json
 from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -14,8 +15,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db, engine
 from app.core.security import get_current_user, require_role
 from app.models.user import User
+from app.models.donor import Donor
 from app.models.event import Event, Registration
-from app.models.awareness import AwarenessContent
+from app.models.awareness import AwarenessContent, HealthFeedback
 from app.services.audit import log_audit_event
 from app.schemas.awareness import (
     EligibilityCheckRequest,
@@ -28,10 +30,13 @@ from app.schemas.awareness import (
     EventRegistrationRequest,
     EventRegistrationResponse,
     UserRegistrationListItem,
+    HealthFeedbackResponse,
+    HealthFeedbackCreateRequest,
 )
 
-# Ensure database table exists in Supabase PostgreSQL
+# Ensure database tables exist in Supabase PostgreSQL
 AwarenessContent.__table__.create(bind=engine, checkfirst=True)
+HealthFeedback.__table__.create(bind=engine, checkfirst=True)
 
 router = APIRouter(tags=["Awareness & Eligibility"])
 
@@ -747,3 +752,139 @@ async def get_event_attendees(
         })
 
     return roster
+
+
+# ==============================================================================
+# 6.5 Post-Donation Health Feedback Endpoints (FR 4.4)
+# ==============================================================================
+
+DEFAULT_POST_DONATION_INSTRUCTIONS = [
+    "Drink plenty of fluids (water, juices, electrolytes) over the next 24-48 hours.",
+    "Avoid strenuous physical exercise, heavy lifting, or gym workouts for the rest of the day.",
+    "Keep the venipuncture bandage dry and intact for at least 4 hours.",
+    "Eat iron-rich meals (spinach, lentils, red meat, dried fruits) to accelerate hemoglobin regeneration.",
+    "If you experience lightheadedness, sit down immediately with your head lowered or lie flat with feet elevated.",
+]
+
+
+@router.get(
+    "/donor/health-feedback",
+    response_model=HealthFeedbackResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retrieve Post-Donation Health Feedback & Guidelines",
+    description="Retrieves post-donation health instructions, screening outcomes, and 90-day cooldown status for authenticated donor.",
+)
+async def get_donor_health_feedback(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> HealthFeedbackResponse:
+    """Fetch post-donation guidelines and screening status for authenticated user."""
+    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    if not donor:
+        return HealthFeedbackResponse(
+            last_donation_date=None,
+            screening_outcome="Pending First Donation",
+            post_donation_instructions=DEFAULT_POST_DONATION_INSTRUCTIONS,
+            next_eligible_date=None,
+            donation_count=0,
+        )
+
+    latest_feedback = (
+        db.query(HealthFeedback)
+        .filter(HealthFeedback.donor_id == donor.id)
+        .order_by(HealthFeedback.donation_date.desc())
+        .first()
+    )
+
+    instructions = DEFAULT_POST_DONATION_INSTRUCTIONS
+    screening_outcome = "Passed" if donor.pre_screening_passed else "Pending"
+    last_donation = donor.last_donation_date
+
+    if latest_feedback:
+        screening_outcome = latest_feedback.screening_outcome
+        if latest_feedback.instructions:
+            try:
+                parsed = json.loads(latest_feedback.instructions)
+                if isinstance(parsed, list):
+                    instructions = parsed
+            except Exception:
+                instructions = [latest_feedback.instructions]
+        if latest_feedback.donation_date:
+            last_donation = latest_feedback.donation_date
+
+    return HealthFeedbackResponse(
+        last_donation_date=last_donation,
+        screening_outcome=screening_outcome,
+        post_donation_instructions=instructions,
+        next_eligible_date=donor.cooldown_until,
+        donation_count=donor.donation_count,
+    )
+
+
+@router.post(
+    "/donor/health-feedback",
+    response_model=HealthFeedbackResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Record Post-Donation Health Feedback & Screening Outcome",
+    description="Records post-donation health screening feedback, updates donor cooldown, and logs medical audit event. Restricted to organizer and admin roles.",
+)
+async def record_donor_health_feedback(
+    payload: HealthFeedbackCreateRequest,
+    current_user: User = Depends(require_role(["organizer", "admin"])),
+    db: Session = Depends(get_db),
+) -> HealthFeedbackResponse:
+    """
+    Store post-donation screening feedback and update cooldown (FR 4.4):
+    1. Retrieve donor profile
+    2. If donation completed, update last_donation_date and cooldown_until (90 days)
+    3. Update pre_screening_passed flag
+    4. Store HealthFeedback record and log security audit
+    """
+    donor = db.query(Donor).filter(Donor.id == payload.donor_id).first()
+    if not donor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Donor #{payload.donor_id} not found.",
+        )
+
+    instructions_list = payload.custom_instructions or DEFAULT_POST_DONATION_INSTRUCTIONS
+    now = datetime.now(timezone.utc)
+
+    if payload.donation_completed:
+        donor.last_donation_date = now
+        donor.cooldown_until = now + timedelta(days=90)
+        donor.donation_count += 1
+        donor.is_available = False
+
+    donor.pre_screening_passed = (payload.screening_outcome.strip().lower() == "passed")
+    donor.pre_screening_updated_at = now
+
+    feedback = HealthFeedback(
+        donor_id=donor.id,
+        donation_date=donor.last_donation_date or now,
+        screening_outcome=payload.screening_outcome.strip(),
+        instructions=json.dumps(instructions_list),
+        notes=payload.notes,
+        recorded_by_id=current_user.id,
+    )
+    db.add(feedback)
+    db.commit()
+    db.refresh(feedback)
+    db.refresh(donor)
+
+    log_audit_event(
+        db=db,
+        user_id=current_user.id,
+        action="record_health_feedback",
+        target_resource="health_feedbacks",
+        target_id=str(feedback.id),
+        details=f"Recorded health feedback for donor #{donor.id}: outcome={payload.screening_outcome}, completed={payload.donation_completed}",
+    )
+
+    return HealthFeedbackResponse(
+        last_donation_date=donor.last_donation_date,
+        screening_outcome=feedback.screening_outcome,
+        post_donation_instructions=instructions_list,
+        next_eligible_date=donor.cooldown_until,
+        donation_count=donor.donation_count,
+    )
