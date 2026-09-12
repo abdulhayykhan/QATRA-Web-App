@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 
 import re
-from fastapi import APIRouter, Depends, HTTPException, status, Header, File, Form, UploadFile, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Header, File, Form, UploadFile, Response, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -24,8 +24,9 @@ from app.models.request import Request
 from app.schemas.enums import UserRole
 from app.schemas.user import UserResponse, CNICSubmission
 from app.schemas.donor import DonorPreScreenSubmit
+from app.schemas.audit import AuditLogResponse, AuditLogListResponse
 from app.services.firebase_auth import verify_firebase_token
-from app.services.audit import log_audit_event
+from app.services.audit import log_audit_event, query_audit_logs
 from app.services.ocr import extract_hospital_slip_data, extract_hospital_slip_data_async
 from app.services.cooldown import calculate_donor_cooldown, evaluate_donor_prescreen
 from app.services.storage import save_slip_file, save_slip_file_async, get_slip_file_path, get_slip_file_data_async
@@ -578,6 +579,45 @@ async def verify_slip_decision(
         status=blood_request.status,
         verified_by_admin_id=current_admin.id,
     )
+
+
+# ==============================================================================
+# 3.7 GET /api/auth/admin/audit-logs (NFR 2.5 - Nimra Iftikhar)
+# ==============================================================================
+
+@router.get(
+    "/admin/audit-logs",
+    response_model=AuditLogListResponse,
+    summary="Admin Compliance & Security Audit Trail (NFR 2.5)",
+    description="Lists security and access audit logs for compliance tracking and fraud audits (Wireframe pg. 22).",
+)
+async def get_admin_audit_logs(
+    action: Optional[str] = Query(None, description="Filter by action type"),
+    target_resource: Optional[str] = Query(None, description="Filter by target resource"),
+    user_id: Optional[int] = Query(None, description="Filter by user id"),
+    skip: int = Query(0, ge=0, description="Pagination offset"),
+    limit: int = Query(50, ge=1, le=200, description="Page limit"),
+    current_admin: User = Depends(require_role([UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns paginated audit records. Strictly restricted to Alkhidmat System Administrators.
+    """
+    total, logs = query_audit_logs(
+        db=db,
+        action=action,
+        target_resource=target_resource,
+        user_id=user_id,
+        skip=skip,
+        limit=limit,
+    )
+    return AuditLogListResponse(
+        total=total,
+        skip=skip,
+        limit=limit,
+        items=[AuditLogResponse.model_validate(l) for l in logs],
+    )
+
 
 
 # ==============================================================================

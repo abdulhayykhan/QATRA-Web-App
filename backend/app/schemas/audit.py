@@ -19,3 +19,10 @@ class AuditLogResponse(AuditLogCreate):
 
     class Config:
         from_attributes = True
+
+
+class AuditLogListResponse(BaseModel):
+    total: int
+    skip: int
+    limit: int
+    items: list[AuditLogResponse]

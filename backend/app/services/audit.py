@@ -33,3 +33,29 @@ def log_audit_event(
     except Exception:
         db.rollback()
     return log_entry
+
+
+def query_audit_logs(
+    db: Session,
+    action: Optional[str] = None,
+    target_resource: Optional[str] = None,
+    user_id: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 50,
+) -> tuple[int, list[AuditLog]]:
+    """
+    Query audit log trail with optional filtering and pagination (NFR 2.5).
+    Returns (total_count, list_of_logs).
+    """
+    query = db.query(AuditLog)
+    if action:
+        query = query.filter(AuditLog.action == action)
+    if target_resource:
+        query = query.filter(AuditLog.target_resource == target_resource)
+    if user_id is not None:
+        query = query.filter(AuditLog.user_id == user_id)
+
+    total = query.count()
+    items = query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
+    return total, items
+
