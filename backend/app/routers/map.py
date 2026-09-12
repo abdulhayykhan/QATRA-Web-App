@@ -31,6 +31,8 @@ from app.services.geo import (
     is_rare_blood_group,
     estimate_arrival_minutes,
     is_location_stale,
+    find_eligible_donors_in_radius,
+    check_and_expand_radius,
 )
 
 
@@ -183,3 +185,149 @@ async def update_donor_location(
         status="updated",
         timestamp=now.isoformat(),
     )
+
+
+# ==============================================================================
+# 4.2 GET /api/map/requests (FR 1.2 Map Request Markers)
+# ==============================================================================
+
+@router.get(
+    "/requests",
+    response_model=List[MapRequestMarker],
+    summary="Get Emergency Request Markers for Map Display",
+    description="Returns verified emergency requests formatted as map markers with anonymized hospital coordinates and urgency colors (FR 1.2).",
+)
+async def get_map_requests(
+    latitude: Optional[float] = Query(None, ge=-90.0, le=90.0, description="Viewer center latitude"),
+    longitude: Optional[float] = Query(None, ge=-180.0, le=180.0, description="Viewer center longitude"),
+    radius_km: float = Query(15.0, ge=1.0, le=100.0, description="Search radius in kilometers"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Query verified or active emergency blood requests.
+    2. Filter by radius from viewer coordinates if provided.
+    3. Anonymize coordinates to hospital locations (NFR 2.2).
+    4. Apply urgency color coding:
+       - 'red': within_2_hours
+       - 'orange': within_24_hours
+       - 'gray': fulfilled or cancelled
+    """
+    query = db.query(Request).filter(
+        Request.status.in_(["verified", "matched", "pending_verification"])
+    )
+
+    if latitude is not None and longitude is not None:
+        min_lat, max_lat, min_lon, max_lon = get_bounding_box(latitude, longitude, radius_km)
+        query = query.filter(
+            Request.hospital_latitude.between(min_lat, max_lat),
+            Request.hospital_longitude.between(min_lon, max_lon),
+        )
+
+    requests = query.order_by(Request.created_at.desc()).all()
+
+    markers: List[MapRequestMarker] = []
+    for req in requests:
+        if latitude is not None and longitude is not None:
+            dist = haversine_distance_km(latitude, longitude, req.hospital_latitude, req.hospital_longitude)
+            if dist > radius_km:
+                continue
+
+        # Urgency color coding per FR 1.2.2
+        if req.status in ["fulfilled", "cancelled"]:
+            color = "gray"
+        elif req.urgency == "within_2_hours":
+            color = "red"
+        else:
+            color = "orange"
+
+        markers.append(
+            MapRequestMarker(
+                request_id=req.id,
+                hospital_name=req.hospital_name,
+                latitude=req.hospital_latitude,
+                longitude=req.hospital_longitude,
+                blood_group=req.blood_group,
+                units_needed=req.units_needed,
+                urgency=req.urgency,
+                marker_color=color,
+            )
+        )
+
+    return markers
+
+
+# ==============================================================================
+# 4.3 GET /api/map/requests/{request_id}/status (FR 1.3.3 Seeker Status Polling)
+# ==============================================================================
+
+@router.get(
+    "/requests/{request_id}/status",
+    response_model=MapRequestStatusResponse,
+    summary="Poll Live Request Status and Proximity Matching State",
+    description="Polled by seekers to monitor real-time fulfillment progress, donor response counts, and ETA (FR 1.3.3 auto-expansion evaluated).",
+)
+async def get_request_status(
+    request_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Retrieve emergency blood request.
+    2. Run lazy serverless radius auto-expansion evaluation (FR 1.3.3 / FR 1.3.4).
+    3. Calculate live alerted donor count and arrival ETA.
+    4. Return status payload matching API contract Section 4.3.
+    """
+    blood_request = db.query(Request).filter(Request.id == request_id).first()
+    if not blood_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request with ID {request_id} not found.",
+        )
+
+    declined_set = DECLINED_REQUESTS.get(blood_request.id, set())
+
+    # Evaluate serverless radius auto-expansion
+    was_expanded, current_rad, exp_count = check_and_expand_radius(
+        request=blood_request,
+        db=db,
+        declined_donor_ids=declined_set,
+    )
+
+    if was_expanded:
+        # Dispatch notification to newly reached donor pool
+        await dispatch_blood_alert(
+            request_id=blood_request.id,
+            blood_group=blood_request.blood_group,
+            hospital_name=blood_request.hospital_name,
+            hospital_lat=blood_request.hospital_latitude,
+            hospital_lon=blood_request.hospital_longitude,
+            urgency=blood_request.urgency,
+            is_rare=is_rare_blood_group(blood_request.blood_group),
+        )
+
+    # Compute live eligible donors in current expanded radius
+    matches = find_eligible_donors_in_radius(
+        db=db,
+        hospital_lat=blood_request.hospital_latitude,
+        hospital_lon=blood_request.hospital_longitude,
+        blood_group=blood_request.blood_group,
+        radius_km=blood_request.search_radius_km,
+        declined_donor_ids=declined_set,
+    )
+
+    alerted_count = len(matches)
+    accepted_count = 1 if blood_request.status == "matched" else (1 if blood_request.units_fulfilled > 0 else 0)
+    eta = matches[0]["estimated_arrival_minutes"] if matches else None
+
+    return MapRequestStatusResponse(
+        request_id=blood_request.id,
+        status=blood_request.status,
+        units_needed=blood_request.units_needed,
+        units_fulfilled=blood_request.units_fulfilled,
+        donors_alerted_count=alerted_count,
+        donors_accepted_count=accepted_count,
+        current_radius_km=blood_request.search_radius_km,
+        eta_minutes=eta,
+    )
+
