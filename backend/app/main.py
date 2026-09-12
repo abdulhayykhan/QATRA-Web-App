@@ -41,6 +41,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from app.core.rate_limit import RateLimitMiddleware
+
 # Configure CORS Middleware
 app.add_middleware(
     CORSMiddleware,
@@ -49,6 +51,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Configure Rate Limiting Middleware (NFR 2.6 - Nimra Iftikhar)
+app.add_middleware(RateLimitMiddleware)
 
 # Register Routers
 app.include_router(health_router, prefix=settings.API_V1_STR)
