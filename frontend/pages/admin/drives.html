@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Campus & Community Drive Management</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+    .stat-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary-red);
+    }
+    .drives-grid {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .drive-management-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container wide-view">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" style="text-decoration: none; font-size: 18px;">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Drive Management Desk</span>
+      </div>
+      <div style="display: flex; gap: var(--space-sm);">
+        <button id="new-drive-btn" class="btn btn-sm btn-primary">+ Create Drive</button>
+        <a href="/admin/audit.html" class="btn btn-sm btn-secondary">Audit Trail</a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Stats Overview -->
+      <div class="stats-overview">
+        <div class="stat-box">
+          <div class="stat-number" id="total-drives-count">0</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Active Drives</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="total-slots-booked">0</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Registered Donors</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="total-units-collected">142</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Units Collected</div>
+        </div>
+      </div>
+
+      <!-- Drives List -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h3>Scheduled Drives</h3>
+        <span style="font-size: 12px; color: var(--text-muted);">Alkhidmat Mobile Donation Vans</span>
+      </div>
+
+      <div class="drives-grid" id="drives-management-list">
+        <div style="text-align: center; padding: 30px; color: var(--text-muted);">Loading drives...</div>
+      </div>
+    </main>
+
+    <!-- Create Drive Modal -->
+    <div id="create-drive-modal" class="modal-overlay">
+      <div class="modal-content">
+        <button class="modal-close" id="close-modal-btn">✕</button>
+        <h3>Schedule New Blood Drive</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">
+          Add an upcoming campus or corporate blood donation drive.
+        </p>
+
+        <form id="create-drive-form">
+          <div class="form-group">
+            <label class="form-label" for="drive-title">Drive Title *</label>
+            <input type="text" id="drive-title" class="form-input" placeholder="e.g. DUET Campus Blood Donation Drive" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="drive-location">Location / Campus *</label>
+            <input type="text" id="drive-location" class="form-input" placeholder="e.g. Dawood UET Main Auditorium" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+            <div class="form-group">
+              <label class="form-label" for="drive-date">Date & Time *</label>
+              <input type="datetime-local" id="drive-date" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="drive-slots">Target Slots</label>
+              <input type="number" id="drive-slots" class="form-input" value="50" min="10" max="200" required>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-drive-btn" class="btn btn-primary" style="margin-top: var(--space-md);">
+            Publish Blood Drive 🚀
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/static/js/admin-drives.js"></script>
+</body>
+</html>

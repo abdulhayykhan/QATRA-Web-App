@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Donation Completed & Cooldown Hold</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .celebration-banner {
+      background: linear-gradient(180deg, var(--color-success-light) 0%, var(--bg-surface) 100%);
+      border: 1px solid var(--color-success);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl) var(--space-md);
+      text-align: center;
+      margin-bottom: var(--space-lg);
+    }
+    .cert-box {
+      border: 2px dashed var(--color-success);
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" style="text-decoration: none; font-size: 18px;">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Donation Completed</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Celebration Banner -->
+      <div class="celebration-banner">
+        <div style="font-size: 56px; margin-bottom: var(--space-xs);">🎖️</div>
+        <h2 style="color: var(--color-success); margin-bottom: 2px;">Life-Saving Donation Verified!</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0;">
+          On behalf of the patient and Alkhidmat Foundation, thank you for your selfless gift.
+        </p>
+      </div>
+
+      <!-- Receipt Card -->
+      <div class="cert-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-sm); margin-bottom: var(--space-sm);">
+          <strong style="font-size: 14px;">QATRA Voluntary Donation Certificate</strong>
+          <span class="badge badge-success">Verified ✅</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); font-size: 13px;">
+          <div>
+            <span style="color: var(--text-muted);">Units Contributed:</span>
+            <div><strong>1 Unit (450 ml)</strong></div>
+          </div>
+          <div>
+            <span style="color: var(--text-muted);">Blood Group:</span>
+            <div><strong>O- Negative</strong></div>
+          </div>
+          <div>
+            <span style="color: var(--text-muted);">Hospital:</span>
+            <div><strong>Civil Hospital Karachi</strong></div>
+          </div>
+          <div>
+            <span style="color: var(--text-muted);">Date:</span>
+            <div><strong>Today</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 90-Day Cooldown Notice -->
+      <div class="card card-warning" style="margin-bottom: var(--space-lg);">
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="font-size: 24px;">⏱️</div>
+          <div>
+            <h4 style="font-size: 14px; margin-bottom: 2px;">90-Day Cooldown Hold Activated</h4>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0; line-height: 1.4;">
+              Your body requires 12 weeks to safely replenish red blood cell iron stores. You will be automatically paused from proximity alerts until your cooldown window completes.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post-Donation Health Feedback (FR 4.4) -->
+      <div class="card">
+        <h3 style="font-size: 14px; margin-bottom: var(--space-xs);">Post-Donation Health Feedback (FR 4.4)</h3>
+        <p style="font-size: 12px; color: var(--text-muted);">How are you feeling right now?</p>
+
+        <form id="feedback-form">
+          <div class="form-group">
+            <label class="form-label">Recovery Status</label>
+            <select id="recovery-status" class="form-select">
+              <option value="feeling_great">Feeling Great — No lightheadedness</option>
+              <option value="mild_fatigue">Mild Fatigue — Resting with juice</option>
+              <option value="dizzy">Dizzy — Phlebotomist attending</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Hydration Check</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+              <input type="checkbox" id="check-hydrated" checked>
+              <span>Consumed 500ml of fluids post-donation</span>
+            </label>
+          </div>
+
+          <button type="submit" id="submit-feedback-btn" class="btn btn-primary" style="margin-top: var(--space-sm);">
+            Save Feedback & Return to Dashboard 🏠
+          </button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/static/js/confirm.js"></script>
+</body>
+</html>
