@@ -47,6 +47,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.get("/docs", include_in_schema=False)
+async def redirect_docs():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")
+
+
 from app.core.rate_limit import RateLimitMiddleware
 
 # Configure CORS Middleware
