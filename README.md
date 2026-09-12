@@ -42,7 +42,7 @@
 - [12. API Reference & Endpoint Index](#12-api-reference--endpoint-index)
 - [13. CI/CD Pipeline & Automated Testing](#13-cicd-pipeline--automated-testing)
 - [14. Production Deployment on Vercel](#14-production-deployment-on-vercel)
-- [15. Core Team & Academic Attribution](#15-core-team--academic-attribution)
+- [15. Core Team & Program Attribution](#15-core-team--program-attribution)
 - [16. License, Safety & Legal Disclaimers](#16-license-safety--legal-disclaimers)
 
 ---
@@ -600,9 +600,9 @@ QATRA is deployed continuously on Vercel at [https://qatra-web-app.vercel.app/](
 
 ---
 
-## 15. Core Team & Academic Attribution
+## 15. Core Team & Program Attribution
 
-This platform was designed, architected, and built by our team at **Dawood University of Engineering Technology (DUET)**:
+This platform was designed, architected, and built for the **Alkhidmat Summer Social Internship Program (SSIP)**:
 
 | Team Member | Project Role | Academic Department | Core Responsibilities |
 | :--- | :--- | :--- | :--- |
