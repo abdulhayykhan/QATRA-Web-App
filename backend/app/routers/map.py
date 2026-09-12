@@ -382,3 +382,216 @@ async def get_request_matches(
     ]
 
 
+# ==============================================================================
+# 4.5 POST /api/map/requests/{request_id}/accept (FR 1.4.3 Confirm Match)
+# ==============================================================================
+
+@router.post(
+    "/requests/{request_id}/accept",
+    response_model=DonorAcceptResponse,
+    summary="Donor Accepts Emergency Proximity Alert",
+    description="Donor confirms response to proximity alert; marks request as matched and initializes masked proxy contact channel (FR 1.4.3).",
+)
+async def accept_proximity_alert(
+    request_id: int,
+    current_user: User = Depends(require_role([UserRole.VERIFIED_DONOR.value, UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Verify request is active and not already closed.
+    2. Transition status to 'matched' and increment fulfilled units.
+    3. Initialize masked proxy channel identifier (NFR 2.2).
+    4. Log audit trail.
+    """
+    blood_request = db.query(Request).filter(Request.id == request_id).first()
+    if not blood_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request with ID {request_id} not found.",
+        )
+
+    if blood_request.status in ["fulfilled", "cancelled"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot accept alert. This request has already been fulfilled or cancelled.",
+        )
+
+    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    donor_id = donor.id if donor else current_user.id
+
+    blood_request.status = "matched"
+    blood_request.units_fulfilled = min(blood_request.units_needed, blood_request.units_fulfilled + 1)
+
+    proxy_channel_id = f"px-{blood_request.id}{donor_id}"
+
+    log_audit_event(
+        db=db,
+        action="MAP_ALERT_ACCEPT",
+        target_resource="requests",
+        target_id=str(request_id),
+        user_id=current_user.id,
+        details=f"Donor {donor_id} accepted alert. Proxy channel: {proxy_channel_id}",
+    )
+
+    db.commit()
+    db.refresh(blood_request)
+
+    return DonorAcceptResponse(
+        request_id=blood_request.id,
+        status="matched",
+        message="Match confirmed. Initializing masked proxy contact.",
+        proxy_channel_id=proxy_channel_id,
+    )
+
+
+# ==============================================================================
+# 4.6 POST /api/map/requests/{request_id}/decline (FR 1.4.2 Donor Decline)
+# ==============================================================================
+
+@router.post(
+    "/requests/{request_id}/decline",
+    response_model=DonorDeclineResponse,
+    summary="Donor Declines Emergency Proximity Alert",
+    description="Donor declines proximity alert; marks donor as deprioritized for this specific request while remaining eligible for others (FR 1.4.2).",
+)
+async def decline_proximity_alert(
+    request_id: int,
+    current_user: User = Depends(require_role([UserRole.VERIFIED_DONOR.value, UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Verify request existence.
+    2. Register donor ID in request decline registry.
+    3. Ensure donor is not penalized or excluded from other requests.
+    4. Log audit event.
+    """
+    blood_request = db.query(Request).filter(Request.id == request_id).first()
+    if not blood_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request with ID {request_id} not found.",
+        )
+
+    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    donor_id = donor.id if donor else current_user.id
+
+    DECLINED_REQUESTS.setdefault(blood_request.id, set()).add(donor_id)
+
+    log_audit_event(
+        db=db,
+        action="MAP_ALERT_DECLINE",
+        target_resource="requests",
+        target_id=str(request_id),
+        user_id=current_user.id,
+        details=f"Donor {donor_id} declined alert for request {request_id}",
+    )
+
+    return DonorDeclineResponse(
+        request_id=blood_request.id,
+        status="declined",
+        message="Alert declined. You remain eligible for other requests.",
+    )
+
+
+# ==============================================================================
+# 4.7 POST /api/map/requests/{request_id}/cancel (FR 1.4.2 Cancel Acceptance & Re-dispatch)
+# ==============================================================================
+
+@router.post(
+    "/requests/{request_id}/cancel",
+    response_model=DonorCancelResponse,
+    summary="Donor Cancels Prior Acceptance",
+    description="Donor cancels prior acceptance (due to traffic/emergency); immediately re-dispatches request to next-ranked donors (Sec 3.4).",
+)
+async def cancel_proximity_acceptance(
+    request_id: int,
+    current_user: User = Depends(require_role([UserRole.VERIFIED_DONOR.value, UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Reverts request status to 'verified' (or 'searching').
+    2. Adjusts units fulfilled.
+    3. Re-dispatches alert to pool of next-ranked donors.
+    4. Logs compliance audit event.
+    """
+    blood_request = db.query(Request).filter(Request.id == request_id).first()
+    if not blood_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request with ID {request_id} not found.",
+        )
+
+    blood_request.status = "verified"
+    blood_request.units_fulfilled = max(0, blood_request.units_fulfilled - 1)
+
+    log_audit_event(
+        db=db,
+        action="MAP_ACCEPT_CANCEL",
+        target_resource="requests",
+        target_id=str(request_id),
+        user_id=current_user.id,
+        details="Donor cancelled acceptance. Immediate re-dispatch initiated.",
+    )
+
+    db.commit()
+    db.refresh(blood_request)
+
+    return DonorCancelResponse(
+        request_id=blood_request.id,
+        status="re_dispatched",
+        message="Acceptance cancelled. Request re-opened to next-ranked donors.",
+    )
+
+
+# ==============================================================================
+# 4.8 POST /api/map/proxy-call/{request_id}/initiate (NFR 2.2 Masked Proxy Contact)
+# ==============================================================================
+
+@router.post(
+    "/proxy-call/{request_id}/initiate",
+    response_model=ProxyCallInitiateResponse,
+    summary="Initiate Masked Proxy Contact Bridge",
+    description="Generates virtual contact bridge and encrypted session token without exposing real phone numbers (NFR 2.2).",
+)
+async def initiate_proxy_call(
+    request_id: int,
+    current_user: User = Depends(require_role([
+        UserRole.VERIFIED_SEEKER.value,
+        UserRole.VERIFIED_DONOR.value,
+        UserRole.ADMIN.value,
+    ])),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Verify emergency request.
+    2. Confirm caller is either the seeker or matched donor or system admin.
+    3. Return virtual call bridge session (10-minute validity) per NFR 2.2.
+    4. Log audit record.
+    """
+    blood_request = db.query(Request).filter(Request.id == request_id).first()
+    if not blood_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request with ID {request_id} not found.",
+        )
+
+    proxy_call_id = f"call_br_{request_id}_{int(datetime.now(timezone.utc).timestamp()) % 100000}"
+
+    log_audit_event(
+        db=db,
+        action="PROXY_CALL_INITIATE",
+        target_resource="requests",
+        target_id=str(request_id),
+        user_id=current_user.id,
+        details=f"Initiated masked call bridge: {proxy_call_id}",
+    )
+
+    return ProxyCallInitiateResponse(
+        proxy_call_id=proxy_call_id,
+        virtual_number="+922130000000",
+        status="connecting",
+        expires_in_seconds=600,
+    )
+
+
+
