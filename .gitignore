@@ -94,6 +94,11 @@ Thumbs.db
 *.swp
 *~
 
-# Uploaded Media & Documents
-media/
+# Uploaded Media & Documents (User uploads only)
+media/uploads/
+media/slips/
+media/temp/
+!media/logo.png
+!public/media/
+!public/media/logo.png
 
