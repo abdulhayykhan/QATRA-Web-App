@@ -13,6 +13,8 @@ from app.services.geo import (
     is_rare_blood_group,
     estimate_arrival_minutes,
     is_location_stale,
+    find_eligible_donors_in_radius,
+    check_and_expand_radius,
 )
 
 __all__ = [
@@ -27,5 +29,7 @@ __all__ = [
     "is_rare_blood_group",
     "estimate_arrival_minutes",
     "is_location_stale",
+    "find_eligible_donors_in_radius",
+    "check_and_expand_radius",
 ]
 
