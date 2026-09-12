@@ -1,62 +1,199 @@
 /**
- * QATRA — Emergency Hospital Slip Upload & Verification (Feature 2)
- * Connects file drop, OCR feedback, and request broadcast.
+ * QATRA — Emergency Blood Request & Hospital Slip Controller (Feature 3 & 2)
+ * Owner: Mahrukh Baig
+ *
+ * Implements Wireframe pg 5 (Requirements) & pg 6 (Slip verification upload).
  */
-import { apiUpload, showToast } from './api.js';
+import { apiUpload, showToast, getCurrentUser } from './api.js';
 
-let selectedFile = null;
+let selectedSlipFile = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  setupFileUpload();
-  setupBloodPills();
-  setupFormSubmit();
+  setupBloodGroupGrid();
+  setupComponentChips();
+  setupUnitsStepper();
+  setupUrgencyCards();
+  setupStepNavigation();
+  setupSlipUpload();
+  setupFormSubmission();
 });
 
-function setupFileUpload() {
-  const dropZone = document.getElementById('drop-zone');
+/**
+ * Blood group 8-pill selection (Wireframe pg 5)
+ */
+function setupBloodGroupGrid() {
+  const buttons = document.querySelectorAll('#blood-group-grid .blood-btn');
+  const hiddenInput = document.getElementById('blood-group-val');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      hiddenInput.value = btn.getAttribute('data-blood');
+    });
+  });
+}
+
+/**
+ * Component type selection
+ */
+function setupComponentChips() {
+  const chips = document.querySelectorAll('#component-chips .component-chip');
+  const hiddenInput = document.getElementById('component-type-val');
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      hiddenInput.value = chip.getAttribute('data-type');
+    });
+  });
+}
+
+/**
+ * Interactive units stepper counter ([-] / [+])
+ */
+function setupUnitsStepper() {
+  const minusBtn = document.getElementById('stepper-minus');
+  const plusBtn = document.getElementById('stepper-plus');
+  const display = document.getElementById('units-display');
+  const label = document.getElementById('units-label');
+  const hiddenInput = document.getElementById('units-needed-val');
+
+  let count = 1;
+
+  function update() {
+    display.innerText = count;
+    label.innerText = count === 1 ? 'Bag' : 'Bags';
+    hiddenInput.value = count;
+  }
+
+  minusBtn.addEventListener('click', () => {
+    if (count > 1) {
+      count--;
+      update();
+    }
+  });
+
+  plusBtn.addEventListener('click', () => {
+    if (count < 10) {
+      count++;
+      update();
+    }
+  });
+}
+
+/**
+ * Urgency radio cards selection
+ */
+function setupUrgencyCards() {
+  const cards = document.querySelectorAll('#urgency-cards .urgency-card');
+  const hiddenInput = document.getElementById('urgency-val');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      hiddenInput.value = card.getAttribute('data-urgency');
+    });
+  });
+}
+
+/**
+ * Multi-step wizard: Step 1 Details -> Step 2 Slip Upload
+ */
+function setupStepNavigation() {
+  const step1 = document.getElementById('form-step-1');
+  const step2 = document.getElementById('form-step-2');
+  const nextBtn = document.getElementById('btn-next-to-slip');
+  const backBtn = document.getElementById('btn-back-to-details');
+  const dot1 = document.getElementById('dot-step-1');
+  const dot2 = document.getElementById('dot-step-2');
+  const line = document.getElementById('line-step-1');
+
+  nextBtn.addEventListener('click', () => {
+    const patientName = document.getElementById('patient-name').value.trim();
+    const hospitalName = document.getElementById('hospital-name').value.trim();
+
+    if (!patientName) {
+      showToast('Please enter the patient name.', 'warning');
+      document.getElementById('patient-name').focus();
+      return;
+    }
+
+    if (!hospitalName) {
+      showToast('Please enter or select the hospital name.', 'warning');
+      document.getElementById('hospital-name').focus();
+      return;
+    }
+
+    step1.style.display = 'none';
+    step2.style.display = 'block';
+    dot2.classList.add('active');
+    line.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  backBtn.addEventListener('click', () => {
+    step2.style.display = 'none';
+    step1.style.display = 'block';
+    dot2.classList.remove('active');
+    line.classList.remove('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+/**
+ * Hospital slip drag-and-drop & file selection (Wireframe pg 6)
+ */
+function setupSlipUpload() {
+  const dropFrame = document.getElementById('slip-drop-frame');
   const fileInput = document.getElementById('slip-file-input');
-  const previewWrap = document.getElementById('file-preview-wrap');
-  const previewImg = document.getElementById('file-preview-img');
-  const fileName = document.getElementById('file-name');
-  const fileSize = document.getElementById('file-size');
-  const removeBtn = document.getElementById('remove-file-btn');
-  const ocrBox = document.getElementById('ocr-status-box');
+  const previewCard = document.getElementById('slip-preview-card');
+  const previewImg = document.getElementById('slip-preview-img');
+  const fileName = document.getElementById('slip-file-name');
+  const fileSize = document.getElementById('slip-file-size');
+  const removeBtn = document.getElementById('slip-remove-btn');
 
-  dropZone.addEventListener('click', () => fileInput.click());
+  dropFrame.addEventListener('click', () => fileInput.click());
 
-  dropZone.addEventListener('dragover', (e) => {
+  dropFrame.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropZone.classList.add('dragover');
+    dropFrame.style.background = '#FFE0E0';
   });
 
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('dragover');
+  dropFrame.addEventListener('dragleave', () => {
+    dropFrame.style.background = 'var(--primary-red-subtle)';
   });
 
-  dropZone.addEventListener('drop', (e) => {
+  dropFrame.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.classList.remove('dragover');
+    dropFrame.style.background = 'var(--primary-red-subtle)';
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+      processFile(e.dataTransfer.files[0]);
     }
   });
 
   fileInput.addEventListener('change', () => {
     if (fileInput.files && fileInput.files[0]) {
-      handleFile(fileInput.files[0]);
+      processFile(fileInput.files[0]);
     }
   });
 
   removeBtn.addEventListener('click', () => {
-    selectedFile = null;
+    selectedSlipFile = null;
     fileInput.value = '';
-    previewWrap.style.display = 'none';
-    dropZone.style.display = 'block';
-    ocrBox.classList.remove('active');
+    previewCard.style.display = 'none';
+    dropFrame.style.display = 'block';
   });
 
-  function handleFile(file) {
-    selectedFile = file;
+  function processFile(file) {
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('File size exceeds 10MB limit.', 'error');
+      return;
+    }
+
+    selectedSlipFile = file;
     fileName.innerText = file.name;
     fileSize.innerText = `${(file.size / 1024).toFixed(1)} KB`;
 
@@ -67,82 +204,68 @@ function setupFileUpload() {
       };
       reader.readAsDataURL(file);
     } else {
-      previewImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="%23C92A2A"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+      // PDF placeholder icon
+      previewImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="55" height="55" viewBox="0 0 24 24" fill="%23C92A2A"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
     }
 
-    dropZone.style.display = 'none';
-    previewWrap.style.display = 'flex';
-
-    // Simulate OCR preview feedback
-    ocrBox.classList.add('active');
-    document.getElementById('ocr-feedback-text').innerText = 'Slip ready for upload. Official stamp and MRN will be parsed on submission.';
+    dropFrame.style.display = 'none';
+    previewCard.style.display = 'flex';
   }
 }
 
-function setupBloodPills() {
-  const pills = document.querySelectorAll('#blood-group-pills .blood-pill');
-  const hiddenInput = document.getElementById('blood-group');
-
-  pills.forEach(pill => {
-    pill.addEventListener('click', () => {
-      pills.forEach(p => p.classList.remove('selected'));
-      pill.classList.add('selected');
-      hiddenInput.value = pill.getAttribute('data-value');
-    });
-  });
-}
-
-function setupFormSubmit() {
-  const form = document.getElementById('emergency-request-form');
-  const submitBtn = document.getElementById('submit-request-btn');
+/**
+ * Handles multipart form submission to the hospital slip OCR upload endpoint
+ */
+function setupFormSubmission() {
+  const form = document.getElementById('create-request-form');
+  const submitBtn = document.getElementById('btn-submit-slip');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const patientName = document.getElementById('patient-name').value.trim();
-    const hospitalName = document.getElementById('hospital-name').value.trim();
-    const bloodGroup = document.getElementById('blood-group').value;
-    const componentType = document.getElementById('component-type').value;
-    const unitsNeeded = parseInt(document.getElementById('units-needed').value, 10);
-    const urgency = document.getElementById('urgency-tier').value;
-
-    if (!patientName || !hospitalName) {
-      showToast('Please fill in patient name and hospital.', 'warning');
+    if (!selectedSlipFile) {
+      showToast('Please attach a hospital admission slip or doctor order.', 'warning');
       return;
     }
 
+    const patientName = document.getElementById('patient-name').value.trim();
+    const hospitalName = document.getElementById('hospital-name').value.trim();
+    const bloodGroup = document.getElementById('blood-group-val').value;
+    const componentType = document.getElementById('component-type-val').value;
+    const unitsNeeded = document.getElementById('units-needed-val').value;
+    const urgency = document.getElementById('urgency-val').value;
+
     submitBtn.disabled = true;
-    submitBtn.innerText = 'Analyzing Slip & Broadcasting... ⏳';
+    const originalText = submitBtn.innerText;
+    submitBtn.innerText = 'Analyzing Requisition Slip via OCR... ⏳';
 
     const formData = new FormData();
-    if (selectedFile) {
-      formData.append('file', selectedFile);
-    }
+    formData.append('file', selectedSlipFile);
     formData.append('patient_name', patientName);
     formData.append('hospital_name', hospitalName);
     formData.append('blood_group', bloodGroup);
     formData.append('component_type', componentType);
-    formData.append('units_needed', unitsNeeded.toString());
+    formData.append('units_needed', unitsNeeded);
     formData.append('urgency', urgency);
 
     try {
-      const result = await apiUpload('/auth/hospital-slip/upload', formData);
-      const isVerified = result.status === 'verified';
+      const res = await apiUpload('/auth/hospital-slip/upload', formData);
+      const isAutoApproved = res.status === 'verified';
 
-      if (isVerified) {
-        showToast('Hospital slip verified! Broadcast alert dispatched to nearby donors.', 'success');
+      if (isAutoApproved) {
+        showToast('Hospital slip verified! Emergency broadcast active.', 'success');
         setTimeout(() => {
-          window.location.href = '/seeker/map.html';
+          window.location.href = `/seeker/map.html?request_id=${res.request_id}`;
         }, 1500);
       } else {
-        showToast('Slip routed to Alkhidmat 24/7 Desk for rapid manual review.', 'info');
+        showToast('Slip uploaded. Queued for 24/7 Desk Review (<3 mins).', 'info');
         setTimeout(() => {
           window.location.href = '/seeker/feed.html';
-        }, 1500);
+        }, 1800);
       }
     } catch (err) {
       submitBtn.disabled = false;
-      submitBtn.innerText = 'Broadcast Emergency Request 🚨';
+      submitBtn.innerText = originalText;
     }
   });
 }

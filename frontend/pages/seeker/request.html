@@ -3,80 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QATRA — Emergency Blood Request</title>
+  <title>QATRA — Create Emergency Blood Request</title>
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
-    .upload-box {
-      border: 2px dashed var(--border-color-strong);
-      border-radius: var(--radius-lg);
-      padding: var(--space-xl) var(--space-md);
-      text-align: center;
-      background: var(--bg-canvas);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      position: relative;
-    }
-    .upload-box:hover, .upload-box.dragover {
-      border-color: var(--primary-red);
-      background: var(--primary-red-subtle);
-    }
-    .upload-icon {
-      font-size: 36px;
-      margin-bottom: var(--space-sm);
-    }
-    .preview-container {
-      margin-top: var(--space-md);
+    /* Create Request Form Styles (Wireframe pg 5 & pg 6) */
+    .step-indicator {
       display: flex;
       align-items: center;
-      gap: var(--space-md);
-      padding: var(--space-sm);
-      background: var(--bg-surface);
+      justify-content: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-full);
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
     }
-    .preview-img {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: var(--radius-sm);
+
+    .step-dot.active {
+      background: var(--primary-red);
+      color: #FFFFFF;
+      border-color: var(--primary-red);
     }
-    .ocr-scanner {
-      display: none;
-      padding: var(--space-md);
-      background: var(--bg-surface);
-      border-left: 4px solid var(--color-info);
-      border-radius: var(--radius-md);
-      margin: var(--space-md) 0;
-      box-shadow: var(--shadow-sm);
+
+    .step-line {
+      width: 40px;
+      height: 2px;
+      background: var(--border-color);
     }
-    .ocr-scanner.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
+
+    .step-line.active {
+      background: var(--primary-red);
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .blood-pills {
+
+    /* Blood Group Grid (Wireframe pg 5) */
+    .blood-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: var(--space-sm);
-      margin-top: var(--space-xs);
+      margin-top: 4px;
     }
-    .blood-pill {
-      border: 1px solid var(--border-color-strong);
-      padding: 8px;
+
+    .blood-btn {
+      padding: 10px 4px;
       text-align: center;
+      border: 1px solid var(--border-color-strong);
       border-radius: var(--radius-md);
       font-weight: 700;
+      font-size: 15px;
       cursor: pointer;
       background: var(--bg-surface);
+      color: var(--text-main);
       transition: all var(--transition-fast);
     }
-    .blood-pill.selected {
-      background: var(--primary-red);
-      color: #fff;
+
+    .blood-btn:hover {
       border-color: var(--primary-red);
+    }
+
+    .blood-btn.selected {
+      background: var(--primary-red);
+      color: #FFFFFF;
+      border-color: var(--primary-red);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Component Type Selector */
+    .component-chips {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-xs);
+      margin-top: 4px;
+    }
+
+    .component-chip {
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color-strong);
+      background: var(--bg-surface);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--transition-fast);
+    }
+
+    .component-chip.selected {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+      color: var(--primary-red-dark);
+      font-weight: 700;
+    }
+
+    /* Units Counter Stepper (Wireframe pg 5) */
+    .units-counter-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-md);
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-sm);
+    }
+
+    .stepper-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-color-strong);
+      background: var(--bg-surface);
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .stepper-btn:hover {
+      background: var(--primary-red-light);
+      border-color: var(--primary-red);
+    }
+
+    .stepper-display {
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .stepper-number {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary-red);
+      line-height: 1;
+    }
+
+    .stepper-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Urgency Radio Cards (Wireframe pg 5) */
+    .urgency-cards {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      margin-top: 4px;
+    }
+
+    .urgency-card {
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-sm) var(--space-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all var(--transition-fast);
+      background: var(--bg-surface);
+    }
+
+    .urgency-card:hover {
+      border-color: var(--primary-red);
+    }
+
+    .urgency-card.selected {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+    }
+
+    .urgency-card-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .urgency-icon {
+      font-size: 22px;
+    }
+
+    /* Wireframe pg 6: Alignment Box Overlay */
+    .camera-alignment-frame {
+      border: 2px dashed var(--primary-red);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg) var(--space-md);
+      text-align: center;
+      background: var(--primary-red-subtle);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition-fast);
+    }
+
+    .camera-alignment-frame:hover {
+      background: #FFE8E8;
+    }
+
+    .alignment-target-box {
+      border: 2px dashed rgba(201, 42, 42, 0.4);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg) var(--space-sm);
+      margin: var(--space-sm) 0;
+      background: rgba(255, 255, 255, 0.7);
     }
   </style>
 </head>
@@ -85,118 +225,189 @@
     <!-- Header -->
     <header class="app-header">
       <div style="display: flex; align-items: center; gap: var(--space-sm);">
-        <a href="/index.html" style="text-decoration: none; font-size: 18px;">←</a>
-        <span style="font-weight: 700; font-size: 16px;">Create Emergency Request</span>
+        <a href="/seeker/feed.html" style="text-decoration: none; font-size: 18px; color: var(--text-main);">←</a>
+        <span style="font-weight: 700; font-size: 16px;">New Emergency Request</span>
       </div>
+      <span class="badge badge-critical">Gated Verification</span>
     </header>
 
     <!-- Main Content -->
     <main class="app-content">
-      <div style="margin-bottom: var(--space-md);">
-        <h2>Hospital Verification Slip</h2>
-        <p>To stop fraud and prioritize real patients, upload a photo or scan of the official hospital admission slip or doctor's blood requisition order.</p>
+      <!-- Step Indicator -->
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot-step-1">1</div>
+        <div class="step-line" id="line-step-1"></div>
+        <div class="step-dot" id="dot-step-2">2</div>
       </div>
 
-      <form id="emergency-request-form">
-        <!-- Drag & Drop File Upload -->
-        <div class="form-group">
-          <label class="form-label">Upload Hospital Requisition Slip *</label>
-          <div class="upload-box" id="drop-zone">
-            <div class="upload-icon">📄</div>
-            <div style="font-weight: 600; font-size: 14px;">Tap to select or drag slip image here</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Supports JPG, PNG, PDF (Max 10MB)</div>
-            <input type="file" id="slip-file-input" accept="image/*,.pdf" style="display: none;">
+      <form id="create-request-form">
+        <!-- ================================================================= -->
+        <!-- STEP 1: Patient & Medical Requirements (Wireframe pg 5) -->
+        <!-- ================================================================= -->
+        <div id="form-step-1">
+          <div style="margin-bottom: var(--space-md);">
+            <h2>Patient & Blood Requirements</h2>
+            <p>Every emergency signal is verified via official hospital slip to protect patients and donors.</p>
           </div>
 
-          <div id="file-preview-wrap" class="preview-container" style="display: none;">
-            <img id="file-preview-img" class="preview-img" src="" alt="Slip Preview">
-            <div style="flex: 1; min-width: 0;">
-              <div id="file-name" style="font-size: 13px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">slip.jpg</div>
-              <div id="file-size" style="font-size: 11px; color: var(--text-muted);">240 KB</div>
+          <!-- Patient Name -->
+          <div class="form-group">
+            <label class="form-label" for="patient-name">Patient Full Name *</label>
+            <input type="text" id="patient-name" class="form-input" placeholder="e.g. Ali Khan" required>
+          </div>
+
+          <!-- Hospital / Location -->
+          <div class="form-group">
+            <label class="form-label" for="hospital-name">Hospital Name (Karachi) *</label>
+            <input type="text" id="hospital-name" class="form-input" placeholder="Search hospital name or select..." required list="karachi-hospitals">
+            <datalist id="karachi-hospitals">
+              <option value="Dr. Ruth K.M. Pfau Civil Hospital Karachi">
+              <option value="Jinnah Postgraduate Medical Centre (JPMC)">
+              <option value="The Aga Khan University Hospital (AKUH)">
+              <option value="Indus Hospital & Health Network (Korangi)">
+              <option value="Liaquat National Hospital (LNH)">
+              <option value="Abbasi Shaheed Hospital (Nazimabad)">
+              <option value="Ziauddin Hospital (Clifton Campus)">
+              <option value="Patel Hospital (Gulshan-e-Iqbal)">
+              <option value="National Institute of Cardiovascular Diseases (NICVD)">
+            </datalist>
+          </div>
+
+          <!-- Blood Group Grid Selection (Wireframe pg 5) -->
+          <div class="form-group">
+            <label class="form-label">Blood Group Required *</label>
+            <div class="blood-grid" id="blood-group-grid">
+              <button type="button" class="blood-btn selected" data-blood="O-">O-</button>
+              <button type="button" class="blood-btn" data-blood="O+">O+</button>
+              <button type="button" class="blood-btn" data-blood="A-">A-</button>
+              <button type="button" class="blood-btn" data-blood="A+">A+</button>
+              <button type="button" class="blood-btn" data-blood="B-">B-</button>
+              <button type="button" class="blood-btn" data-blood="B+">B+</button>
+              <button type="button" class="blood-btn" data-blood="AB-">AB-</button>
+              <button type="button" class="blood-btn" data-blood="AB+">AB+</button>
             </div>
-            <button type="button" id="remove-file-btn" class="btn btn-sm btn-secondary" style="width: auto;">✕</button>
+            <input type="hidden" id="blood-group-val" value="O-">
           </div>
-        </div>
 
-        <!-- OCR Scanning Feedback Banner -->
-        <div id="ocr-status-box" class="ocr-scanner">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 13px;">🤖 Automated OCR Analysis</span>
-            <span id="ocr-confidence-badge" class="badge badge-success">Confidence: 92%</span>
-          </div>
-          <div id="ocr-feedback-text" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-            Doctor stamp detected. Verifying patient information...
-          </div>
-        </div>
-
-        <!-- Patient & Hospital Details -->
-        <div class="form-group">
-          <label class="form-label" for="patient-name">Patient Full Name *</label>
-          <input type="text" id="patient-name" class="form-input" placeholder="e.g. Zainab Bibi" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="hospital-name">Hospital Name *</label>
-          <input type="text" id="hospital-name" class="form-input" placeholder="e.g. Civil Hospital Karachi, JPMC, Indus" required list="karachi-hospitals-list">
-          <datalist id="karachi-hospitals-list">
-            <option value="Dr. Ruth K.M. Pfau Civil Hospital Karachi">
-            <option value="Jinnah Postgraduate Medical Centre (JPMC)">
-            <option value="The Aga Khan University Hospital (AKUH)">
-            <option value="Indus Hospital & Health Network (Korangi)">
-            <option value="Liaquat National Hospital (LNH)">
-            <option value="Abbasi Shaheed Hospital (Nazimabad)">
-            <option value="Ziauddin Hospital (Clifton Campus)">
-            <option value="Patel Hospital (Gulshan-e-Iqbal)">
-          </datalist>
-        </div>
-
-        <!-- Blood Group Selector -->
-        <div class="form-group">
-          <label class="form-label">Blood Group Required *</label>
-          <div class="blood-pills" id="blood-group-pills">
-            <div class="blood-pill selected" data-value="O-">O-</div>
-            <div class="blood-pill" data-value="O+">O+</div>
-            <div class="blood-pill" data-value="A-">A-</div>
-            <div class="blood-pill" data-value="A+">A+</div>
-            <div class="blood-pill" data-value="B-">B-</div>
-            <div class="blood-pill" data-value="B+">B+</div>
-            <div class="blood-pill" data-value="AB-">AB-</div>
-            <div class="blood-pill" data-value="AB+">AB+</div>
-          </div>
-          <input type="hidden" id="blood-group" value="O-">
-        </div>
-
-        <!-- Component & Units -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm);">
+          <!-- Component Type Selection (Wireframe pg 5) -->
           <div class="form-group">
-            <label class="form-label" for="component-type">Component Type</label>
-            <select id="component-type" class="form-select">
-              <option value="Whole Blood">Whole Blood</option>
-              <option value="PRBC">PRBC (Packed Cells)</option>
-              <option value="Platelets">Platelets (Mega/Single)</option>
-              <option value="Plasma">Fresh Frozen Plasma</option>
-            </select>
+            <label class="form-label">Component Type</label>
+            <div class="component-chips" id="component-chips">
+              <div class="component-chip selected" data-type="Whole Blood">Whole Blood</div>
+              <div class="component-chip" data-type="PRBC">PRBC (Packed Cells)</div>
+              <div class="component-chip" data-type="Platelets">Platelets / Mega Unit</div>
+              <div class="component-chip" data-type="Plasma">Plasma (FFP)</div>
+            </div>
+            <input type="hidden" id="component-type-val" value="Whole Blood">
           </div>
 
+          <!-- Units Required Stepper Counter (Wireframe pg 5) -->
           <div class="form-group">
-            <label class="form-label" for="units-needed">Units Needed *</label>
-            <input type="number" id="units-needed" class="form-input" value="1" min="1" max="10" required>
+            <label class="form-label">Units Required (Bags) *</label>
+            <div class="units-counter-wrap">
+              <button type="button" class="stepper-btn" id="stepper-minus">−</button>
+              <div class="stepper-display">
+                <div class="stepper-number" id="units-display">1</div>
+                <div class="stepper-label" id="units-label">Bag</div>
+              </div>
+              <button type="button" class="stepper-btn" id="stepper-plus">+</button>
+            </div>
+            <input type="hidden" id="units-needed-val" value="1">
+          </div>
+
+          <!-- Urgency Tier Selection (Wireframe pg 5) -->
+          <div class="form-group">
+            <label class="form-label">Urgency Tier *</label>
+            <div class="urgency-cards" id="urgency-cards">
+              <div class="urgency-card selected" data-urgency="within_2_hours">
+                <div class="urgency-card-left">
+                  <span class="urgency-icon">🔺</span>
+                  <div>
+                    <strong style="font-size: 14px; color: var(--color-danger);">High Priority</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">Needed within 2 Hours</div>
+                  </div>
+                </div>
+                <span class="badge badge-critical">Urgent</span>
+              </div>
+
+              <div class="urgency-card" data-urgency="within_24_hours">
+                <div class="urgency-card-left">
+                  <span class="urgency-icon">🕒</span>
+                  <div>
+                    <strong style="font-size: 14px;">Standard</strong>
+                    <div style="font-size: 12px; color: var(--text-muted);">Needed within 24 Hours</div>
+                  </div>
+                </div>
+                <span class="badge badge-standard">Routine</span>
+              </div>
+            </div>
+            <input type="hidden" id="urgency-val" value="within_2_hours">
+          </div>
+
+          <button type="button" id="btn-next-to-slip" class="btn btn-primary" style="margin-top: var(--space-md);">
+            Proceed to Slip Verification →
+          </button>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- STEP 2: Hospital Slip Capture & OCR Verification (Wireframe pg 6) -->
+        <!-- ================================================================= -->
+        <div id="form-step-2" style="display: none;">
+          <div style="margin-bottom: var(--space-md);">
+            <h2>Verify Request with Hospital Slip</h2>
+            <p style="font-size: 13px;">Attach the hospital blood requisition slip or admission order showing the doctor's stamp and patient MRN.</p>
+          </div>
+
+          <!-- Alignment Boundary Frame (Wireframe pg 6) -->
+          <div class="form-group">
+            <div class="camera-alignment-frame" id="slip-drop-frame">
+              <div style="font-size: 32px; margin-bottom: 4px;">📷</div>
+              <strong style="font-size: 14px; color: var(--primary-red);">Align hospital slip within frame</strong>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Ensure Doctor Stamp, MRN & Hospital Letterhead are clearly visible.
+              </p>
+
+              <div class="alignment-target-box">
+                <span style="font-size: 13px; color: var(--text-main); font-weight: 600;">
+                  Tap to upload or take photo
+                </span>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Supports JPG, PNG, PDF (Max 10MB)</div>
+              </div>
+
+              <input type="file" id="slip-file-input" accept="image/*,.pdf" style="display: none;">
+            </div>
+
+            <!-- Preview Card -->
+            <div id="slip-preview-card" class="card" style="display: none; margin-top: var(--space-sm); align-items: center; gap: var(--space-md); flex-direction: row;">
+              <img id="slip-preview-img" src="" alt="Slip Preview" style="width: 55px; height: 55px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+              <div style="flex: 1; min-width: 0;">
+                <div id="slip-file-name" style="font-size: 13px; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">admission_slip.jpg</div>
+                <div id="slip-file-size" style="font-size: 11px; color: var(--text-muted);">320 KB</div>
+              </div>
+              <button type="button" id="slip-remove-btn" class="btn btn-sm btn-secondary" style="width: auto;">✕</button>
+            </div>
+          </div>
+
+          <!-- Trust & Confidentiality Notice (Wireframe pg 6) -->
+          <div class="card" style="background: var(--bg-canvas); padding: var(--space-sm) var(--space-md); margin-bottom: var(--space-md);">
+            <div style="display: flex; gap: var(--space-sm); align-items: center;">
+              <span style="font-size: 18px;">🛡️</span>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">
+                <strong>100% Verified Requests:</strong> Uploads eliminate commercial resellers. Medical details are securely encrypted and never publicly exposed.
+              </p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; gap: var(--space-sm);">
+            <button type="button" id="btn-back-to-details" class="btn btn-secondary" style="flex: 1;">
+              ← Back
+            </button>
+            <button type="submit" id="btn-submit-slip" class="btn btn-primary" style="flex: 2;">
+              Submit for Verification 📄
+            </button>
           </div>
         </div>
-
-        <!-- Urgency Tier -->
-        <div class="form-group">
-          <label class="form-label">Urgency Tier</label>
-          <select id="urgency-tier" class="form-select">
-            <option value="within_2_hours">Critical — Required within 2 Hours</option>
-            <option value="within_24_hours">Standard — Required within 24 Hours</option>
-          </select>
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" id="submit-request-btn" class="btn btn-primary" style="margin-top: var(--space-md); padding: 12px;">
-          Broadcast Emergency Request 🚨
-        </button>
       </form>
     </main>
 
