@@ -1,10 +1,12 @@
 /* ============================================================================
-   QATRA — Design Tokens & Global Style System (v1.0)
+   QATRA — Design Tokens & Global Style System (v2.0)
    Alkhidmat Foundation Emergency Blood Response Platform
-   Mobile-First, Responsive, Production-Grade
-============================================================================ */
+   White Theme Only · Apple Design · Production-Grade
+   ============================================================================ */
 
 :root {
+  color-scheme: light;
+
   /* Brand Palette */
   --primary-red: #C92A2A;
   --primary-red-hover: #A61E1E;
