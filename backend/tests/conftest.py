@@ -13,6 +13,22 @@ def setup_test_database():
     yield
 
 
+@pytest.fixture
+def anyio_backend():
+    """Ensure anyio tests run on asyncio without looking for optional trio backend."""
+    return "asyncio"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def initialize_test_database():
+    """Ensure all SQLAlchemy model tables are created before running the test suite."""
+    from app.core.database import engine
+    from app.models import Base
+
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
 @pytest.fixture(autouse=True)
 def reset_rate_limiter_before_each_test():
     """Reset the sliding window rate limiter before every single test.
@@ -24,3 +40,4 @@ def reset_rate_limiter_before_each_test():
     limiter.enabled = True
     yield
     limiter.clear()
+
