@@ -23,6 +23,15 @@ from app.schemas.request import RequestBase, RequestCreate, RequestUpdate, Reque
 from app.schemas.notification import NotificationResponse
 from app.schemas.event import EventBase, EventCreate, EventResponse, RegistrationCreate, RegistrationResponse
 from app.schemas.audit import AuditLogCreate, AuditLogResponse
+from app.schemas.feed import (
+    FeedItemResponse,
+    FeedListResponse,
+    FeedDetailResponse,
+    FeedResponseAction,
+    FeedShareResponse,
+    FeedCloseRequest,
+    FeedCloseResponse,
+)
 
 __all__ = [
     "UserRole",
@@ -58,4 +67,12 @@ __all__ = [
     "RegistrationResponse",
     "AuditLogCreate",
     "AuditLogResponse",
+    "FeedItemResponse",
+    "FeedListResponse",
+    "FeedDetailResponse",
+    "FeedResponseAction",
+    "FeedShareResponse",
+    "FeedCloseRequest",
+    "FeedCloseResponse",
 ]
+

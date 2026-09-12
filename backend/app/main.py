@@ -20,6 +20,7 @@ from app.routers.health import router as health_router
 from app.routers.auth import router as auth_router
 from app.routers.awareness import router as awareness_router
 from app.routers.map import router as map_router
+from app.routers.feed import router as feed_router
 
 
 @asynccontextmanager
@@ -54,6 +55,7 @@ app.include_router(health_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth")
 app.include_router(awareness_router, prefix=f"{settings.API_V1_STR}/awareness")
 app.include_router(map_router, prefix=f"{settings.API_V1_STR}/map")
+app.include_router(feed_router, prefix=f"{settings.API_V1_STR}/feed")
 
 
 
