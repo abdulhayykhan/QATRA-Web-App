@@ -3,13 +3,15 @@
  * Enables PWA capabilities, offline asset caching, and fast app shell loads.
  */
 
-const CACHE_NAME = 'qatra-v1.0.2';
+const CACHE_NAME = 'qatra-v1.0.3';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/static/css/tokens.css',
   '/static/css/apple.css',
   '/static/js/api.js',
+  '/static/js/auth-modal.js',
+  '/static/js/motion-interactions.js',
   '/static/js/pwa.js',
   '/media/logo.png',
   '/static/icons/icon-192.png',
