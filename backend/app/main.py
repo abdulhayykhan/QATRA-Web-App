@@ -23,10 +23,16 @@ from app.routers.map import router as map_router
 from app.routers.feed import router as feed_router
 
 
+from app.core.database import engine
+from app.models.base import Base
+import app.models  # noqa: F401
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events (startup / shutdown)."""
-    # Startup logic: DB connection checks, background services setup
+    # Initialize DB schema for in-memory SQLite and testing environments
+    Base.metadata.create_all(bind=engine)
     yield
     # Shutdown logic: cleanup resources
 

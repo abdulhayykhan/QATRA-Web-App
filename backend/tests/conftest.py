@@ -1,6 +1,16 @@
 """Pytest configuration and global test fixtures for QATRA backend test suite."""
 import pytest
+from app.core.database import engine
 from app.core.rate_limit import limiter
+from app.models.base import Base
+import app.models  # noqa: F401 - Register all models with Base.metadata
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_database():
+    """Ensure all database tables are created before running the test suite."""
+    Base.metadata.create_all(bind=engine)
+    yield
 
 
 @pytest.fixture(autouse=True)
