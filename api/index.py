@@ -4,12 +4,20 @@ import traceback
 from pathlib import Path
 
 # Set up system paths for serverless environment
-root_dir = Path(__file__).resolve().parent.parent
-backend_dir = root_dir / "backend"
+current_file = Path(__file__).resolve()
+api_dir = current_file.parent
+repo_root = api_dir.parent
 
-for path in (str(backend_dir), str(root_dir)):
-    if path not in sys.path:
-        sys.path.insert(0, path)
+candidate_paths = [
+    repo_root / "backend",
+    api_dir / "backend",
+    repo_root,
+    api_dir,
+]
+
+for p in candidate_paths:
+    if str(p) not in sys.path:
+        sys.path.insert(0, str(p))
 
 app = None
 
@@ -20,8 +28,9 @@ except Exception as e:
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse
 
-    _diag_app = FastAPI(title="QATRA Diagnostic Fallback")
+    err_msg = str(e)
     err_tb = traceback.format_exc()
+    _diag_app = FastAPI(title="QATRA Diagnostic Fallback")
 
     @_diag_app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
     async def catch_all(path_name: str):
@@ -29,7 +38,7 @@ except Exception as e:
             status_code=500,
             content={
                 "error": "Serverless Startup Failure",
-                "details": str(e),
+                "details": err_msg,
                 "traceback": err_tb,
                 "sys_path": sys.path[:5],
             },
