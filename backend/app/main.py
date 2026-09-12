@@ -76,6 +76,8 @@ app.add_middleware(RateLimitMiddleware)
 
 # Register Routers
 app.include_router(health_router, prefix=settings.API_V1_STR)
+app.include_router(health_router, prefix="/api")
+app.include_router(health_router, prefix="")
 app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth")
 app.include_router(awareness_router, prefix=f"{settings.API_V1_STR}/awareness")
 app.include_router(map_router, prefix=f"{settings.API_V1_STR}/map")
