@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>QATRA — Emergency Blood Response Platform</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <!-- Core & Apple Design System Stylesheets -->
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/apple.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with Translucent Glass & Segmented Pill Navigation -->
+    <header class="app-header">
+      <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+        <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+        <span>QATRA</span>
+      </a>
+
+      <!-- Apple Segmented Navigation Bar -->
+      <nav class="desktop-nav">
+        <a href="/index.html" class="active">Home</a>
+        <a href="/seeker/feed.html">Appeals Feed</a>
+        <a href="/seeker/map.html">Live Map</a>
+        <a href="/seeker/request.html">Request Blood</a>
+        <a href="/donor/register.html">Register Donor</a>
+        <a href="/donor/eligibility.html">Eligibility</a>
+        <a href="/donor/awareness.html">Awareness</a>
+        <a href="/admin/drives.html">Drives</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="header-actions" id="header-actions">
+        <button type="button" class="btn btn-sm btn-ghost pwa-install-trigger" id="btn-header-install" title="Install QATRA App on your device">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="hide-on-mobile">Install App</span>
+        </button>
+        <button id="btn-header-login" class="btn btn-sm btn-primary auth-trigger-btn">Sign In</button>
+        <div id="user-header-menu" style="display: none; align-items: center; gap: 8px;">
+          <a id="header-profile-link" href="/donor/dashboard.html" class="btn btn-sm btn-ghost">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span id="header-user-name">Profile</span>
+          </a>
+          <button id="btn-header-logout" class="btn btn-sm btn-secondary" style="padding: 4px 8px; font-size: 11px;">✕</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Apple Hero Section -->
+      <section class="hero-section">
+        <div class="hero-eyebrow">
+          <span class="status-dot"></span>
+          <span>Karachi 24/7 Emergency Blood Response Platform</span>
+        </div>
+
+        <div class="hero-brand-mark">
+          <img src="/media/logo.png" alt="QATRA Brand Logo" class="hero-logo-img" />
+        </div>
+
+        <h1 class="hero-title">
+          Every Drop Counts.<br>
+          <span class="hero-gradient-text">Every Second Matters.</span>
+        </h1>
+
+        <p class="hero-tagline">
+          Alkhidmat Foundation's real-time emergency network connecting verified blood seekers with proximity-matched volunteer donors across Karachi.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/seeker/request.html" class="btn btn-primary btn-hero">
+            <span>Request Blood Now</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <a href="/donor/register.html" class="btn btn-secondary btn-hero">
+            <span>Register as Donor</span>
+          </a>
+        </div>
+
+        <div class="hero-trust-bar">
+          <div class="trust-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>15-Min Dynamic Expansion</span>
+          </div>
+          <div class="trust-divider"></div>
+          <div class="trust-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <span>Hospital Slip OCR Verification</span>
+          </div>
+          <div class="trust-divider"></div>
+          <div class="trust-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>100% Volunteer Network</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Primary Action Paths -->
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-eyebrow">Immediate Action</span>
+          <h2 class="section-title">How can we help you today?</h2>
+        </div>
+
+        <div class="grid-responsive-2">
+          <!-- Path 1: Emergency Seeker -->
+          <a href="/seeker/request.html" class="path-card">
+            <div class="path-icon-container icon-red">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="path-content">
+              <div class="path-badge-row">
+                <span class="pill-badge pill-red">Emergency Broadcast</span>
+                <span class="path-eta">Immediate Matching</span>
+              </div>
+              <h3 class="path-title">Need Blood Urgently</h3>
+              <p class="path-description">Upload hospital slip, verify patient requirement with OCR, and broadcast alerts to nearby donors within 15 km.</p>
+            </div>
+            <div class="path-chevron">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </a>
+
+          <!-- Path 2: Donor Registration & Eligibility -->
+          <a href="/donor/register.html" class="path-card">
+            <div class="path-icon-container icon-rose">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <div class="path-content">
+              <div class="path-badge-row">
+                <span class="pill-badge pill-rose">Life Saver</span>
+                <span class="path-eta">Join 10k+ Donors</span>
+              </div>
+              <h3 class="path-title">Register as a Donor</h3>
+              <p class="path-description">Sign in with Google, verify your Pakistani CNIC, and receive proximity-based urgent alerts when patients near you need blood.</p>
+            </div>
+            <div class="path-chevron">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Explore Platform Services -->
+      <div class="section-container">
+        <div class="section-header">
+          <span class="section-eyebrow">Platform Capabilities</span>
+          <h2 class="section-title">Explore Platform Services</h2>
+        </div>
+
+        <div class="grid-responsive-4">
+          <a href="/seeker/map.html" class="service-card">
+            <div class="service-icon-box icon-blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            </div>
+            <h4 class="service-title">Live Map</h4>
+            <p class="service-desc">Real-time hospital requests, cluster markers, and expanding search radius across Karachi.</p>
+            <div class="service-link-label">View Map →</div>
+          </a>
+
+          <a href="/seeker/feed.html" class="service-card">
+            <div class="service-icon-box icon-red">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <h4 class="service-title">Urgent Feed</h4>
+            <p class="service-desc">Verified appeals stream filtered by blood group, hospital urgency, and donation drives.</p>
+            <div class="service-link-label">Browse Feed →</div>
+          </a>
+
+          <a href="/donor/eligibility.html" class="service-card">
+            <div class="service-icon-box icon-green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h4 class="service-title">Eligibility Quiz</h4>
+            <p class="service-desc">4-step medical screening for donation fitness, 90-day cooldown status, and health criteria.</p>
+            <div class="service-link-label">Take Quiz →</div>
+          </a>
+
+          <a href="/donor/awareness.html" class="service-card">
+            <div class="service-icon-box icon-purple">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <h4 class="service-title">Awareness & Drives</h4>
+            <p class="service-desc">Educational myths vs. facts, university campus blood drive schedules, and post-donation guidance.</p>
+            <div class="service-link-label">Learn More →</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Alkhidmat 24/7 Operations Desk Card -->
+      <div class="alkhidmat-desk-card">
+        <div class="desk-content-left">
+          <div class="desk-badge">
+            <span class="desk-badge-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <span>Alkhidmat Official Operations</span>
+          </div>
+          <h3 class="desk-title">24/7 Verification Queue & Campus Blood Drives Desk</h3>
+          <p class="desk-desc">Hospital slip OCR review, CNIC identity validation, compliance audit trails, and campus blood drive coordination.</p>
+        </div>
+        <div class="desk-actions">
+          <a href="/admin/verification.html" class="btn btn-secondary desk-btn">Verification Desk</a>
+          <a href="/admin/drives.html" class="btn btn-outline desk-btn">Drives Desk</a>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation (Apple Frosted Glass) -->
+    <nav class="bottom-nav">
+      <a href="/index.html" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Google Auth & Sign-In Modal (Apple Glass Sheet) -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center;">
+      <button class="modal-close" id="modal-close-auth">✕</button>
+      <img src="/media/logo.png" alt="QATRA" style="height: 52px; width: auto; margin: 0 auto 12px auto; display: block;" />
+      <h2 style="font-size: 20px; font-weight: 800; margin: 0 0 6px 0;">Welcome to QATRA</h2>
+      <p style="font-size: 13.5px; color: var(--apple-secondary-label); margin: 0 0 24px 0; line-height: 1.5;">
+        Sign in to access real-time blood emergency dispatches, manage your donor status, or verify hospital slips.
+      </p>
+
+      <button type="button" id="modal-google-btn" class="google-btn" style="margin-bottom: 16px;">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <div style="font-size: 11.5px; color: var(--apple-tertiary-label); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+        Or select demo role:
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+        <button type="button" id="role-donor-btn" class="btn btn-sm btn-secondary">Donor User</button>
+        <button type="button" id="role-admin-btn" class="btn btn-sm btn-secondary">Desk Lead (Admin)</button>
+      </div>
+
+      <div style="font-size: 11px; color: var(--apple-tertiary-label); line-height: 1.4;">
+        🔒 Zero-password authentication. Protected by Alkhidmat patient privacy protocol & AES-256 encryption.
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA, Auth & Motion Modules -->
+  <script type="module" src="/static/js/pwa.js"></script>
+  <script type="module" src="/static/js/auth-modal.js"></script>
+  <script type="module" src="/static/js/motion-interactions.js"></script>
+</body>
+</html>
