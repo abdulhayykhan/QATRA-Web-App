@@ -19,6 +19,7 @@ from app.services.geo import (
 from app.services.feed import (
     check_and_auto_close_request,
     record_donation_fulfillment,
+    trigger_feed_blood_alert,
 )
 
 __all__ = [
@@ -37,6 +38,8 @@ __all__ = [
     "check_and_expand_radius",
     "check_and_auto_close_request",
     "record_donation_fulfillment",
+    "trigger_feed_blood_alert",
 ]
+
 
 
