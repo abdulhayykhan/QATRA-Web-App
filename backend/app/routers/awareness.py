@@ -34,9 +34,12 @@ from app.schemas.awareness import (
     HealthFeedbackCreateRequest,
 )
 
-# Ensure database tables exist in Supabase PostgreSQL
-AwarenessContent.__table__.create(bind=engine, checkfirst=True)
-HealthFeedback.__table__.create(bind=engine, checkfirst=True)
+# Ensure database tables exist in Supabase PostgreSQL (graceful if DB unreachable at import)
+try:
+    AwarenessContent.__table__.create(bind=engine, checkfirst=True)
+    HealthFeedback.__table__.create(bind=engine, checkfirst=True)
+except Exception:
+    pass
 
 router = APIRouter(tags=["Awareness & Eligibility"])
 
