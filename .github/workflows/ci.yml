@@ -12,6 +12,7 @@ on:
     branches:
       - main
       - develop
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -26,6 +27,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+          cache-dependency-path: "requirements.txt"
 
       - name: Install Linting Tools
         run: |
@@ -34,7 +36,7 @@ jobs:
 
       - name: Run Ruff Lint Check
         run: |
-          ruff check backend/app --ignore E501,E402
+          ruff check backend/app
 
   test:
     name: Backend Test Suite (Pytest)
@@ -43,9 +45,9 @@ jobs:
     env:
       ENVIRONMENT: test
       DEBUG: "False"
-      SECRET_KEY: a9ba8ddb3a72899a15a3ccf66992c5f8313400a9743281f2374d939d5c194f5f
-      ENCRYPTION_KEY_AES256: c75a7b8cf0cb0653fc66e54800ee0194b02d1dcd0262d970f695f4e87e20f775
-      DATABASE_URL: sqlite:///:memory:
+      SECRET_KEY: "a9ba8ddb3a72899a15a3ccf66992c5f8313400a9743281f2374d939d5c194f5f"
+      ENCRYPTION_KEY_AES256: "c75a7b8cf0cb0653fc66e54800ee0194b02d1dcd0262d970f695f4e87e20f775"
+      DATABASE_URL: "sqlite:///:memory:"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -55,6 +57,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+          cache-dependency-path: "requirements.txt"
 
       - name: Install Dependencies
         run: |

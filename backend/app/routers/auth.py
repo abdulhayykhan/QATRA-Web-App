@@ -615,7 +615,7 @@ async def get_admin_audit_logs(
         total=total,
         skip=skip,
         limit=limit,
-        items=[AuditLogResponse.model_validate(l) for l in logs],
+        items=[AuditLogResponse.model_validate(log_item) for log_item in logs],
     )
 
 

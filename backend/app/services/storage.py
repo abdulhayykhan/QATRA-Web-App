@@ -118,7 +118,7 @@ async def save_slip_file_async(file_bytes: bytes, original_filename: str, user_i
     timestamp = int(datetime.now(timezone.utc).timestamp())
     random_suffix = uuid.uuid4().hex[:8]
     ext = os.path.splitext(clean_name)[1].lower() or ".jpg"
-    
+
     saved_filename = f"slip_{user_id}_{timestamp}_{random_suffix}{ext}"
     content_type = get_mime_type(saved_filename)
 
@@ -143,7 +143,7 @@ def save_slip_file(file_bytes: bytes, original_filename: str, user_id: int) -> T
     timestamp = int(datetime.now(timezone.utc).timestamp())
     random_suffix = uuid.uuid4().hex[:8]
     ext = os.path.splitext(clean_name)[1].lower() or ".jpg"
-    
+
     saved_filename = f"slip_{user_id}_{timestamp}_{random_suffix}{ext}"
     content_type = get_mime_type(saved_filename)
 
