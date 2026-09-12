@@ -24,6 +24,8 @@ from app.models.request import Request
 from app.models.event import Event
 from app.models.notification import Notification
 from app.schemas.enums import UserRole, RequestStatus, NotificationType
+from app.services.cooldown import calculate_donor_cooldown
+from app.services.audit import log_audit_event
 from app.schemas.feed import (
     FeedItemResponse,
     FeedListResponse,
@@ -218,3 +220,144 @@ def get_feed_item_detail(
         search_radius_km=req.search_radius_km,
         created_at=req.created_at,
     )
+
+
+# ==============================================================================
+# 5.3 POST /api/feed/{request_id}/respond
+# ==============================================================================
+
+@router.post(
+    "/{request_id}/respond",
+    response_model=FeedResponseAction,
+    summary="One-Tap 'I Can Donate' Response",
+    description="Registers an immediate donor response to an active verified emergency request (FR 3.3).",
+)
+def respond_to_feed_request(
+    request_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Authenticate user: Must be a verified donor or admin.
+    2. Validate request existence and active verified state.
+    3. Check donor eligibility and 90-day cooldown status.
+    4. Record in-app notification to the seeker.
+    5. Update request state to 'matched' if currently 'verified'.
+    6. Log compliance audit event.
+    """
+    # Role check: verified donor or admin
+    if current_user.role not in [UserRole.VERIFIED_DONOR.value, UserRole.ADMIN.value]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Only verified donors can respond to emergency blood requests.",
+        )
+
+    req = db.query(Request).filter(Request.id == request_id).first()
+    if not req:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request #{request_id} not found.",
+        )
+
+    if req.status in ["fulfilled", "cancelled"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot respond to blood request #{request_id} because it is already {req.status}.",
+        )
+
+    if req.status == "pending_verification":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot respond to blood request #{request_id} while it is pending verification.",
+        )
+
+    # Validate donor profile and cooldown
+    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    if donor:
+        cooldown_info = calculate_donor_cooldown(donor)
+        if cooldown_info.get("is_on_cooldown"):
+            days = cooldown_info.get("days_remaining", 0)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Donor is currently on a 90-day cooldown ({days} days remaining) and cannot donate at this time.",
+            )
+
+    # Transition to matched if verified
+    if req.status == "verified":
+        req.status = "matched"
+
+    # Send in-app notification to seeker
+    seeker_notif = Notification(
+        user_id=req.seeker_id,
+        request_id=req.id,
+        title="Donor Responded: I Can Donate",
+        message=f"Verified donor {current_user.full_name} has responded 'I Can Donate' to your emergency request for {req.patient_name} at {req.hospital_name}.",
+        notification_type=NotificationType.SYSTEM.value,
+        is_read=False,
+        sent_at=datetime.now(timezone.utc),
+    )
+    db.add(seeker_notif)
+
+    # Log audit event
+    log_audit_event(
+        db=db,
+        action="DONOR_FEED_RESPONSE",
+        target_resource="requests",
+        target_id=str(req.id),
+        user_id=current_user.id,
+        details=f"Donor {current_user.id} responded to request {req.id} (Status -> {req.status})",
+    )
+
+    db.commit()
+    db.refresh(req)
+
+    return FeedResponseAction(
+        request_id=req.id,
+        response_recorded=True,
+        message="Thank you! The seeker has been notified.",
+    )
+
+
+# ==============================================================================
+# 5.4 GET /api/feed/{request_id}/share
+# ==============================================================================
+
+@router.get(
+    "/{request_id}/share",
+    response_model=FeedShareResponse,
+    summary="Generate Structured Share Link and WhatsApp Message",
+    description="Generates a structured URL and WhatsApp-formatted message without losing details or formatting (FR 3.3).",
+)
+def get_feed_share_details(
+    request_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Generates structured shareable link and clean WhatsApp broadcast text.
+    """
+    req = db.query(Request).filter(Request.id == request_id).first()
+    if not req:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request #{request_id} not found.",
+        )
+
+    # Format human-readable urgency text
+    urgency_text = "Within 2 Hours" if req.urgency == "within_2_hours" else "Within 24 Hours"
+    share_url = f"https://qatra.pk/requests/{req.id}"
+
+    whatsapp_text = (
+        f"🚨 *URGENT BLOOD NEEDED (QATRA)*\n"
+        f"Blood Group: *{req.blood_group}*\n"
+        f"Hospital: *{req.hospital_name}*\n"
+        f"Units Needed: *{req.units_needed}*\n"
+        f"Urgency: *{urgency_text}*\n"
+        f"Verify & Respond: {share_url}"
+    )
+
+    return FeedShareResponse(
+        request_id=req.id,
+        share_url=share_url,
+        whatsapp_text=whatsapp_text,
+    )
+
