@@ -206,17 +206,17 @@ sequenceDiagram
     end
 
     Seeker->>Web: Initiates Emergency Dispatch
-    Web->>API: GET /api/map/requests/{id}/matches
+    Web->>API: GET /api/map/requests/:id/matches
     API->>Geo: Query Available Donors in 5km Radius
     Geo-->>API: Ranked Candidate Donors (Haversine Distance + ETA)
-    API->>Donor: Push Proximity Alert ("B+ Needed at Civil Hospital - 3.4km")
+    API->>Donor: Push Proximity Alert (B+ Needed at Civil Hospital)
     
-    Donor->>Web: Taps "Accept Emergency Request"
-    Web->>API: POST /api/map/requests/{id}/accept
+    Donor->>Web: Taps Accept Emergency Request
+    Web->>API: POST /api/map/requests/:id/accept
     API-->>Web: Match Confirmed (Proxy Channel px-99218 Created)
     
-    Seeker->>Web: Taps "Call Matched Donor"
-    Web->>API: POST /api/map/proxy-call/{id}/initiate
+    Seeker->>Web: Taps Call Matched Donor
+    Web->>API: POST /api/map/proxy-call/:id/initiate
     API-->>Seeker: Virtual Number (+92-21-3000-0000) Connected
     Note over Seeker,Donor: Both parties coordinate safely without exposing personal phone numbers
 ```
@@ -227,22 +227,22 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    Start([Hospital Slip Uploaded]) --> CheckFormat{Valid File? PDF/PNG/JPG}
-    CheckFormat -- No --> RejectFormat[Return 400 Bad Request]
-    CheckFormat -- Yes --> RunOCR[Run OCR Extraction Engine]
+    Start(["Hospital Slip Uploaded"]) --> CheckFormat{"Valid File? (PDF / PNG / JPG)"}
+    CheckFormat -->|No| RejectFormat["Return 400 Bad Request"]
+    CheckFormat -->|Yes| RunOCR["Run OCR Extraction Engine"]
     
-    RunOCR --> ExtractFields[Extract Hospital Name, MRN, Blood Group, Doctor Stamp]
-    ExtractFields --> EvalConfidence{Confidence Score >= 0.85?}
+    RunOCR --> ExtractFields["Extract Hospital Name, MRN, Blood Group, Doctor Stamp"]
+    ExtractFields --> EvalConfidence{"Confidence Score >= 0.85?"}
     
-    EvalConfidence -- Yes --> AutoVerify[Status: Verified<br>Immediate Map Dispatch]
-    EvalConfidence -- No --> FlagQueue[Status: Pending Verification<br>Escalate to 24/7 Desk]
+    EvalConfidence -->|Yes| AutoVerify["Status: Verified<br>Immediate Map Dispatch"]
+    EvalConfidence -->|No| FlagQueue["Status: Pending Verification<br>Escalate to 24/7 Desk"]
     
-    FlagQueue --> DeskReview[Alkhidmat Desk Admin Reviews Slip]
-    DeskReview --> AdminDecision{Admin Assessment}
-    AdminDecision -- Approve --> ManualApprove[POST /api/auth/admin/verify-slip/{id}<br>Status: Verified]
-    AdminDecision -- Reject --> ManualReject[Reject Request & Notify Seeker]
+    FlagQueue --> DeskReview["Alkhidmat Desk Admin Reviews Slip"]
+    DeskReview --> AdminDecision{"Admin Assessment"}
+    AdminDecision -->|Approve| ManualApprove["POST /api/auth/admin/verify-slip/:id<br>Status: Verified"]
+    AdminDecision -->|Reject| ManualReject["Reject Request & Notify Seeker"]
     
-    AutoVerify --> Broadcast[Publish to Emergency Feed & Proximity Map]
+    AutoVerify --> Broadcast["Publish to Emergency Feed & Proximity Map"]
     ManualApprove --> Broadcast
 ```
 
@@ -252,22 +252,22 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    Request([Browser Request]) --> SW{Service Worker Registered?}
-    SW -- No --> NetworkDirect[Fetch from Network]
-    SW -- Yes --> RouteType{Request Target}
+    Request(["Browser Request"]) --> SW{"Service Worker Registered?"}
+    SW -->|No| NetworkDirect["Fetch from Network"]
+    SW -->|Yes| RouteType{"Request Target"}
     
-    RouteType -- API Route (/api/*) --> NetFirst[Network First with Graceful Fallback]
-    RouteType -- Static Asset (/static/*, /media/*) --> StaleWhile[Stale-While-Revalidate]
-    RouteType -- Navigation (HTML Pages) --> CacheFirst[Cache First with Offline Fallback]
+    RouteType -->|API Routes /api/*| NetFirst["Network First with Graceful Fallback"]
+    RouteType -->|Static Assets| StaleWhile["Stale-While-Revalidate"]
+    RouteType -->|HTML Pages| CacheFirst["Cache First with Offline Fallback"]
     
-    NetFirst -->|Success| ReturnResponse[Serve Fresh Data]
-    NetFirst -->|Failure / Offline| DegradedHealth[Return Cached Feed & Fallback Response]
+    NetFirst -->|Success| ReturnResponse["Serve Fresh Data"]
+    NetFirst -->|Offline / Error| DegradedHealth["Return Cached Feed & Fallback Response"]
     
-    StaleWhile --> ServeCached[Serve from Cache Immediately]
-    StaleWhile --> FetchUpdate[Fetch Background Update & Refresh Cache]
+    StaleWhile --> ServeCached["Serve from Cache Immediately"]
+    StaleWhile --> FetchUpdate["Fetch Background Update & Refresh Cache"]
     
-    CacheFirst -->|In Cache| ServeHTML[Render Instant Apple HIG Shell]
-    CacheFirst -->|Miss| FetchHTML[Fetch from Network & Store]
+    CacheFirst -->|Hit| ServeHTML["Render Instant Apple HIG Shell"]
+    CacheFirst -->|Miss| FetchHTML["Fetch from Network & Store"]
 ```
 
 ---
