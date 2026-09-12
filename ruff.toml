@@ -1,0 +1,12 @@
+# Ruff configuration for QATRA
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # line too long
+    "E402",  # module level import not at top
+    "F401",  # imported but unused
+    "E712",  # comparison to True/False (needed for SQLAlchemy boolean filters)
+]
