@@ -77,9 +77,13 @@ from starlette.requests import Request
 frontend_dir = root_dir / "frontend"
 static_dir = frontend_dir / "static"
 pages_dir = frontend_dir / "pages"
+media_dir = root_dir / "media"
 
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+if media_dir.exists():
+    app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
 
 if pages_dir.exists():
     seeker_dir = pages_dir / "seeker"
@@ -92,6 +96,28 @@ if pages_dir.exists():
         app.mount("/donor", StaticFiles(directory=str(donor_dir), html=True), name="donor")
     if admin_dir.exists():
         app.mount("/admin", StaticFiles(directory=str(admin_dir), html=True), name="admin")
+
+
+@app.get("/manifest.json", tags=["PWA"])
+async def pwa_manifest():
+    """Serve PWA Web App Manifest at root URL for mobile Chrome installation."""
+    manifest_file = static_dir / "manifest.json"
+    if manifest_file.exists():
+        return FileResponse(str(manifest_file), media_type="application/manifest+json")
+    return {"name": "QATRA Emergency Blood Response"}
+
+
+@app.get("/sw.js", tags=["PWA"])
+async def pwa_service_worker():
+    """Serve Service Worker at root URL allowing root-scope progressive caching."""
+    sw_file = static_dir / "sw.js"
+    if sw_file.exists():
+        return FileResponse(
+            str(sw_file),
+            media_type="application/javascript",
+            headers={"Service-Worker-Allowed": "/"},
+        )
+    return ""
 
 
 @app.get("/", tags=["Root"])

@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QATRA — Emergency Blood Response Platform</title>
+  
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
     .hero-section {
@@ -13,11 +22,17 @@
       border-radius: 0 0 var(--radius-lg) var(--radius-lg);
       margin-bottom: var(--space-lg);
     }
-    .hero-logo {
-      font-size: 56px;
-      line-height: 1;
+    @media (min-width: 768px) {
+      .hero-section {
+        padding: var(--space-2xl) var(--space-xl);
+      }
+    }
+    .hero-logo-img {
+      height: 76px;
+      width: auto;
       margin-bottom: var(--space-sm);
-      animation: pulse 2s infinite;
+      filter: drop-shadow(0 4px 12px rgba(201, 42, 42, 0.2));
+      animation: pulse 2.5s infinite ease-in-out;
     }
     @keyframes pulse {
       0% { transform: scale(1); }
@@ -25,25 +40,19 @@
       100% { transform: scale(1); }
     }
     .hero-title {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 800;
       color: var(--primary-red);
       letter-spacing: -0.5px;
     }
     .hero-tagline {
-      font-size: 14px;
+      font-size: 15px;
       color: var(--text-muted);
       margin-top: var(--space-xs);
-      max-width: 320px;
+      max-width: 520px;
       margin-left: auto;
       margin-right: auto;
-    }
-    .cta-card {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-md);
-      padding: var(--space-lg);
-      margin-bottom: var(--space-lg);
+      line-height: 1.5;
     }
     .path-card {
       border: 2px solid var(--border-color);
@@ -56,6 +65,7 @@
       gap: var(--space-md);
       transition: all var(--transition-fast);
       background: var(--bg-surface);
+      height: 100%;
     }
     .path-card:hover {
       border-color: var(--primary-red);
@@ -70,24 +80,19 @@
       border-color: var(--primary-red);
     }
     .path-icon {
-      font-size: 32px;
+      font-size: 36px;
       flex-shrink: 0;
     }
     .path-text h3 {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
     .path-text p {
       font-size: 13px;
       color: var(--text-muted);
       margin-bottom: 0;
-    }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-md);
-      margin-top: var(--space-sm);
+      line-height: 1.4;
     }
     .feature-item {
       background: var(--bg-surface);
@@ -98,18 +103,23 @@
       text-decoration: none;
       color: var(--text-main);
       transition: all var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     .feature-item:hover {
       border-color: var(--primary-red);
       box-shadow: var(--shadow-sm);
+      transform: translateY(-2px);
     }
     .feature-icon {
-      font-size: 24px;
+      font-size: 26px;
       margin-bottom: var(--space-xs);
     }
     .feature-title {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 700;
     }
     .google-btn {
       display: flex;
@@ -159,14 +169,30 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Header -->
+    <!-- Header with Logo and Responsive Desktop Navigation -->
     <header class="app-header">
-      <a href="/index.html" class="brand">
-        <span class="drop-icon">🩸</span>
+      <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+        <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
         <span>QATRA</span>
       </a>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html" class="active">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/donor/eligibility.html">✅ Eligibility</a>
+        <a href="/donor/awareness.html">📚 Awareness</a>
+        <a href="/admin/drives.html">🎪 Drives</a>
+      </nav>
+
       <div class="header-actions" id="header-actions">
-        <button id="btn-header-login" class="btn btn-sm btn-outline">Sign In</button>
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" id="btn-header-install" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <button id="btn-header-login" class="btn btn-sm btn-primary">Sign In</button>
         <div id="user-header-menu" style="display: none; align-items: center; gap: 6px;">
           <a id="header-profile-link" href="/donor/dashboard.html" class="btn btn-sm btn-outline">👤 <span id="header-user-name">Profile</span></a>
           <button id="btn-header-logout" class="btn btn-sm btn-secondary" style="padding: 4px 8px; font-size: 11px;">✕</button>
@@ -175,25 +201,25 @@
     </header>
 
     <!-- Main Content -->
-    <main class="app-content" style="padding: 0 0 80px 0;">
+    <main class="app-content">
       <!-- Hero Section -->
       <section class="hero-section">
-        <div class="hero-logo">🩸</div>
+        <img src="/media/logo.png" alt="QATRA Brand Logo" class="hero-logo-img" />
         <h1 class="hero-title">QATRA</h1>
-        <p class="hero-tagline">Alkhidmat Foundation Emergency Blood Response Platform — Every Second Saves a Life.</p>
+        <p class="hero-tagline">Alkhidmat Foundation Emergency Blood Response Platform — Connecting Verified Seekers with Proximity-Matched Donors in Real Time.</p>
       </section>
 
-      <!-- Primary Action Paths -->
-      <div style="padding: 0 var(--space-md);">
-        <h2 style="font-size: 16px; margin-bottom: var(--space-sm);">How can we help today?</h2>
+      <!-- Primary Action Paths (Side-by-Side on Tablet/Desktop) -->
+      <div style="margin-bottom: var(--space-xl);">
+        <h2 style="font-size: 18px; margin-bottom: var(--space-md); font-weight: 700;">How can we help you today?</h2>
 
-        <div style="display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg);">
+        <div class="grid-responsive-2" style="margin-bottom: var(--space-lg);">
           <!-- Path 1: Emergency Seeker -->
           <a href="/seeker/request.html" class="path-card emergency">
             <div class="path-icon">🚨</div>
             <div class="path-text">
               <h3 style="color: var(--primary-red);">Need Blood Urgently</h3>
-              <p>Upload hospital slip, verify patient requirement, and broadcast to nearby verified donors.</p>
+              <p>Upload hospital slip, verify patient requirement, and broadcast to nearby verified donors across Karachi.</p>
             </div>
           </a>
 
@@ -202,53 +228,56 @@
             <div class="path-icon">❤️</div>
             <div class="path-text">
               <h3>Register as a Donor</h3>
-              <p>Sign in with Google, verify your CNIC, and receive proximity-matched emergency alerts.</p>
+              <p>Sign in with Google, verify your Pakistani CNIC, and receive proximity-matched emergency blood alerts.</p>
             </div>
           </a>
         </div>
 
-        <!-- Quick Access Grid -->
-        <h2 style="font-size: 16px; margin-bottom: var(--space-sm);">Explore Features</h2>
-        <div class="features-grid">
+        <!-- Explore Features Grid (4 Columns on Desktop, 2 on Mobile) -->
+        <h2 style="font-size: 18px; margin-bottom: var(--space-md); font-weight: 700;">Explore Platform Services</h2>
+        <div class="grid-responsive-4" style="margin-bottom: var(--space-xl);">
           <a href="/seeker/map.html" class="feature-item">
             <div class="feature-icon">🗺️</div>
             <div class="feature-title">Live Map</div>
-            <p style="font-size: 11px; margin-top: 2px;">Nearby requests & radius</p>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Nearby requests & radius</p>
           </a>
 
           <a href="/seeker/feed.html" class="feature-item">
             <div class="feature-icon">📢</div>
             <div class="feature-title">Urgent Feed</div>
-            <p style="font-size: 11px; margin-top: 2px;">Citywide blood appeals</p>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Citywide blood appeals</p>
           </a>
 
           <a href="/donor/eligibility.html" class="feature-item">
             <div class="feature-icon">📋</div>
             <div class="feature-title">Eligibility Quiz</div>
-            <p style="font-size: 11px; margin-top: 2px;">4-step health screening</p>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">4-step health screening</p>
           </a>
 
           <a href="/donor/awareness.html" class="feature-item">
             <div class="feature-icon">📚</div>
             <div class="feature-title">Awareness</div>
-            <p style="font-size: 11px; margin-top: 2px;">Myths, facts & drives</p>
+            <p style="font-size: 12px; margin-top: 4px; color: var(--text-muted);">Myths, facts & drives</p>
           </a>
         </div>
 
         <!-- Admin Desk Banner -->
-        <div class="card" style="margin-top: var(--space-lg); background: var(--bg-subtle);">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="card" style="background: var(--bg-subtle);">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
             <div>
-              <h3 style="font-size: 14px;">Alkhidmat Desk & Verification Queue</h3>
-              <p style="font-size: 12px; margin-bottom: 0;">24/7 hospital slip OCR and CNIC review</p>
+              <h3 style="font-size: 15px;">Alkhidmat 24/7 Verification Queue & Drive Desk</h3>
+              <p style="font-size: 13px; margin-bottom: 0; color: var(--text-muted);">Hospital slip OCR review, CNIC validation queue, and campus donation drives management.</p>
             </div>
-            <a href="/admin/verification.html" class="btn btn-sm btn-secondary" style="width: auto;">Admin</a>
+            <div style="display: flex; gap: 8px;">
+              <a href="/admin/verification.html" class="btn btn-sm btn-secondary" style="width: auto;">Verification Desk</a>
+              <a href="/admin/drives.html" class="btn btn-sm btn-outline" style="width: auto;">Drives Desk</a>
+            </div>
           </div>
         </div>
       </div>
     </main>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation (Mobile Only, hidden on Desktop) -->
     <nav class="bottom-nav">
       <a href="/index.html" class="active">
         <span class="nav-icon">🏠</span>
@@ -272,8 +301,8 @@
   <!-- Google Auth & Sign-In Modal -->
   <div id="auth-modal" class="modal-overlay">
     <div class="modal-card" style="text-align: center; max-width: 400px; padding: var(--space-xl) var(--space-lg);">
-      <button class="modal-close" id="modal-close-auth" style="position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);">✕</button>
-      <div style="font-size: 44px; margin-bottom: var(--space-xs);">🩸</div>
+      <button class="modal-close" id="modal-close-auth">✕</button>
+      <img src="/media/logo.png" alt="QATRA" style="height: 52px; width: auto; margin: 0 auto 12px auto; display: block;" />
       <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Welcome to QATRA</h2>
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-lg);">
         Sign in to access real-time blood emergency dispatches, manage your donor status, or verify hospital slips.
@@ -304,6 +333,8 @@
     </div>
   </div>
 
+  <!-- PWA & Auth Modules -->
+  <script type="module" src="/static/js/pwa.js"></script>
   <script type="module" src="/static/js/auth-modal.js"></script>
 </body>
 </html>

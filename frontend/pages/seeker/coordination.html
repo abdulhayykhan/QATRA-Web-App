@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QATRA — Masked Proxy Coordination & Navigation</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
     .coordination-header-card {
@@ -145,19 +154,40 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Header -->
+    <!-- Header with Logo and Responsive Desktop Navigation -->
     <header class="app-header">
       <div style="display: flex; align-items: center; gap: var(--space-sm);">
-        <a href="/seeker/status.html" style="text-decoration: none; font-size: 18px;">←</a>
-        <span style="font-weight: 700; font-size: 16px;">Masked Proxy Coordination</span>
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
       </div>
-      <span class="badge badge-success">Encrypted</span>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html" class="active">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/donor/eligibility.html">✅ Eligibility</a>
+        <a href="/donor/awareness.html">📚 Awareness</a>
+        <a href="/admin/drives.html">🎪 Drives</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <span class="badge badge-success">Encrypted</span>
+      </div>
     </header>
 
     <!-- Main Content -->
     <main class="app-content">
-      <!-- Privacy Masked Call Bridge Card (Wireframe pg. 10, NFR 2.2) -->
-      <section class="coordination-header-card">
+      <div class="form-container-md">
+        <!-- Privacy Masked Call Bridge Card (Wireframe pg. 10, NFR 2.2) -->
+        <section class="coordination-header-card">
         <div class="privacy-shield-badge">
           <span>🛡️ ZERO-KNOWLEDGE PROXY BRIDGE</span>
         </div>
@@ -243,6 +273,7 @@
           <button type="submit" class="btn btn-primary" style="width: auto; padding: 8px 16px;">Send</button>
         </form>
       </div>
+      </div>
     </main>
 
     <!-- Bottom Navigation -->
@@ -270,6 +301,7 @@
     </nav>
   </div>
 
+  <script type="module" src="/static/js/pwa.js"></script>
   <script type="module" src="/static/js/coordination.js"></script>
 </body>
 </html>

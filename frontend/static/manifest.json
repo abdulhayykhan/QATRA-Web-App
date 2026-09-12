@@ -1,0 +1,67 @@
+{
+  "name": "QATRA Emergency Blood Response",
+  "short_name": "QATRA",
+  "description": "Emergency blood response platform connecting verified seekers to eligible donors in real-time across Pakistan.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#C92A2A",
+  "orientation": "portrait-primary",
+  "categories": ["medical", "health", "social"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency Request",
+      "short_name": "Request Blood",
+      "description": "Submit an urgent hospital blood request",
+      "url": "/seeker/request.html",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Live Appeals Feed",
+      "short_name": "Live Feed",
+      "description": "View urgent blood appeals and blood drives",
+      "url": "/seeker/feed.html",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Check Eligibility",
+      "short_name": "Eligibility",
+      "description": "Take the 4-step donor eligibility quiz",
+      "url": "/donor/eligibility.html",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Live Proximity Map",
+      "short_name": "Live Map",
+      "description": "View blood requests in your area",
+      "url": "/seeker/map.html",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

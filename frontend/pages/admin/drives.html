@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QATRA — Campus & Community Drive Management</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
     .stats-overview {
@@ -11,6 +20,11 @@
       grid-template-columns: repeat(3, 1fr);
       gap: var(--space-md);
       margin-bottom: var(--space-lg);
+    }
+    @media (max-width: 640px) {
+      .stats-overview {
+        grid-template-columns: 1fr;
+      }
     }
     .stat-box {
       background: var(--bg-surface);
@@ -44,13 +58,31 @@
 </head>
 <body>
   <div class="app-container wide-view">
-    <!-- Header -->
+    <!-- Header with Logo and Responsive Desktop Navigation -->
     <header class="app-header">
       <div style="display: flex; align-items: center; gap: var(--space-sm);">
-        <a href="/index.html" style="text-decoration: none; font-size: 18px;">←</a>
-        <span style="font-weight: 700; font-size: 16px;">Drive Management Desk</span>
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
       </div>
-      <div style="display: flex; gap: var(--space-sm);">
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/admin/verification.html">🛡️ Verification Desk</a>
+        <a href="/admin/drives.html" class="active">🎪 Drives Desk</a>
+        <a href="/admin/audit.html">🔒 Audit Trail</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
         <button id="new-drive-btn" class="btn btn-sm btn-primary">+ Create Drive</button>
         <a href="/admin/audit.html" class="btn btn-sm btn-secondary">Audit Trail</a>
       </div>
@@ -125,6 +157,7 @@
     </div>
   </div>
 
+  <script type="module" src="/static/js/pwa.js"></script>
   <script type="module" src="/static/js/admin-drives.js"></script>
 </body>
 </html>

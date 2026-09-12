@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QATRA — Security & Compliance Audit Trail</title>
+
+  <!-- PWA & Favicon Meta Tags -->
+  <link rel="icon" type="image/png" href="/static/icons/favicon.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#C92A2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
     .audit-table-wrapper {
@@ -39,13 +48,33 @@
 </head>
 <body>
   <div class="app-container wide-view">
-    <!-- Header -->
+    <!-- Header with Logo and Responsive Desktop Navigation -->
     <header class="app-header">
       <div style="display: flex; align-items: center; gap: var(--space-sm);">
-        <a href="/admin/verification.html" style="text-decoration: none; font-size: 18px;">←</a>
-        <span style="font-weight: 700; font-size: 16px;">Security & Compliance Audit Trail (NFR 2.5)</span>
+        <a href="/index.html" class="brand" title="QATRA Emergency Blood Response Platform">
+          <img src="/media/logo.png" alt="QATRA Logo" class="brand-logo" />
+          <span>QATRA</span>
+        </a>
       </div>
-      <button id="refresh-audit-btn" class="btn btn-sm btn-secondary" style="width: auto;">🔄 Refresh</button>
+
+      <!-- Desktop Navigation Bar (Hidden on Mobile) -->
+      <nav class="desktop-nav">
+        <a href="/index.html">Home</a>
+        <a href="/seeker/feed.html">🚨 Appeals Feed</a>
+        <a href="/seeker/map.html">🗺️ Live Map</a>
+        <a href="/seeker/request.html">🩸 Request Blood</a>
+        <a href="/donor/register.html">❤️ Register Donor</a>
+        <a href="/admin/verification.html">🛡️ Verification Desk</a>
+        <a href="/admin/drives.html">🎪 Drives Desk</a>
+        <a href="/admin/audit.html" class="active">🔒 Audit Trail</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
+          📲 <span class="hide-on-mobile">Install App</span>
+        </button>
+        <button id="refresh-audit-btn" class="btn btn-sm btn-secondary" style="width: auto;">🔄 Refresh</button>
+      </div>
     </header>
 
     <!-- Main Content -->
@@ -84,6 +113,7 @@
     </main>
   </div>
 
+  <script type="module" src="/static/js/pwa.js"></script>
   <script type="module" src="/static/js/admin-audit.js"></script>
 </body>
 </html>
