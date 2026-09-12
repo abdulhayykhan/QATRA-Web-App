@@ -331,3 +331,54 @@ async def get_request_status(
         eta_minutes=eta,
     )
 
+
+# ==============================================================================
+# 4.4 GET /api/map/requests/{request_id}/matches (FR 1.4 Proximity-Ranked Matches)
+# ==============================================================================
+
+@router.get(
+    "/requests/{request_id}/matches",
+    response_model=List[DonorMatchResponse],
+    summary="Get Proximity-Ranked Compatible Donors",
+    description="Returns distance-sorted compatible donors within search radius, deprioritizing (not excluding) past decliners per FR 1.4.",
+)
+async def get_request_matches(
+    request_id: int,
+    current_user: User = Depends(require_role([UserRole.VERIFIED_SEEKER.value, UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Verify emergency request.
+    2. Query eligible compatible donors in search radius.
+    3. Output Haversine distance-sorted matches with past decliners deprioritized (FR 1.4.2).
+    """
+    blood_request = db.query(Request).filter(Request.id == request_id).first()
+    if not blood_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request with ID {request_id} not found.",
+        )
+
+    declined_set = DECLINED_REQUESTS.get(blood_request.id, set())
+
+    ranked_matches = find_eligible_donors_in_radius(
+        db=db,
+        hospital_lat=blood_request.hospital_latitude,
+        hospital_lon=blood_request.hospital_longitude,
+        blood_group=blood_request.blood_group,
+        radius_km=blood_request.search_radius_km,
+        declined_donor_ids=declined_set,
+    )
+
+    return [
+        DonorMatchResponse(
+            donor_id=match["donor_id"],
+            blood_group=match["blood_group"],
+            distance_km=match["distance_km"],
+            estimated_arrival_minutes=match["estimated_arrival_minutes"],
+            is_available=match["is_available"],
+        )
+        for match in ranked_matches
+    ]
+
+
