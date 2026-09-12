@@ -64,11 +64,40 @@ app.include_router(feed_router, prefix=f"{settings.API_V1_STR}/feed")
 
 
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from starlette.requests import Request
+
+frontend_dir = root_dir / "frontend"
+static_dir = frontend_dir / "static"
+pages_dir = frontend_dir / "pages"
+
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+if pages_dir.exists():
+    seeker_dir = pages_dir / "seeker"
+    donor_dir = pages_dir / "donor"
+    admin_dir = pages_dir / "admin"
+
+    if seeker_dir.exists():
+        app.mount("/seeker", StaticFiles(directory=str(seeker_dir), html=True), name="seeker")
+    if donor_dir.exists():
+        app.mount("/donor", StaticFiles(directory=str(donor_dir), html=True), name="donor")
+    if admin_dir.exists():
+        app.mount("/admin", StaticFiles(directory=str(admin_dir), html=True), name="admin")
+
+
 @app.get("/", tags=["Root"])
-async def root():
-    """Root endpoint providing quick API navigation."""
+async def root(request: Request):
+    """Root endpoint providing index HTML for browsers and JSON navigation for API clients."""
+    accept = request.headers.get("accept", "")
+    index_file = pages_dir / "index.html"
+    if "text/html" in accept and index_file.exists():
+        return FileResponse(str(index_file))
     return {
         "message": "Welcome to QATRA Emergency Blood Response Platform API",
         "docs": f"{settings.API_V1_STR}/docs",
         "health": f"{settings.API_V1_STR}/health",
     }
+

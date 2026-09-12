@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Alkhidmat 24/7 Verification Queue</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .queue-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-md);
+    }
+    @media (min-width: 768px) {
+      .queue-layout {
+        grid-template-columns: 320px 1fr;
+      }
+    }
+    .queue-list {
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .queue-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .queue-card:hover, .queue-card.selected {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+    }
+    .detail-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    .slip-image-view {
+      width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+      background: #000;
+      border-radius: var(--radius-md);
+      margin: var(--space-md) 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container wide-view">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" style="text-decoration: none; font-size: 18px;">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Alkhidmat 24/7 Verification Desk</span>
+      </div>
+      <span class="badge badge-critical" id="pending-count-badge">0 Pending</span>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <div class="queue-layout">
+        <!-- Left: Queue Item List -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+            <h3 style="font-size: 14px;">Escalation Queue</h3>
+            <button id="refresh-queue-btn" class="btn btn-sm btn-secondary" style="width: auto;">🔄 Refresh</button>
+          </div>
+          <div id="queue-items-list" class="queue-list">
+            <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading pending queue...</div>
+          </div>
+        </div>
+
+        <!-- Right: Detail & Verification Panel -->
+        <div id="detail-panel" class="detail-panel">
+          <div id="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            <div style="font-size: 40px; margin-bottom: 8px;">📋</div>
+            <p>Select a pending hospital slip or CNIC from the left queue to inspect details.</p>
+          </div>
+
+          <div id="detail-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h2 id="detail-hospital-name" style="margin-bottom: 2px;">Civil Hospital Karachi</h2>
+                <div style="font-size: 13px; color: var(--text-muted);">Patient: <strong id="detail-patient-name">Zainab Bibi</strong></div>
+              </div>
+              <div style="text-align: right;">
+                <span id="detail-blood-badge" class="badge badge-blood">O-</span>
+                <div style="font-size: 11px; margin-top: 4px;" id="detail-urgency">Critical (2h)</div>
+              </div>
+            </div>
+
+            <!-- OCR Confidence Meter -->
+            <div style="margin-top: var(--space-md); padding: 10px; background: var(--bg-canvas); border-radius: var(--radius-md);">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <span>Automated OCR Confidence</span>
+                <strong id="detail-confidence-text">78%</strong>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="detail-confidence-fill" style="width: 78%; background-color: var(--color-warning);"></div>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                Flagged for manual review because score is below 85% safety threshold (FR 2.2.3).
+              </div>
+            </div>
+
+            <!-- Document Image Preview -->
+            <img id="detail-slip-img" class="slip-image-view" src="" alt="Hospital Slip">
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: var(--space-md); margin-top: var(--space-md);">
+              <button id="approve-btn" class="btn btn-success">✅ Approve & Broadcast to Donors</button>
+              <button id="reject-btn" class="btn btn-outline" style="border-color: var(--color-danger); color: var(--color-danger);">❌ Reject as Invalid</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/static/js/admin-verification.js"></script>
+</body>
+</html>

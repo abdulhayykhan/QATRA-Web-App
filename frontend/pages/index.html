@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Emergency Blood Response Platform</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .hero-section {
+      text-align: center;
+      padding: var(--space-2xl) var(--space-md);
+      background: linear-gradient(180deg, var(--primary-red-subtle) 0%, var(--bg-surface) 100%);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      margin-bottom: var(--space-lg);
+    }
+    .hero-logo {
+      font-size: 56px;
+      line-height: 1;
+      margin-bottom: var(--space-sm);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    .hero-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary-red);
+      letter-spacing: -0.5px;
+    }
+    .hero-tagline {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: var(--space-xs);
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cta-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+    }
+    .path-card {
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      transition: all var(--transition-fast);
+      background: var(--bg-surface);
+    }
+    .path-card:hover {
+      border-color: var(--primary-red);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .path-card.emergency {
+      border-color: var(--primary-red-light);
+      background: var(--primary-red-subtle);
+    }
+    .path-card.emergency:hover {
+      border-color: var(--primary-red);
+    }
+    .path-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+    .path-text h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .path-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 0;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+      margin-top: var(--space-sm);
+    }
+    .feature-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all var(--transition-fast);
+    }
+    .feature-item:hover {
+      border-color: var(--primary-red);
+      box-shadow: var(--shadow-sm);
+    }
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: var(--space-xs);
+    }
+    .feature-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="/index.html" class="brand">
+        <span class="drop-icon">🩸</span>
+        <span>QATRA</span>
+      </a>
+      <div class="header-actions">
+        <a href="/donor/dashboard.html" class="btn btn-sm btn-outline">Profile</a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content" style="padding: 0 0 80px 0;">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-logo">🩸</div>
+        <h1 class="hero-title">QATRA</h1>
+        <p class="hero-tagline">Alkhidmat Foundation Emergency Blood Response Platform — Every Second Saves a Life.</p>
+      </section>
+
+      <!-- Primary Action Paths -->
+      <div style="padding: 0 var(--space-md);">
+        <h2 style="font-size: 16px; margin-bottom: var(--space-sm);">How can we help today?</h2>
+
+        <div style="display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg);">
+          <!-- Path 1: Emergency Seeker -->
+          <a href="/seeker/request.html" class="path-card emergency">
+            <div class="path-icon">🚨</div>
+            <div class="path-text">
+              <h3 style="color: var(--primary-red);">Need Blood Urgently</h3>
+              <p>Upload hospital slip, verify patient requirement, and broadcast to nearby verified donors.</p>
+            </div>
+          </a>
+
+          <!-- Path 2: Donor Registration & Eligibility -->
+          <a href="/donor/register.html" class="path-card">
+            <div class="path-icon">❤️</div>
+            <div class="path-text">
+              <h3>Register as a Donor</h3>
+              <p>Sign in with Google, verify your CNIC, and receive proximity-matched emergency alerts.</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- Quick Access Grid -->
+        <h2 style="font-size: 16px; margin-bottom: var(--space-sm);">Explore Features</h2>
+        <div class="features-grid">
+          <a href="/seeker/map.html" class="feature-item">
+            <div class="feature-icon">🗺️</div>
+            <div class="feature-title">Live Map</div>
+            <p style="font-size: 11px; margin-top: 2px;">Nearby requests & radius</p>
+          </a>
+
+          <a href="/seeker/feed.html" class="feature-item">
+            <div class="feature-icon">📢</div>
+            <div class="feature-title">Urgent Feed</div>
+            <p style="font-size: 11px; margin-top: 2px;">Citywide blood appeals</p>
+          </a>
+
+          <a href="/donor/eligibility.html" class="feature-item">
+            <div class="feature-icon">📋</div>
+            <div class="feature-title">Eligibility Quiz</div>
+            <p style="font-size: 11px; margin-top: 2px;">4-step health screening</p>
+          </a>
+
+          <a href="/donor/awareness.html" class="feature-item">
+            <div class="feature-icon">📚</div>
+            <div class="feature-title">Awareness</div>
+            <p style="font-size: 11px; margin-top: 2px;">Myths, facts & drives</p>
+          </a>
+        </div>
+
+        <!-- Admin Desk Banner -->
+        <div class="card" style="margin-top: var(--space-lg); background: var(--bg-subtle);">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <h3 style="font-size: 14px;">Alkhidmat Desk & Verification Queue</h3>
+              <p style="font-size: 12px; margin-bottom: 0;">24/7 hospital slip OCR and CNIC review</p>
+            </div>
+            <a href="/admin/verification.html" class="btn btn-sm btn-secondary" style="width: auto;">Admin</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html" class="active">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module">
+    import { getCurrentUser } from '/static/js/api.js';
+    const user = getCurrentUser();
+    if (user && user.full_name) {
+      document.querySelector('.header-actions a').innerText = user.full_name.split(' ')[0];
+    }
+  </script>
+</body>
+</html>

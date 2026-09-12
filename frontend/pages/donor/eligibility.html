@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Donor Eligibility Quiz</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .quiz-progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: var(--space-lg);
+    }
+    .quiz-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--border-color);
+      border-radius: var(--radius-full);
+      transition: background var(--transition-normal);
+    }
+    .quiz-progress-bar.active {
+      background: var(--primary-red);
+    }
+    .quiz-step {
+      display: none;
+    }
+    .quiz-step.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    .quiz-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+    }
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      margin: var(--space-md) 0;
+    }
+    .quiz-option {
+      border: 1.5px solid var(--border-color-strong);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all var(--transition-fast);
+      background: var(--bg-surface);
+    }
+    .quiz-option:hover {
+      border-color: var(--primary-red);
+      background: var(--primary-red-subtle);
+    }
+    .quiz-option.selected {
+      border-color: var(--primary-red);
+      background: var(--primary-red);
+      color: #fff;
+    }
+    .result-box {
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      margin-bottom: var(--space-md);
+    }
+    .result-box.eligible {
+      background: var(--color-success-light);
+      border: 2px solid var(--color-success);
+    }
+    .result-box.warning {
+      background: var(--color-warning-light);
+      border: 2px solid var(--color-warning);
+    }
+    .result-box.deferred {
+      background: var(--color-danger-light);
+      border: 2px solid var(--color-danger);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" style="text-decoration: none; font-size: 18px;">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Donor Eligibility Quiz</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Step Indicator -->
+      <div class="quiz-progress">
+        <div class="quiz-progress-bar active" id="bar-1"></div>
+        <div class="quiz-progress-bar" id="bar-2"></div>
+        <div class="quiz-progress-bar" id="bar-3"></div>
+        <div class="quiz-progress-bar" id="bar-4"></div>
+      </div>
+
+      <!-- STEP 1: Basic Demographics -->
+      <section id="step-1" class="quiz-step active">
+        <div class="quiz-card">
+          <span class="badge badge-gray" style="margin-bottom: 8px;">Step 1 of 4: Physical Baseline</span>
+          <h2>Age & Body Weight</h2>
+          <p>Clinical standards require healthy biological reserves to prevent lightheadedness during donation.</p>
+
+          <div class="form-group" style="margin-top: var(--space-md);">
+            <label class="form-label" for="quiz-age">How old are you? (Must be 18–65)</label>
+            <input type="number" id="quiz-age" class="form-input" min="15" max="80" value="23">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="quiz-weight">What is your current weight? (kg)</label>
+            <input type="number" id="quiz-weight" class="form-input" min="30" max="150" value="65">
+            <span style="font-size: 11px; color: var(--text-muted);">Standard requirement is at least 50 kg.</span>
+          </div>
+
+          <button type="button" id="btn-next-1" class="btn btn-primary" style="margin-top: var(--space-sm);">Next: Medical History →</button>
+        </div>
+      </section>
+
+      <!-- STEP 2: Medical History & Procedures -->
+      <section id="step-2" class="quiz-step">
+        <div class="quiz-card">
+          <span class="badge badge-gray" style="margin-bottom: 8px;">Step 2 of 4: Procedures & Travel</span>
+          <h2>Recent Medical Procedures</h2>
+          <p>Have you had any of the following within the past 6 months?</p>
+
+          <div class="option-group">
+            <label class="quiz-option">
+              <span>Tattoo or Body Piercing</span>
+              <input type="checkbox" id="check-tattoo">
+            </label>
+            <label class="quiz-option">
+              <span>Major Surgery or Blood Transfusion</span>
+              <input type="checkbox" id="check-surgery">
+            </label>
+            <label class="quiz-option">
+              <span>Dental Extraction (past 72 hours)</span>
+              <input type="checkbox" id="check-dental">
+            </label>
+            <label class="quiz-option">
+              <span>Fever, Dengue or Malaria (past 1 month)</span>
+              <input type="checkbox" id="check-malaria">
+            </label>
+          </div>
+
+          <div style="display: flex; gap: var(--space-sm);">
+            <button type="button" id="btn-back-2" class="btn btn-secondary" style="width: 100px;">← Back</button>
+            <button type="button" id="btn-next-2" class="btn btn-primary" style="flex: 1;">Next: Medications →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 3: Medications & Conditions -->
+      <section id="step-3" class="quiz-step">
+        <div class="quiz-card">
+          <span class="badge badge-gray" style="margin-bottom: 8px;">Step 3 of 4: Health Conditions</span>
+          <h2>Medications & Chronic Conditions</h2>
+          <p>Please select any that apply to your current situation:</p>
+
+          <div class="option-group">
+            <label class="quiz-option">
+              <span>Currently taking Antibiotics</span>
+              <input type="checkbox" id="check-antibiotics">
+            </label>
+            <label class="quiz-option">
+              <span>Taking Aspirin or Blood Thinners</span>
+              <input type="checkbox" id="check-aspirin">
+            </label>
+            <label class="quiz-option">
+              <span>History of Hepatitis B, C, or HIV</span>
+              <input type="checkbox" id="check-hepatitis">
+            </label>
+            <label class="quiz-option">
+              <span>Pregnant or Nursing (Past 6 months)</span>
+              <input type="checkbox" id="check-pregnancy">
+            </label>
+          </div>
+
+          <div style="display: flex; gap: var(--space-sm);">
+            <button type="button" id="btn-back-3" class="btn btn-secondary" style="width: 100px;">← Back</button>
+            <button type="button" id="btn-submit-quiz" class="btn btn-primary" style="flex: 1;">Evaluate My Eligibility 🩺</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 4: Results & Disclaimer -->
+      <section id="step-4" class="quiz-step">
+        <div id="quiz-result-card" class="result-box eligible">
+          <div id="result-icon" style="font-size: 48px; margin-bottom: 8px;">🎉</div>
+          <h2 id="result-status-title" style="margin-bottom: 4px;">You Are Likely Eligible!</h2>
+          <p id="result-message-text" style="font-size: 14px; margin-bottom: var(--space-md);">
+            Based on standard clinical parameters, you meet the initial criteria to donate blood safely.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+            <a href="/donor/register.html" id="result-action-btn" class="btn btn-primary">
+              Register as Verified Donor
+            </a>
+            <a href="/donor/awareness.html" class="btn btn-secondary">
+              Find an Upcoming Blood Drive
+            </a>
+          </div>
+        </div>
+
+        <!-- Medical Disclaimer -->
+        <div class="card" style="background: var(--bg-subtle); border: 1px solid var(--border-color);">
+          <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">⚠️ Statutory Medical Disclaimer</h4>
+          <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 0;">
+            This digital checker provides general guidance based on Alkhidmat Foundation and WHO voluntary donation standards. Final eligibility is determined on-site by a certified medical phlebotomist following blood pressure and hemoglobin fingerstick testing.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/eligibility.js"></script>
+</body>
+</html>

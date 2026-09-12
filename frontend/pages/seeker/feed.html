@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QATRA — Urgent Blood & Drives Feed</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <style>
+    .feed-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: var(--space-md);
+    }
+    .feed-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all var(--transition-fast);
+      margin-bottom: -2px;
+    }
+    .feed-tab.active {
+      color: var(--primary-red);
+      border-bottom-color: var(--primary-red);
+    }
+    .filter-scroll {
+      display: flex;
+      gap: var(--space-xs);
+      overflow-x: auto;
+      padding-bottom: var(--space-sm);
+      margin-bottom: var(--space-md);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color-strong);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .filter-chip.active {
+      background: var(--primary-red);
+      color: #FFFFFF;
+      border-color: var(--primary-red);
+    }
+    .feed-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-fast);
+    }
+    .feed-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    .feed-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-sm);
+    }
+    .card-actions-row {
+      display: flex;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: var(--space-sm);">
+        <a href="/index.html" style="text-decoration: none; font-size: 18px;">←</a>
+        <span style="font-weight: 700; font-size: 16px;">Live Appeals & Feed</span>
+      </div>
+      <a href="/seeker/request.html" class="btn btn-sm btn-primary" style="width: auto;">+ Request</a>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content">
+      <!-- Tabs -->
+      <div class="feed-tabs">
+        <div class="feed-tab active" id="tab-urgent" data-type="requests">🚨 Emergency Requests</div>
+        <div class="feed-tab" id="tab-drives" data-type="drives">🎪 Campus Drives</div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-scroll" id="filter-chips">
+        <div class="filter-chip active" data-filter="">All</div>
+        <div class="filter-chip" data-filter="O-">O- (Universal)</div>
+        <div class="filter-chip" data-filter="B+">B+</div>
+        <div class="filter-chip" data-filter="A+">A+</div>
+        <div class="filter-chip" data-filter="O+">O+</div>
+        <div class="filter-chip" data-filter="AB-">AB-</div>
+        <div class="filter-chip" data-urgency="within_2_hours">⚡ Critical (2h)</div>
+      </div>
+
+      <!-- Feed Stream Container -->
+      <div id="feed-stream">
+        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+          Loading verified appeals...
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="/seeker/feed.html" class="active">
+        <span class="nav-icon">📢</span>
+        <span>Feed</span>
+      </a>
+      <a href="/seeker/map.html">
+        <span class="nav-icon">🗺️</span>
+        <span>Map</span>
+      </a>
+      <a href="/donor/dashboard.html">
+        <span class="nav-icon">👤</span>
+        <span>Donor</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module" src="/static/js/feed.js"></script>
+</body>
+</html>
