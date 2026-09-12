@@ -16,6 +16,10 @@ from app.services.geo import (
     find_eligible_donors_in_radius,
     check_and_expand_radius,
 )
+from app.services.feed import (
+    check_and_auto_close_request,
+    record_donation_fulfillment,
+)
 
 __all__ = [
     "get_firebase_app",
@@ -31,5 +35,8 @@ __all__ = [
     "is_location_stale",
     "find_eligible_donors_in_radius",
     "check_and_expand_radius",
+    "check_and_auto_close_request",
+    "record_donation_fulfillment",
 ]
+
 

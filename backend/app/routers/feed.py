@@ -361,3 +361,115 @@ def get_feed_share_details(
         whatsapp_text=whatsapp_text,
     )
 
+
+# ==============================================================================
+# 5.5 POST /api/feed/{request_id}/close
+# ==============================================================================
+
+@router.post(
+    "/{request_id}/close",
+    response_model=FeedCloseResponse,
+    summary="Manual Override to Close an Active Blood Request",
+    description="Manual override allowing the request owner (seeker) or an admin to close an active request (FR 3.4).",
+)
+def close_feed_request(
+    request_id: int,
+    payload: FeedCloseRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Authenticate user: Must be verified seeker or admin.
+    2. Enforce strict ownership: Seeker can only close their own request.
+    3. Validate request existence and active state.
+    4. Transition status to 'fulfilled'.
+    5. Discard/notify donors and seeker.
+    6. Log compliance audit event.
+    """
+    req = db.query(Request).filter(Request.id == request_id).first()
+    if not req:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blood request #{request_id} not found.",
+        )
+
+    # Ownership check: seeker must own the request, or user must be admin
+    is_admin = current_user.role == UserRole.ADMIN.value
+    is_owner = req.seeker_id == current_user.id
+
+    if not (is_admin or is_owner):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. You can only close your own blood requests.",
+        )
+
+    if req.status in ["fulfilled", "cancelled"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot close blood request #{request_id} because it is already {req.status}.",
+        )
+
+    old_status = req.status
+    req.status = "fulfilled"
+    # Ensure units_fulfilled reflects fulfillment
+    if req.units_fulfilled < req.units_needed:
+        req.units_fulfilled = req.units_needed
+
+    close_note = f"Closed by user #{current_user.id} ({current_user.role}): {payload.reason}"
+    req.admin_notes = f"{req.admin_notes}\n{close_note}" if req.admin_notes else close_note
+
+    # Log compliance audit event
+    log_audit_event(
+        db=db,
+        action="MANUAL_REQUEST_CLOSE",
+        target_resource="requests",
+        target_id=str(req.id),
+        user_id=current_user.id,
+        details=f"Closed with reason: {payload.reason} (Status: {old_status} -> fulfilled)",
+    )
+
+    # Notify seeker
+    seeker_notif = Notification(
+        user_id=req.seeker_id,
+        request_id=req.id,
+        title="Blood Request Closed",
+        message=f"Your emergency request for {req.patient_name} has been closed: {payload.reason}.",
+        notification_type=NotificationType.SYSTEM.value,
+        is_read=False,
+        sent_at=datetime.now(timezone.utc),
+    )
+    db.add(seeker_notif)
+
+    # Notify donors who received alerts or responded for this request
+    related_notifs = (
+        db.query(Notification)
+        .filter(
+            Notification.request_id == req.id,
+            Notification.user_id != req.seeker_id,
+        )
+        .all()
+    )
+    donor_user_ids = {n.user_id for n in related_notifs}
+    for uid in donor_user_ids:
+        db.add(
+            Notification(
+                user_id=uid,
+                request_id=req.id,
+                title="Blood Request Closed",
+                message=f"The blood request for {req.patient_name} at {req.hospital_name} has been closed: {payload.reason}.",
+                notification_type=NotificationType.SYSTEM.value,
+                is_read=False,
+                sent_at=datetime.now(timezone.utc),
+            )
+        )
+
+    db.commit()
+    db.refresh(req)
+
+    return FeedCloseResponse(
+        request_id=req.id,
+        status="fulfilled",
+        message="Request closed. Donors have been notified.",
+    )
+
+
