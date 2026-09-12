@@ -18,18 +18,48 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Load User Profile Info into Header
+ * Load User Profile Info into Header & Sync from GET /api/auth/me
  */
-function loadUserProfile() {
-  const user = getCurrentUser();
+async function loadUserProfile() {
+  let user = getCurrentUser();
+  const token = getAuthToken();
+
+  if (token) {
+    try {
+      const me = await apiGet('/auth/me');
+      if (me) {
+        user = { ...(user || {}), ...me };
+        setCurrentUser(user);
+      }
+    } catch (err) {
+      console.warn('Could not refresh /auth/me profile, using cached session.');
+    }
+  }
+
   if (user) {
     const nameEl = document.getElementById('donor-name');
     const emailEl = document.getElementById('donor-email');
     const bloodBadge = document.getElementById('donor-blood-badge');
+    const roleBadge = document.getElementById('donor-role-badge');
+    const cnicBadge = document.getElementById('donor-cnic-badge');
 
     if (nameEl && user.full_name) nameEl.innerText = user.full_name;
     if (emailEl && user.email) emailEl.innerText = user.email;
     if (bloodBadge && user.blood_group) bloodBadge.innerText = user.blood_group;
+
+    if (roleBadge) {
+      roleBadge.innerText = user.role === 'verified_donor' ? 'Verified Donor ✅' : 'Volunteer Donor';
+    }
+
+    if (cnicBadge) {
+      if (user.cnic_verified) {
+        cnicBadge.innerText = 'CNIC: Verified 🔒';
+        cnicBadge.style.background = 'rgba(46, 125, 50, 0.4)';
+      } else {
+        cnicBadge.innerText = 'CNIC: Pending ⚠️';
+        cnicBadge.style.background = 'rgba(230, 81, 0, 0.4)';
+      }
+    }
   }
 }
 
