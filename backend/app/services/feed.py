@@ -9,7 +9,6 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from app.models.request import Request
 from app.models.donor import Donor
@@ -141,8 +140,8 @@ async def trigger_feed_blood_alert(
         db.query(Donor)
         .filter(
             Donor.blood_group.in_(compatible_groups),
-            Donor.is_available == True,
-            Donor.pre_screening_passed == True,
+            Donor.is_available.is_(True),
+            Donor.pre_screening_passed.is_(True),
         )
         .all()
     )
