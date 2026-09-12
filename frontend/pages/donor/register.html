@@ -211,20 +211,46 @@
           <div class="form-group">
             <label class="form-label" for="cnic-input">Pakistani CNIC (13 digits) *</label>
             <input type="text" id="cnic-input" class="form-input" placeholder="42101-1234567-1" maxlength="15" required>
-            <span id="cnic-hint" style="font-size: 11px; color: var(--text-muted);">Format: 5 digits - 7 digits - 1 digit</span>
+            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+              <span id="cnic-hint" style="font-size: 11px; color: var(--text-muted);">Format: 5 digits - 7 digits - 1 digit</span>
+              <span id="cnic-province-tag" style="font-size: 11px; font-weight: 600; color: var(--primary-red);"></span>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">CNIC Front Photo URL / Upload</label>
-            <input type="text" id="cnic-front-url" class="form-input" placeholder="https://vault.supabase.co/cnic_front.jpg">
+          <label class="form-label">CNIC Document Photos (Front & Back)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
+            <div class="card" id="front-upload-box" style="border: 2px dashed var(--border-color-strong); text-align: center; padding: 14px 8px; cursor: pointer; background: var(--bg-canvas);">
+              <input type="file" id="cnic-front-file" accept="image/*,.pdf" style="display: none;">
+              <div id="front-placeholder">
+                <div style="font-size: 24px; margin-bottom: 4px;">🪪</div>
+                <strong style="font-size: 12px; display: block;">Front Side</strong>
+                <span style="font-size: 10.5px; color: var(--text-muted);">Tap to upload photo</span>
+              </div>
+              <img id="front-preview-img" style="display: none; max-width: 100%; max-height: 90px; object-fit: cover; border-radius: var(--radius-sm); margin: 0 auto;" alt="Front Preview">
+            </div>
+
+            <div class="card" id="back-upload-box" style="border: 2px dashed var(--border-color-strong); text-align: center; padding: 14px 8px; cursor: pointer; background: var(--bg-canvas);">
+              <input type="file" id="cnic-back-file" accept="image/*,.pdf" style="display: none;">
+              <div id="back-placeholder">
+                <div style="font-size: 24px; margin-bottom: 4px;">📄</div>
+                <strong style="font-size: 12px; display: block;">Back Side</strong>
+                <span style="font-size: 10.5px; color: var(--text-muted);">Tap to upload photo</span>
+              </div>
+              <img id="back-preview-img" style="display: none; max-width: 100%; max-height: 90px; object-fit: cover; border-radius: var(--radius-sm); margin: 0 auto;" alt="Back Preview">
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">CNIC Back Photo URL / Upload</label>
-            <input type="text" id="cnic-back-url" class="form-input" placeholder="https://vault.supabase.co/cnic_back.jpg">
+          <input type="hidden" id="cnic-front-url" value="">
+          <input type="hidden" id="cnic-back-url" value="">
+
+          <div class="card" style="background: var(--bg-canvas); padding: 10px 12px; margin-bottom: var(--space-md); border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-muted);">
+              <span>🔒</span>
+              <span>AES-256 encrypted at rest & SHA-256 hashed for duplicate protection (PRD 4.1).</span>
+            </div>
           </div>
 
-          <button type="submit" id="cnic-submit-btn" class="btn btn-primary" style="margin-top: var(--space-md);">Validate CNIC & Proceed →</button>
+          <button type="submit" id="cnic-submit-btn" class="btn btn-primary" style="margin-top: var(--space-xs);">Validate CNIC & Proceed →</button>
         </form>
       </section>
 
