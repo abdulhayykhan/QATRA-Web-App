@@ -259,8 +259,9 @@ def check_and_expand_radius(
 
     if force_expand:
         should_expand = True
-    elif is_rare_blood_group(request.blood_group) and eligible_non_declined_count < 5:
-        # FR 1.3.4: Rare blood groups bypass wait window and expand immediately
+    elif is_rare_blood_group(request.blood_group) and request.expansion_count == 0:
+        # FR 1.3.4: Rare blood groups (O-, AB-) ALWAYS expand immediately on first evaluation
+        # regardless of current donor count — they bypass both the wait window AND the threshold.
         should_expand = True
     elif eligible_non_declined_count < 5:
         # FR 1.3.3: Fewer than minimum threshold of eligible donors (e.g. 5)
