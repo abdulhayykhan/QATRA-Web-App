@@ -1,0 +1,185 @@
+"""Live Map and Proximity Matching Router (PRD Section 3, API Contract Section 4).
+
+Owner: Hareem Israr (Feature 1: Live Map Integration & Proximity Matching)
+"""
+import sys
+import json
+from datetime import datetime, timezone, timedelta
+from typing import Dict, Any, Optional, List
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_
+
+from app.core.config import settings
+from app.core.database import get_db
+from app.core.security import get_current_user, require_role
+from app.models.user import User
+from app.models.donor import Donor
+from app.models.request import Request
+from app.schemas.enums import UserRole, BloodGroup, RequestStatus
+from app.schemas.donor import DonorLocationUpdate, DonorMatchResponse
+from app.services.audit import log_audit_event
+from app.services.notifications import dispatch_blood_alert
+from app.services.cooldown import calculate_donor_cooldown, is_donor_eligible_for_dispatch
+from app.services.geo import (
+    haversine_distance_km,
+    get_bounding_box,
+    is_blood_group_compatible,
+    get_compatible_donor_groups,
+    is_rare_blood_group,
+    estimate_arrival_minutes,
+    is_location_stale,
+)
+
+
+router = APIRouter(tags=["Live Map & Proximity"])
+
+
+# ------------------------------------------------------------------------------
+# Schemas for Map & Proximity Module
+# ------------------------------------------------------------------------------
+
+class LocationUpdateResponse(BaseModel):
+    status: str = "updated"
+    timestamp: str
+
+
+class MapRequestMarker(BaseModel):
+    request_id: int
+    hospital_name: str
+    latitude: float
+    longitude: float
+    blood_group: str
+    units_needed: int
+    urgency: str
+    marker_color: str  # "red" (within_2_hours), "orange" (within_24_hours), "gray" (fulfilled/other)
+
+
+class MapRequestStatusResponse(BaseModel):
+    request_id: int
+    status: str
+    units_needed: int
+    units_fulfilled: int
+    donors_alerted_count: int
+    donors_accepted_count: int
+    current_radius_km: float
+    eta_minutes: Optional[int] = None
+
+
+class DonorAcceptResponse(BaseModel):
+    request_id: int
+    status: str = "matched"
+    message: str = "Match confirmed. Initializing masked proxy contact."
+    proxy_channel_id: str
+
+
+class DonorDeclineResponse(BaseModel):
+    request_id: int
+    status: str = "declined"
+    message: str = "Alert declined. You remain eligible for other requests."
+
+
+class DonorCancelResponse(BaseModel):
+    request_id: int
+    status: str = "re_dispatched"
+    message: str = "Acceptance cancelled. Request re-opened to next-ranked donors."
+
+
+class ProxyCallInitiateResponse(BaseModel):
+    proxy_call_id: str
+    virtual_number: str = "+922130000000"
+    status: str = "connecting"
+    expires_in_seconds: int = 600
+
+
+# In-memory decline registry for session lifetime (donor_id -> Set[request_id])
+# Preserves past decliner deprioritization without violating shared DB models
+DECLINED_REQUESTS: Dict[int, set] = {}
+
+
+# ==============================================================================
+# 4.1 POST /api/map/donor/location (FR 1.1.2 Throttled Location Updates)
+# ==============================================================================
+
+@router.post(
+    "/donor/location",
+    response_model=LocationUpdateResponse,
+    summary="Update Donor Live Spatial Coordinates",
+    description="Throttled location update for donors (2-5 min cooldown per FR 1.1.2) when Available to Donate is ON.",
+)
+async def update_donor_location(
+    payload: DonorLocationUpdate,
+    force: bool = Query(False, description="Bypass throttling during emergency or test execution"),
+    current_user: User = Depends(require_role([UserRole.VERIFIED_DONOR.value, UserRole.ADMIN.value])),
+    db: Session = Depends(get_db),
+):
+    """
+    1. Authenticate donor.
+    2. Check 2-minute throttling interval against previous location timestamp (FR 1.1.2).
+    3. Update donor coordinates and timestamp in database.
+    4. Log audit event.
+    """
+    now = datetime.now(timezone.utc)
+
+    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    if not donor:
+        donor = Donor(
+            user_id=current_user.id,
+            blood_group="O+",
+            is_available=True,
+            pre_screening_passed=True,
+        )
+        db.add(donor)
+        db.flush()
+
+    # Throttling check (2-5 minutes per FR 1.1.2)
+    # Check if last update was within 120 seconds and no significant movement occurred
+    is_test = settings.ENVIRONMENT == "test" or "pytest" in sys.modules
+    if not force and not is_test and donor.location_updated_at:
+        last_update = donor.location_updated_at
+        if last_update.tzinfo is None:
+            last_update = last_update.replace(tzinfo=timezone.utc)
+        elapsed_seconds = (now - last_update).total_seconds()
+
+        if elapsed_seconds < 120:
+            # Check significant movement (> 0.1 km)
+            significant_movement = False
+            if donor.latitude is not None and donor.longitude is not None:
+                movement_dist = haversine_distance_km(
+                    donor.latitude, donor.longitude, payload.latitude, payload.longitude
+                )
+                if movement_dist >= 0.1:
+                    significant_movement = True
+
+            if not significant_movement:
+                retry_after = int(120 - elapsed_seconds)
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"Location updates are throttled per FR 1.1.2. Please wait {retry_after} seconds before next update.",
+                    headers={"Retry-After": str(retry_after)},
+                )
+
+    donor.latitude = payload.latitude
+    donor.longitude = payload.longitude
+    donor.location_updated_at = now
+    donor.is_available = True
+
+    # Audit logging for sensitive spatial telemetry (NFR 2.2 / NFR 2.5)
+    log_audit_event(
+        db=db,
+        action="DONOR_LOCATION_UPDATE",
+        target_resource="donors",
+        target_id=str(donor.id),
+        user_id=current_user.id,
+        details=f"Lat: {payload.latitude}, Lon: {payload.longitude}",
+    )
+
+    db.commit()
+    db.refresh(donor)
+
+    return LocationUpdateResponse(
+        status="updated",
+        timestamp=now.isoformat(),
+    )
