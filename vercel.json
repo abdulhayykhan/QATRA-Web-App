@@ -6,12 +6,107 @@
       "destination": "/api/index.py"
     },
     {
+      "source": "/manifest.json",
+      "destination": "/frontend/static/manifest.json"
+    },
+    {
+      "source": "/sw.js",
+      "destination": "/frontend/static/sw.js"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/frontend/static/icons/favicon.ico"
+    },
+    {
+      "source": "/favicon.png",
+      "destination": "/frontend/static/icons/favicon.png"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "destination": "/frontend/static/icons/apple-touch-icon.png"
+    },
+    {
+      "source": "/apple-touch-icon-precomposed.png",
+      "destination": "/frontend/static/icons/apple-touch-icon.png"
+    },
+    {
+      "source": "/media/(.*)",
+      "destination": "/media/$1"
+    },
+    {
       "source": "/static/(.*)",
       "destination": "/frontend/static/$1"
     },
     {
+      "source": "/",
+      "destination": "/frontend/pages/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/frontend/pages/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "image/x-icon"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/media/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     }
   ]
 }
