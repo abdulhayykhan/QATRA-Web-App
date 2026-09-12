@@ -26,6 +26,7 @@ from app.models.notification import Notification
 from app.schemas.enums import UserRole, RequestStatus, NotificationType
 from app.services.cooldown import calculate_donor_cooldown
 from app.services.audit import log_audit_event
+from app.services.cache import get_cached_feed, set_cached_feed, invalidate_feed_cache
 from app.schemas.feed import (
     FeedItemResponse,
     FeedListResponse,
@@ -109,6 +110,12 @@ def get_feed(
     4. Sort requests by urgency (within_2_hours first) and recency.
     5. Paginate and return structured items.
     """
+    # Check cache (NFR 1.2 & NFR 1.3 - sub-2-second performance)
+    cache_key = f"{blood_group}:{urgency}:{location}:{include_drive_events}:{event_id}:{page}:{limit}"
+    cached_result = get_cached_feed(cache_key)
+    if cached_result is not None:
+        return cached_result
+
     # Active emergency requests must be verified (or matched and still in need of units)
     query = db.query(Request).filter(
         Request.status.in_(["verified", "matched"]),
@@ -175,12 +182,14 @@ def get_feed(
     end = start + limit
     paginated_items = items[start:end]
 
-    return FeedListResponse(
+    feed_response = FeedListResponse(
         total=total,
         page=page,
         limit=limit,
         items=paginated_items,
     )
+    set_cached_feed(cache_key, feed_response, ttl=30)
+    return feed_response
 
 
 
@@ -322,6 +331,7 @@ def respond_to_feed_request(
 
     db.commit()
     db.refresh(req)
+    invalidate_feed_cache()
 
     return FeedResponseAction(
         request_id=req.id,
@@ -477,6 +487,7 @@ def close_feed_request(
 
     db.commit()
     db.refresh(req)
+    invalidate_feed_cache()
 
     return FeedCloseResponse(
         request_id=req.id,
