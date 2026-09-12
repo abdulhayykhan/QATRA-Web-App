@@ -171,5 +171,5 @@ For questions on specific modules, consult the respective module owner:
 
 <div align="center">
   <b>QATRA Engineering Contribution Protocol</b><br>
-  <i>Built with dedication at Dawood University of Engineering Technology.</i>
+  <i>Built with dedication for the Alkhidmat Summer Social Internship Program (SSIP).</i>
 </div>
