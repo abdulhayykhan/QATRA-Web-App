@@ -6,6 +6,7 @@ from app.models.request import Request
 from app.models.notification import Notification
 from app.models.event import Event, Registration
 from app.models.audit import AuditLog
+from app.models.awareness import AwarenessContent, HealthFeedback
 
 __all__ = [
     "Base",
@@ -17,4 +18,6 @@ __all__ = [
     "Event",
     "Registration",
     "AuditLog",
+    "AwarenessContent",
+    "HealthFeedback",
 ]
