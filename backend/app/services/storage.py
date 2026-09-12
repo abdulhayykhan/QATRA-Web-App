@@ -108,11 +108,11 @@ def upload_to_supabase_storage_sync(file_bytes: bytes, saved_filename: str, cont
         return False
 
 
-async def save_slip_file_async(file_bytes: bytes, original_filename: str, user_id: int) -> Tuple[str, str, str]:
+async def save_slip_file_async(file_bytes: bytes, original_filename: str, user_id: int) -> Tuple[str, str, bool]:
     """
     Save uploaded hospital slip bytes to Supabase Storage and cache to disk.
     Returns:
-        (saved_filename: str, file_url: str, storage_ref: str)
+        (saved_filename: str, file_url: str, is_cloud_saved: bool)
     """
     clean_name = sanitize_filename(original_filename)
     timestamp = int(datetime.now(timezone.utc).timestamp())
@@ -123,7 +123,7 @@ async def save_slip_file_async(file_bytes: bytes, original_filename: str, user_i
     content_type = get_mime_type(saved_filename)
 
     # 1. Primary cloud object store: Supabase Storage
-    await upload_to_supabase_storage_async(file_bytes, saved_filename, content_type)
+    is_cloud_saved = await upload_to_supabase_storage_async(file_bytes, saved_filename, content_type)
 
     # 2. Local disk cache (best effort; gracefully ignores read-only environments)
     try:
@@ -134,11 +134,11 @@ async def save_slip_file_async(file_bytes: bytes, original_filename: str, user_i
         pass
 
     file_url = f"/api/auth/slips/{saved_filename}"
-    return saved_filename, file_url, saved_filename
+    return saved_filename, file_url, is_cloud_saved
 
 
-def save_slip_file(file_bytes: bytes, original_filename: str, user_id: int) -> Tuple[str, str, str]:
-    """Synchronous version of save_slip_file."""
+def save_slip_file(file_bytes: bytes, original_filename: str, user_id: int) -> Tuple[str, str, bool]:
+    """Synchronous version of save_slip_file returning (saved_filename, file_url, is_cloud_saved)."""
     clean_name = sanitize_filename(original_filename)
     timestamp = int(datetime.now(timezone.utc).timestamp())
     random_suffix = uuid.uuid4().hex[:8]
@@ -148,7 +148,7 @@ def save_slip_file(file_bytes: bytes, original_filename: str, user_id: int) -> T
     content_type = get_mime_type(saved_filename)
 
     # 1. Upload to Supabase Storage
-    upload_to_supabase_storage_sync(file_bytes, saved_filename, content_type)
+    is_cloud_saved = upload_to_supabase_storage_sync(file_bytes, saved_filename, content_type)
 
     # 2. Local disk cache
     try:
@@ -159,7 +159,7 @@ def save_slip_file(file_bytes: bytes, original_filename: str, user_id: int) -> T
         pass
 
     file_url = f"/api/auth/slips/{saved_filename}"
-    return saved_filename, file_url, saved_filename
+    return saved_filename, file_url, is_cloud_saved
 
 
 async def get_slip_file_data_async(saved_filename: str) -> Optional[Tuple[bytes, str]]:

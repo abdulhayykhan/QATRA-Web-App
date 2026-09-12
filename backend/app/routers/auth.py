@@ -335,7 +335,7 @@ async def upload_hospital_slip(
         )
 
     # Save actual uploaded file to Supabase Storage and cache
-    saved_filename, slip_url, _ = await save_slip_file_async(
+    saved_filename, slip_url, is_cloud_saved = await save_slip_file_async(
         file_bytes=file_bytes,
         original_filename=file.filename or "admission_slip.jpg",
         user_id=current_user.id,
@@ -351,8 +351,11 @@ async def upload_hospital_slip(
         units_needed=units_needed,
     )
 
-    # Auto-approval rule (FR 2.2.3): >= 85% -> verified; < 85% -> pending_verification
-    request_status = "verified" if confidence >= 0.85 else "pending_verification"
+    # Auto-approval rule (FR 2.2.3):
+    # Confidence >= 85% with verified cloud storage -> verified
+    # If cloud upload failed in non-dev environment, hold in pending_verification for review
+    is_safe_env = is_cloud_saved or settings.ENVIRONMENT == "test" or settings.DEBUG
+    request_status = "verified" if (confidence >= 0.85 and is_safe_env) else "pending_verification"
 
     blood_request = Request(
         seeker_id=current_user.id,
