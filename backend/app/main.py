@@ -32,7 +32,13 @@ import app.models  # noqa: F401
 async def lifespan(app: FastAPI):
     """Application lifespan events (startup / shutdown)."""
     # Initialize DB schema for in-memory SQLite and testing environments
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        import logging
+        logging.getLogger("qatra.startup").warning(
+            f"Database schema auto-creation skipped: {e}"
+        )
     yield
     # Shutdown logic: cleanup resources
 
