@@ -9,21 +9,21 @@ Endpoints:
 - POST /api/feed/{request_id}/close   - Manual override to close active request (FR 3.4)
 """
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, or_, and_, case
+from sqlalchemy import or_, case
 
 from app.core.database import get_db
-from app.core.security import get_current_user, require_role
+from app.core.security import get_current_user
 from app.models.user import User
 from app.models.donor import Donor
 from app.models.request import Request
 from app.models.event import Event
 from app.models.notification import Notification
-from app.schemas.enums import UserRole, RequestStatus, NotificationType
+from app.schemas.enums import UserRole, NotificationType
 from app.services.cooldown import calculate_donor_cooldown
 from app.services.audit import log_audit_event
 from app.services.cache import get_cached_feed, set_cached_feed, invalidate_feed_cache
@@ -149,7 +149,7 @@ def get_feed(
     # Include blood drive events if requested (FR 3.2)
     if include_drive_events:
         event_query = db.query(Event).filter(
-            Event.is_active == True,
+            Event.is_active.is_(True),
             Event.event_type == "blood_drive",
         )
         if event_id:
@@ -190,7 +190,6 @@ def get_feed(
     )
     set_cached_feed(cache_key, feed_response, ttl=30)
     return feed_response
-
 
 
 # ==============================================================================
@@ -494,5 +493,3 @@ def close_feed_request(
         status="fulfilled",
         message="Request closed. Donors have been notified.",
     )
-
-
