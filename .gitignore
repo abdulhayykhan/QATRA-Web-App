@@ -102,3 +102,4 @@ Thumbs.db
 !media/logo.png
 !public/media/logo.png
 
+.env*
