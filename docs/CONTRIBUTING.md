@@ -103,7 +103,7 @@ develop (Integration Branch)
 ### Security & Privacy Safeguards
 - **Never Log PII**: Do not print or log raw CNICs, phone numbers, or passwords.
 - **Always Validate Checksums**: Validate 13-digit Pakistani CNICs using the utility in `backend/app/core/security.py`.
-- **Mask Phone Numbers**: Use the proxy dialer helper (`/api/map/proxy-call/*`) for all seeker-donor communications.
+- **Strict Privacy Guard**: Never expose seeker phone numbers to donors. Only seekers may call donors via direct tel: links; all donor messages route through the in-app coordination chat (`/api/coordination/*`).
 
 ---
 

@@ -4,7 +4,7 @@
  * - Real-time seeker polling (GET /api/map/requests/{id}/status)
  * - Proximity-ranked donor matching (GET /api/map/requests/{id}/matches)
  * - Auto-expansion status tracker (FR 1.3.3)
- * - Masked identity coordination handoff (NFR 2.2)
+ * - Real-time in-app chat & direct coordination handoff
  */
 import { apiGet, apiPost, showToast, formatUrgency, onReady } from './api.js';
 
@@ -120,7 +120,7 @@ async function loadProximityMatches(silent = false) {
         </div>
 
         <a href="/seeker/coordination.html?request_id=${currentRequestId}&donor_id=${donor.donor_id}" class="btn btn-sm btn-primary" style="font-size: 12px; margin-top: 4px;">
-          📞 Connect via Masked Call / Chat
+          💬 Chat & Call Donor
         </a>
       `;
 

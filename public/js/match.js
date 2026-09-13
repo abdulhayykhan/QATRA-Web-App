@@ -1,60 +1,50 @@
 /**
- * QATRA — Seeker Matchmaker & Masked Proxy Contact Controller (Feature 1)
- * Polls real-time fulfillment status and launches virtual bridge calls.
+ * QATRA — Seeker Matchmaker & Live Coordination Controller
+ * Connects accepted dispatch donor with seeker.
+ * - Resolves seeker calling rights and donor phone
+ * - Unidirectional calling: Seeker calls donor directly on phone via tel:
+ * - Direct navigation to In-App Chat
  */
-import { apiGet, apiPost, showToast, onReady } from './api.js';
-
-let countdownInterval = null;
+import { apiGet, onReady } from './api.js';
 
 onReady(() => {
-  setupProxyCall();
+  setupMatchActions();
 });
 
-function setupProxyCall() {
-  const callBtn = document.getElementById('call-proxy-btn');
-  const box = document.getElementById('proxy-call-container');
-  const closeBtn = document.getElementById('close-proxy-btn');
+async function setupMatchActions() {
+  const params = new URLSearchParams(window.location.search);
+  const requestId = params.get('request_id') || '1';
 
-  callBtn.addEventListener('click', async () => {
-    callBtn.disabled = true;
-    callBtn.innerText = 'Connecting Bridge... ⏳';
+  const callBtn = document.getElementById('btn-match-call-donor');
+  const chatBtn = document.getElementById('btn-match-chat-donor');
+  const donorNameEl = document.getElementById('matched-donor-name');
+  const donorSubtextEl = document.getElementById('matched-donor-subtext');
 
-    try {
-      // Launch proxy call session
-      box.style.display = 'block';
-      startTimer(600);
-      showToast('Secure virtual bridge connected. Numbers are masked.', 'success');
-    } catch (err) {
-      showToast('Could not initiate proxy call.', 'error');
-    } finally {
-      callBtn.disabled = false;
-      callBtn.innerText = '📞 Masked Call';
+  if (chatBtn) {
+    chatBtn.href = `/seeker/coordination.html?request_id=${requestId}`;
+  }
+
+  try {
+    const data = await apiGet(`/coordination/${requestId}`).catch(() => null);
+
+    if (data) {
+      if (data.matched_donor) {
+        if (donorNameEl) donorNameEl.innerText = data.matched_donor.name || 'Anonymous Donor #D-402';
+        if (donorSubtextEl) {
+          donorSubtextEl.innerText = `📍 ${data.matched_donor.distance_km || 3.4} km away • ⏱️ ETA: ~${data.matched_donor.estimated_arrival_minutes || 14} mins`;
+        }
+      }
+
+      // If user is seeker and can call donor
+      if (data.can_call && data.call_phone_number && callBtn) {
+        callBtn.href = `tel:${data.call_phone_number}`;
+        callBtn.style.display = 'inline-flex';
+      } else if (!data.can_call && callBtn) {
+        // Strict donor protection: donor cannot call seeker
+        callBtn.style.display = 'none';
+      }
     }
-  });
-
-  closeBtn.addEventListener('click', () => {
-    box.style.display = 'none';
-    if (countdownInterval) clearInterval(countdownInterval);
-  });
-}
-
-function startTimer(seconds) {
-  let remaining = seconds;
-  const timerEl = document.getElementById('proxy-timer');
-
-  if (countdownInterval) clearInterval(countdownInterval);
-
-  countdownInterval = setInterval(() => {
-    remaining--;
-    if (remaining <= 0) {
-      clearInterval(countdownInterval);
-      timerEl.innerText = 'Session expired';
-      document.getElementById('proxy-call-container').style.display = 'none';
-      return;
-    }
-
-    const mins = Math.floor(remaining / 60);
-    const secs = remaining % 60;
-    timerEl.innerText = `Session expires in: ${mins} mins ${secs < 10 ? '0' : ''}${secs} secs`;
-  }, 1000);
+  } catch (err) {
+    console.warn('Match session fallback active:', err);
+  }
 }

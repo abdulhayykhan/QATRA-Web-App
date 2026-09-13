@@ -21,6 +21,7 @@ from app.routers.auth import router as auth_router
 from app.routers.awareness import router as awareness_router
 from app.routers.map import router as map_router
 from app.routers.feed import router as feed_router
+from app.routers.coordination import router as coordination_router
 
 
 from app.core.database import engine
@@ -34,6 +35,12 @@ async def lifespan(app: FastAPI):
     # Initialize DB schema for in-memory SQLite and testing environments
     try:
         Base.metadata.create_all(bind=engine)
+        from sqlalchemy import text
+        with engine.begin() as conn:
+            try:
+                conn.execute(text("ALTER TABLE requests ADD COLUMN IF NOT EXISTS matched_donor_id INTEGER;"))
+            except Exception:
+                pass
     except Exception as e:
         import logging
         logging.getLogger("qatra.startup").warning(
@@ -81,6 +88,7 @@ for prefix in list(dict.fromkeys([settings.API_V1_STR, "/api", "/api/v1"])):
     app.include_router(awareness_router, prefix=f"{prefix}/awareness")
     app.include_router(map_router, prefix=f"{prefix}/map")
     app.include_router(feed_router, prefix=f"{prefix}/feed")
+    app.include_router(coordination_router, prefix=f"{prefix}/coordination")
 app.include_router(health_router, prefix="")
 
 

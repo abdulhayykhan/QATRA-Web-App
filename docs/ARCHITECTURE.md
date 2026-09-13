@@ -27,7 +27,7 @@
 - [8. Cryptography, Security & Data Privacy (NFR 2)](#8-cryptography-security--data-privacy-nfr-2)
   - [AES-256-GCM Vault Encryption at Rest](#aes-256-gcm-vault-encryption-at-rest)
   - [Pakistani CNIC Checksum Validation (Mod-10)](#pakistani-cnic-checksum-validation-mod-10)
-  - [Masked Proxy Phone Coordination](#masked-proxy-phone-coordination)
+  - [In-App Chat & Unidirectional Seeker-to-Donor Calling](#in-app-chat--unidirectional-seeker-to-donor-calling)
   - [Tamper-Evident Audit Trails (NFR 2.5)](#tamper-evident-audit-trails-nfr-25)
 - [9. Data Persistence & Caching Strategy](#9-data-persistence--caching-strategy)
   - [PostgreSQL Relational Schema](#postgresql-relational-schema)
@@ -264,11 +264,11 @@ def validate_pakistani_cnic(cnic: str) -> bool:
     return True
 ```
 
-### Masked Proxy Phone Coordination
-To eliminate harassment and prevent commercial black-market brokering:
-1. When a donor accepts an emergency request, a temporary virtual channel is generated (`proxy_channel_id: px-99218`).
-2. Both seeker and donor dial into QATRA's telecommunication virtual gateway (`+92-21-3000-0000`).
-3. The bridge routes audio bidirectionally while completely concealing private cellular phone numbers.
+### In-App Chat & Unidirectional Seeker-to-Donor Calling
+To safeguard volunteer donors from unsolicited calls, prevent commercial brokering, and maintain reliable emergency arrival coordination:
+1. **Unidirectional Direct Calling**: When a donor accepts an emergency request, the emergency seeker is authorized to call the accepted volunteer donor directly on their mobile number (`tel:+92300XXXXXXX`) via a dedicated call button.
+2. **Strict Donor Privacy Guard**: The accepted donor cannot place outgoing direct calls to the seeker, and the seeker's private phone number is strictly withheld from donor API responses and UI views.
+3. **Bidirectional In-App Chat**: Both parties communicate in real-time on `/seeker/coordination.html` via `GET /api/coordination/{request_id}/messages` and `POST /api/coordination/{request_id}/messages` with predefined emergency status chips.
 
 ### Tamper-Evident Audit Trails (NFR 2.5)
 Every access to sensitive medical records creates an immutable audit record:

@@ -41,9 +41,9 @@ Standard JSON payload, HTTP `200 OK` or `201 Created`.
 }
 ```
 
-### Privacy & Data Masking Rule (NFR 2.2)
+### Privacy & Phone Contact Rule (NFR 2.2)
 > [!IMPORTANT]
-> Raw phone numbers and raw 13-digit CNIC plain text are **strictly forbidden** in public response bodies. All contact coordination is conducted via masked proxy identifiers.
+> Raw 13-digit CNIC plain text is **strictly forbidden** in public response bodies. For voice communications, direct calling is strictly **unidirectional**: only the emergency seeker receives the accepted donor's phone number (`tel:+92...`) to coordinate hospital arrival. Donors cannot call seekers directly and communicate via live In-App Chat, ensuring seeker contact privacy.
 
 ---
 
@@ -321,8 +321,8 @@ Donor accepts an emergency proximity alert.
 {
   "request_id": 101,
   "status": "matched",
-  "message": "Match confirmed. Initializing masked proxy contact.",
-  "proxy_channel_id": "px-99218"
+  "message": "Match confirmed. Live coordination and in-app chat initialized.",
+  "matched_donor_id": 402
 }
 ```
 
@@ -350,18 +350,50 @@ Donor cancels prior acceptance (due to emergency/traffic), immediately triggerin
 }
 ```
 
-### 4.8 `POST /api/map/proxy-call/{request_id}/initiate`
-Initiates masked proxy calling / in-app bridging without exposing real phone numbers.
-- **Auth**: Required (`verified_seeker`, `verified_donor`)
+### 4.8 `GET /api/coordination/{request_id}`
+Resolves session parameters, unidirectional calling capability, and matched donor details.
+- **Auth**: Optional (`seeker`, `verified_donor`)
 - **Response**: `200 OK`
 ```json
 {
-  "proxy_call_id": "call_br_88392",
-  "virtual_number": "+922130000000",
-  "status": "connecting",
-  "expires_in_seconds": 600
+  "request_id": 101,
+  "status": "matched",
+  "viewer_role": "seeker",
+  "can_call": true,
+  "call_phone_number": "+923001234567",
+  "matched_donor": {
+    "donor_id": 402,
+    "name": "Verified Volunteer Donor",
+    "phone_number": "+923001234567",
+    "blood_group": "B+",
+    "distance_km": 2.4,
+    "estimated_arrival_minutes": 14
+  },
+  "seeker_info": {
+    "patient_name": "Emergency Blood Recipient",
+    "blood_group": "B+",
+    "units_needed": 2,
+    "units_fulfilled": 1
+  },
+  "hospital": {
+    "name": "Civil Hospital Karachi",
+    "address": "Mission Rd, New Karachi",
+    "latitude": 24.8569,
+    "longitude": 67.0112
+  }
 }
 ```
+
+### 4.9 `GET /api/coordination/{request_id}/messages`
+Retrieves chat stream history for this emergency coordination session.
+- **Auth**: Optional / Authenticated
+- **Response**: `200 OK`
+
+### 4.10 `POST /api/coordination/{request_id}/messages`
+Appends a coordination message from either seeker or donor.
+- **Auth**: Optional / Authenticated
+- **Body**: `{"text": "Attendant is at reception", "sender_role": "seeker"}`
+- **Response**: `200 OK`
 
 ---
 

@@ -128,12 +128,13 @@ Once verified, you will be redirected to the **Live Status Radar** (`/seeker/sta
 - **Phase 3 (30+ minutes)**: Automatic expansion to **15 km** across the metropolitan area.
 - Watch live indicators for **Donors Alerted**, **Donors Accepted**, and **Estimated Arrival Times (ETA)**.
 
-### Step 6: Communicating with Matched Donors (Masked Calling)
+### Step 6: Communicating with Matched Donors (In-App Chat & Direct Calling)
 When a nearby donor accepts your appeal:
 1. Tap **"Coordinate with Donor"** or open `/seeker/match.html`.
 2. View the donor’s distance (e.g., `3.2 km away`) and arrival ETA (e.g., `12 minutes`).
-3. Tap the green **"Call Donor"** button.
-4. **Zero Exposure Privacy**: The call bridges automatically through QATRA’s virtual proxy line (`+92-21-3000-0000`). Neither party sees the other’s personal mobile number.
+3. **Seeker Direct Calling**: Tap the green **"Call Donor"** button to dial the accepted volunteer donor directly on their mobile number (`tel:+92XXXXXXXXXX`) to coordinate urgent hospital entry.
+4. **Strict Donor Privacy Guard**: Donors cannot place direct calls to seekers, and the seeker's private mobile number is never exposed to donors.
+5. **Real-Time In-App Chat**: Both seeker and donor can exchange real-time coordination messages and quick status updates on the in-app coordination panel (`/seeker/coordination.html`).
 
 ### Step 7: Fulfilling & Closing the Emergency Request
 1. Once the required units have been donated and handed over to the hospital blood bank:
@@ -298,7 +299,7 @@ For students, first-time donors, and community members:
 QATRA has been engineered from the ground up with a privacy-first posture:
 - **AES-256-GCM Encryption**: All sensitive identity documents and National Identity Card (CNIC) numbers are encrypted using authenticated symmetric ciphers before writing to disk or database.
 - **Strict Role-Based Access Control (RBAC)**: Only verified administrators with signed JWT tokens can access backend verification queues.
-- **Zero Raw Phone Exposure**: Seekers and donors never receive each other’s personal cellular numbers. All communications occur via virtual proxy lines.
+- **Unidirectional Calling & Donor Privacy**: Only emergency seekers are authorized to place direct calls to accepted donors (`tel:+92...`) for rapid arrival coordination. Donors cannot call seekers directly and communicate via real-time In-App Chat, protecting patient numbers from exposure.
 - **No Commercial Monetization**: QATRA is strictly non-profit and humanitarian. Data is never sold, traded, or shared with commercial entities.
 
 ---

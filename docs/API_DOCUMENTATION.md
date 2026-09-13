@@ -30,8 +30,9 @@
   - [`GET /api/map/requests/{id}/matches`](#get-apimaprequestsidmatches)
   - [`POST /api/map/requests/{id}/accept`](#post-apimaprequestsidaccept)
   - [`POST /api/map/requests/{id}/decline`](#post-apimaprequestsiddecline)
-  - [`POST /api/map/requests/{id}/cancel`](#post-apimaprequestsidcancel)
-  - [`POST /api/map/proxy-call/{id}/initiate`](#post-apimapproxy-callidinitiate)
+  - [`GET /api/coordination/{id}`](#get-apicoordinationid)
+  - [`GET /api/coordination/{id}/messages`](#get-apicoordinationidmessages)
+  - [`POST /api/coordination/{id}/messages`](#post-apicoordinationidmessages)
 - [5. Urgent Social Feed & Sharing API (Mahrukh Baig)](#5-urgent-social-feed--sharing-api-mahrukh-baig)
   - [`GET /api/feed`](#get-apifeed)
   - [`GET /api/feed/{id}`](#get-apifeedid)
@@ -373,8 +374,8 @@ Donor accepts an emergency proximity notification.
 {
   "request_id": 101,
   "status": "matched",
-  "message": "Match confirmed. Initializing masked proxy contact.",
-  "proxy_channel_id": "px-99218"
+  "message": "Match confirmed. Live coordination and in-app chat initialized.",
+  "matched_donor_id": 402
 }
 ```
 
@@ -402,16 +403,75 @@ Donor cancels prior acceptance (due to breakdown/traffic), immediately re-openin
 }
 ```
 
-### `POST /api/map/proxy-call/{id}/initiate`
-Bridges an anonymous voice coordination call without revealing personal phone numbers.
-- **Access**: Required (`verified_seeker`, `verified_donor`)
+### `GET /api/coordination/{id}`
+Resolves emergency coordination permissions and donor contact for the session.
+- **Access**: Public / Optional JWT (`seeker`, `verified_donor`)
+- **Calling Policy**: Seeker receives donor phone number for direct calling (`tel:+92...`). Donor receives `can_call: false` with seeker phone strictly omitted.
 - **Response**: `200 OK`
 ```json
 {
-  "proxy_call_id": "call_br_88392",
-  "virtual_number": "+922130000000",
-  "status": "connecting",
-  "expires_in_seconds": 600
+  "request_id": 101,
+  "status": "matched",
+  "viewer_role": "seeker",
+  "can_call": true,
+  "call_phone_number": "+923001234567",
+  "matched_donor": {
+    "donor_id": 402,
+    "name": "Verified Volunteer Donor",
+    "phone_number": "+923001234567",
+    "blood_group": "B+",
+    "distance_km": 2.4,
+    "estimated_arrival_minutes": 14
+  },
+  "seeker_info": {
+    "patient_name": "Emergency Blood Recipient",
+    "blood_group": "B+",
+    "units_needed": 2,
+    "units_fulfilled": 1
+  },
+  "hospital": {
+    "name": "Civil Hospital Karachi",
+    "address": "Mission Rd, New Karachi",
+    "latitude": 24.8569,
+    "longitude": 67.0112
+  }
+}
+```
+
+### `GET /api/coordination/{id}/messages`
+Retrieves the real-time chat history between seeker and dispatch donor.
+- **Access**: Public / Authenticated
+- **Response**: `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "sender_role": "donor",
+    "sender_name": "Volunteer Donor",
+    "text": "Hello! I have confirmed your emergency blood alert. I am on my way to the blood bank.",
+    "timestamp": "2026-09-13T10:00:00Z"
+  }
+]
+```
+
+### `POST /api/coordination/{id}/messages`
+Sends a coordination message into the live in-app chat.
+- **Access**: Public / Authenticated
+- **Request Body**:
+```json
+{
+  "text": "Attendant is waiting at the reception with the file.",
+  "sender_role": "seeker"
+}
+```
+- **Response**: `200 OK`
+```json
+{
+  "id": 2,
+  "sender_role": "seeker",
+  "sender_name": "Emergency Seeker",
+  "text": "Attendant is waiting at the reception with the file.",
+  "timestamp": "2026-09-13T10:01:15Z"
 }
 ```
 

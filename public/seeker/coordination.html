@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
-  <title>QATRA — Masked Proxy Coordination & Navigation</title>
+  <title>QATRA — Live Coordination & In-App Chat</title>
 
   <!-- PWA & Favicon Meta Tags -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -19,79 +19,27 @@
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
     .coordination-header-card {
-      background: linear-gradient(135deg, #1864AB 0%, #1971C2 100%);
-      color: var(--text-white);
+      background: linear-gradient(135deg, #C92A2A 0%, #A61E4D 100%);
+      color: #ffffff;
       padding: var(--space-lg) var(--space-md);
       border-radius: var(--radius-lg);
       margin-bottom: var(--space-md);
       text-align: center;
+      box-shadow: var(--shadow-md);
     }
-    .privacy-shield-badge {
+    .coordination-status-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       background: rgba(255, 255, 255, 0.2);
-      padding: 4px 12px;
+      padding: 4px 14px;
       border-radius: var(--radius-full);
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.5px;
       margin-bottom: var(--space-sm);
     }
-    .virtual-number-display {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      margin: var(--space-xs) 0;
-      font-family: monospace;
-    }
-    .countdown-timer {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.9);
-    }
-    /* Call Controls (Wireframe pg. 10) */
-    .call-controls-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-md);
-      margin: var(--space-lg) 0;
-      text-align: center;
-    }
-    .call-control-btn {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      border: 1px solid var(--border-color);
-      background: var(--bg-surface);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      font-size: 20px;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      transition: all var(--transition-fast);
-    }
-    .call-control-btn:active, .call-control-btn.active {
-      background: var(--bg-subtle);
-      border-color: var(--primary-red);
-      transform: scale(0.95);
-    }
-    .call-control-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 6px;
-    }
-    .call-end-btn {
-      background-color: var(--color-danger);
-      color: white;
-      border: none;
-    }
-    .call-end-btn:hover {
-      background-color: #C92A2A;
-    }
-    /* Chat Messaging Box (Wireframe pg. 10) */
+    /* Chat Messaging Box */
     .chat-box {
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
@@ -101,30 +49,48 @@
       box-shadow: var(--shadow-sm);
     }
     .messages-stream {
-      max-height: 200px;
+      min-height: 180px;
+      max-height: 260px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: var(--space-sm);
+      gap: 8px;
       margin-bottom: var(--space-md);
-      padding: 4px;
+      padding: 8px;
+      background: var(--bg-canvas);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
     }
     .message-bubble {
       padding: 8px 12px;
       border-radius: var(--radius-md);
       font-size: 13px;
-      max-width: 80%;
+      max-width: 85%;
       line-height: 1.4;
+      word-break: break-word;
+    }
+    .message-bubble .bubble-meta {
+      font-size: 10px;
+      margin-bottom: 3px;
+      font-weight: 700;
+      opacity: 0.85;
+    }
+    .message-bubble .bubble-time {
+      font-size: 9px;
+      opacity: 0.7;
+      text-align: right;
+      margin-top: 3px;
     }
     .message-bubble.incoming {
-      background: var(--bg-subtle);
+      background: var(--bg-surface);
       color: var(--text-main);
       align-self: flex-start;
+      border: 1px solid var(--border-color);
       border-bottom-left-radius: 2px;
     }
     .message-bubble.outgoing {
       background: var(--primary-red);
-      color: white;
+      color: #ffffff;
       align-self: flex-end;
       border-bottom-right-radius: 2px;
     }
@@ -132,24 +98,28 @@
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding: 4px 0 var(--space-sm) 0;
+      padding-bottom: 8px;
+      margin-bottom: var(--space-sm);
+      -webkit-overflow-scrolling: touch;
     }
     .preset-chip {
       background: var(--bg-subtle);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-full);
-      padding: 4px 10px;
+      padding: 5px 12px;
       font-size: 11px;
       color: var(--text-main);
       cursor: pointer;
       white-space: nowrap;
+      transition: all var(--transition-fast);
+      font-family: inherit;
     }
-    .preset-chip:hover {
+    .preset-chip:hover, .preset-chip:active {
       background: var(--primary-red-subtle);
       color: var(--primary-red);
       border-color: var(--primary-red);
     }
-    /* Navigation & Directions Card (Wireframe pg. 17) */
+    /* Navigation & Directions Card */
     .nav-card {
       border-left: 4px solid var(--color-info);
     }
@@ -183,100 +153,104 @@
         <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
           📲 <span class="hide-on-mobile">Install App</span>
         </button>
-        <span class="badge badge-success">Encrypted</span>
+        <span class="badge badge-success">Live Coordination</span>
       </div>
     </header>
 
     <!-- Main Content -->
     <main class="app-content">
       <div class="form-container-md">
-        <!-- Privacy Masked Call Bridge Card (Wireframe pg. 10, NFR 2.2) -->
+        <!-- Live Coordination Header Card -->
         <section class="coordination-header-card">
-        <div class="privacy-shield-badge">
-          <span>🛡️ ZERO-KNOWLEDGE PROXY BRIDGE</span>
-        </div>
-        <div style="font-size: 13px; color: rgba(255,255,255,0.85);" id="caller-target-text">
-          Connected with Matched Donor
-        </div>
-        <div class="virtual-number-display" id="virtual-number-display">
-          +92 21 3000 0000
-        </div>
-        <div class="countdown-timer">
-          ⏱️ Active Channel: <b id="call-timer-display">10:00</b> remaining
-        </div>
-        <div style="font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 4px;">
-          Proxy Channel ID: <span id="proxy-channel-id-text">px-connecting...</span>
-        </div>
-      </section>
+          <div class="coordination-status-badge">
+            <span>🚨 LIVE DISPATCH COORDINATION</span>
+          </div>
+          <h2 style="font-size: 18px; margin: 0 0 4px 0; color: #ffffff;" id="coordination-headline">Matched Volunteer En Route</h2>
+          <p style="font-size: 13px; color: rgba(255,255,255,0.9); margin: 0 0 var(--space-md) 0;" id="coordination-subline">
+            Coordinating arrival with donor <b id="matched-donor-display-name">Anonymous Donor #D-402</b> (<span id="matched-donor-blood-tag">B+</span>)
+          </p>
 
-      <!-- Interactive Call Controls (Wireframe pg. 10) -->
-      <div class="call-controls-grid">
-        <div>
-          <button id="btn-mute" class="call-control-btn">🔇</button>
-          <div class="call-control-label">Mute</div>
-        </div>
-        <div>
-          <button id="btn-speaker" class="call-control-btn">🔊</button>
-          <div class="call-control-label">Speaker</div>
-        </div>
-        <div>
-          <button id="btn-end-call" class="call-control-btn call-end-btn">📞</button>
-          <div class="call-control-label" style="color: var(--color-danger); font-weight: 600;">End Call</div>
-        </div>
-      </div>
-
-      <!-- Hospital Routing & Navigation Card (Wireframe pg. 17) -->
-      <div class="card nav-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-xs);">
-          <div>
-            <h3 style="font-size: 14px; margin-bottom: 2px;" id="nav-hospital-name">Civil Hospital Karachi</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;" id="nav-hospital-address">
-              Mission Rd, New Karachi
+          <!-- Seeker Direct Call Section (Exclusively rendered for Seekers) -->
+          <div id="seeker-call-container" style="display: block; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.25);">
+            <div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: rgba(255,255,255,0.95);">
+              📞 Emergency Direct Contact
+            </div>
+            <a id="btn-call-donor" href="tel:+923001234567" class="btn btn-success" style="font-size: 15px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 12px; box-shadow: var(--shadow-sm);">
+              <span>📞 Call Donor</span> <span id="donor-call-number-text">(+92 300 1234567)</span>
+            </a>
+            <p style="font-size: 11px; color: rgba(255, 255, 255, 0.85); margin: 8px 0 0 0;">
+              Seeker direct phone link to coordinate critical hospital entry.
             </p>
           </div>
-          <span class="badge badge-blood">B+ Needed</span>
-        </div>
-        <div style="display: flex; gap: var(--space-md); font-size: 12px; margin: var(--space-sm) 0;">
-          <span>📍 Distance: <b id="nav-distance">2.4 km</b></span>
-          <span>⏱️ Estimated Travel: <b id="nav-eta">14 mins</b></span>
-        </div>
-        <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-sm);">
-          <a id="btn-open-gps-directions" href="#" target="_blank" class="btn btn-sm btn-outline" style="flex: 1;">
-            🗺️ Open Turn-by-Turn Navigation
-          </a>
-          <button id="btn-cancel-match" class="btn btn-sm btn-secondary" style="color: var(--color-danger); width: auto;">
-            Cancel Match
-          </button>
-        </div>
-      </div>
 
-      <!-- In-App Proxy Chat (Wireframe pg. 10) -->
-      <div class="chat-box">
-        <h3 style="font-size: 14px; margin-bottom: var(--space-xs);">Masked In-App Messaging</h3>
-        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: var(--space-sm);">
-          Messages routed securely through QATRA proxy engine. Real phone numbers are hidden.
-        </p>
+          <!-- Donor Advisory Section (Rendered for Donors; direct calling prohibited) -->
+          <div id="donor-advisory-container" style="display: none; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.25); text-align: left;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+              <span>ℹ️ Seeker Direct Contact Policy</span>
+            </div>
+            <p style="font-size: 12px; color: rgba(255, 255, 255, 0.95); margin: 0; line-height: 1.4;">
+              For patient safety and privacy protection, direct cellular calling is restricted to the emergency seeker. Please coordinate your arrival and location directly via the <b>In-App Chat</b> below.
+            </p>
+          </div>
+        </section>
 
-        <!-- Messages Stream -->
-        <div class="messages-stream" id="chat-messages-container">
-          <div class="message-bubble incoming">
-            Hello! I have confirmed your emergency blood alert. I am on my way to the blood bank.
+        <!-- Hospital Routing & Navigation Card -->
+        <div class="card nav-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-xs);">
+            <div>
+              <h3 style="font-size: 14px; margin-bottom: 2px;" id="nav-hospital-name">Civil Hospital Karachi</h3>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;" id="nav-hospital-address">
+                Mission Rd, New Karachi
+              </p>
+            </div>
+            <span class="badge badge-blood" id="nav-blood-badge">B+ Needed</span>
+          </div>
+          <div style="display: flex; gap: var(--space-md); font-size: 12px; margin: var(--space-sm) 0;">
+            <span>📍 Distance: <b id="nav-distance">2.4 km</b></span>
+            <span>⏱️ Estimated Travel: <b id="nav-eta">14 mins</b></span>
+          </div>
+          <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-sm);">
+            <a id="btn-open-gps-directions" href="https://www.google.com/maps/dir/?api=1&destination=24.8569,67.0112" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" style="flex: 1; text-align: center;">
+              🗺️ Open Turn-by-Turn Navigation
+            </a>
+            <button type="button" id="btn-cancel-match" class="btn btn-sm btn-secondary" style="color: var(--color-danger); width: auto;">
+              Cancel Match
+            </button>
           </div>
         </div>
 
-        <!-- Quick Response Chips -->
-        <div class="quick-preset-chips">
-          <span class="preset-chip">🏥 I have arrived at the hospital entrance</span>
-          <span class="preset-chip">📍 Please meet at 2nd floor Blood Bank</span>
-          <span class="preset-chip">🩺 Attendant is waiting at reception</span>
-        </div>
+        <!-- In-App Chat (Real-time Bidirectional) -->
+        <div class="chat-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xs);">
+            <h3 style="font-size: 15px; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <span>💬 Real-Time In-App Chat</span>
+            </h3>
+            <span class="badge badge-success" id="chat-live-badge">🟢 Live</span>
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: var(--space-sm);">
+            Instant coordination between seeker and accepted donor. Messages sync in real-time.
+          </p>
 
-        <!-- Chat Input Form -->
-        <form id="chat-form" style="display: flex; gap: var(--space-xs);">
-          <input type="text" id="chat-input" class="form-input" placeholder="Type a message..." style="font-size: 13px; padding: 8px 12px;" autocomplete="off">
-          <button type="submit" class="btn btn-primary" style="width: auto; padding: 8px 16px;">Send</button>
-        </form>
-      </div>
+          <!-- Messages Stream -->
+          <div class="messages-stream" id="chat-messages-container">
+            <!-- Dynamically populated via coordination.js -->
+          </div>
+
+          <!-- Quick Response Chips -->
+          <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">⚡ Quick Responses</div>
+          <div class="quick-preset-chips" id="quick-preset-chips">
+            <button type="button" class="preset-chip">🏥 I have arrived at the hospital entrance</button>
+            <button type="button" class="preset-chip">📍 Please meet at 2nd floor Blood Bank</button>
+            <button type="button" class="preset-chip">🩺 Attendant is waiting at reception</button>
+            <button type="button" class="preset-chip">🚗 Running 5 minutes late due to traffic</button>
+          </div>
+
+          <!-- Chat Input Form -->
+          <form id="chat-form" style="display: flex; gap: var(--space-xs);">
+            <input type="text" id="chat-input" class="form-input" placeholder="Type a message to coordinate..." style="font-size: 13px; padding: 10px 12px; flex: 1;" autocomplete="off" required>
+            <button type="submit" id="btn-send-message" class="btn btn-primary" style="width: auto; padding: 10px 18px; font-weight: 600;">Send</button>
+          </form>
+        </div>
       </div>
     </main>
 
