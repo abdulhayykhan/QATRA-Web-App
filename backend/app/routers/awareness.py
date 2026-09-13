@@ -430,11 +430,13 @@ def ensure_seed_events(db: Session) -> None:
             organizer = db.query(User).filter(User.role.in_(["organizer", "admin"])).first()
             if not organizer:
                 organizer = User(
+                    firebase_uid="organizer_system_seed",
                     email="organizer@qatra.org",
                     full_name="QATRA Community Organizer",
-                    phone="+923001234567",
+                    phone_number="+923001234567",
                     role="organizer",
                     is_active=True,
+                    is_verified=True,
                 )
                 db.add(organizer)
                 db.commit()

@@ -97,10 +97,61 @@ function getFallbackArticles(query) {
   return matched.length > 0 ? matched : FALLBACK_CLIENT_ARTICLES;
 }
 
+const FALLBACK_EVENTS = [
+  {
+    id: 1,
+    title: "NED University Annual Emergency Blood Drive",
+    event_type: "blood_drive",
+    date_time: "2026-09-15T09:00:00Z",
+    location_name: "NED University Main Auditorium, Karachi",
+    address: "University Road, Gulshan-e-Iqbal, Karachi",
+    description: "Annual campus emergency blood drive in collaboration with Al-Khidmat and Indus Hospital.",
+    slots_total: 200,
+    slots_booked: 48,
+    is_active: true
+  },
+  {
+    id: 2,
+    title: "Dawood UET Thalassemia Awareness & Screening Session",
+    event_type: "awareness_session",
+    date_time: "2026-09-18T11:00:00Z",
+    location_name: "Dawood University Jinnah Campus Seminar Hall",
+    address: "M.A. Jinnah Road, Karachi",
+    description: "Interactive educational workshop covering hereditary blood disorders, voluntary donor rights, and emergency registry participation.",
+    slots_total: 100,
+    slots_booked: 24,
+    is_active: true
+  },
+  {
+    id: 3,
+    title: "Dow University Emergency Mobile Collection Drive",
+    event_type: "blood_drive",
+    date_time: "2026-09-22T10:00:00Z",
+    location_name: "Ojha Institute of Chest Diseases, Dow University, Karachi",
+    address: "Gulzar-e-Hijri, Scheme 33, Suparco Road, Karachi",
+    description: "Targeted emergency collection drive prioritizing rare blood types (O-, AB-) for Karachi trauma centers.",
+    slots_total: 150,
+    slots_booked: 35,
+    is_active: true
+  }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   setupCategoryPills();
   setupSearch();
   setupModal();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialCat = urlParams.get('cat') || urlParams.get('category');
+  if (initialCat) {
+    const matchingPill = document.querySelector(`#category-pills .cat-pill[data-cat="${initialCat}"]`);
+    if (matchingPill) {
+      document.querySelectorAll('#category-pills .cat-pill').forEach(p => p.classList.remove('active'));
+      matchingPill.classList.add('active');
+      activeCategory = initialCat;
+    }
+  }
+
   loadContent();
 });
 
@@ -223,7 +274,17 @@ async function fetchLiveArticles() {
  * Fetch and cache upcoming blood drives and sessions
  */
 async function fetchEvents() {
-  cachedEvents = await apiGet('/awareness/events');
+  try {
+    const events = await apiGet('/awareness/events');
+    if (Array.isArray(events) && events.length > 0) {
+      cachedEvents = events;
+    } else {
+      cachedEvents = FALLBACK_EVENTS;
+    }
+  } catch (err) {
+    console.warn('Could not load events from API, using fallback:', err);
+    cachedEvents = FALLBACK_EVENTS;
+  }
   renderCurrentView();
 }
 
