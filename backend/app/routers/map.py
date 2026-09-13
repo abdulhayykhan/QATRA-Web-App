@@ -14,7 +14,7 @@ from sqlalchemy import or_, and_
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import get_current_user, require_role
+from app.core.security import get_current_user, get_current_user_optional, require_role
 from app.models.user import User
 from app.models.donor import Donor
 from app.models.request import Request
@@ -201,7 +201,7 @@ async def get_map_requests(
     latitude: Optional[float] = Query(None, ge=-90.0, le=90.0, description="Viewer center latitude"),
     longitude: Optional[float] = Query(None, ge=-180.0, le=180.0, description="Viewer center longitude"),
     radius_km: float = Query(15.0, ge=1.0, le=100.0, description="Search radius in kilometers"),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """

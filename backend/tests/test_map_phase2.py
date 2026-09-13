@@ -240,6 +240,13 @@ def test_map_requests_markers_and_color_coding():
     nearby_ids = [m["request_id"] for m in nearby_markers]
     assert urgent_id in nearby_ids
 
+    # Test unauthenticated guest access to map requests (Public Live Map)
+    res_guest = client.get("/api/map/requests")
+    assert res_guest.status_code == 200
+    guest_markers = res_guest.json()
+    assert isinstance(guest_markers, list)
+    assert len(guest_markers) > 0
+
 
 # ==============================================================================
 # 4. Seeker Status Polling & Serverless Auto-Expansion Tests (FR 1.3.3)
