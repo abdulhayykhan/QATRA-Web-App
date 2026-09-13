@@ -10,8 +10,8 @@
  * - No locking out input during transitions
  */
 
-// Load Motion One from CDN (no build step required)
-import { animate, spring } from 'https://esm.sh/motion@11.5.3';
+// Load Motion One from CDN (v10.18.0)
+import { animate, spring } from 'https://esm.sh/motion@10.18.0';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 

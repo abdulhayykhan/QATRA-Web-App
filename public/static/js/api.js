@@ -103,8 +103,10 @@ async function request(endpoint, options = {}) {
 
     // Handle 401 Unauthorized
     if (response.status === 401 && !endpoint.includes('/auth/firebase-login')) {
-      showToast('Session expired. Please sign in again.', 'warning');
-      logout();
+      if (token) {
+        showToast('Session expired. Please sign in again.', 'warning');
+        logout();
+      }
       throw new Error('Unauthorized');
     }
 

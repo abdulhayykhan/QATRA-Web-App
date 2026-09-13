@@ -74,14 +74,14 @@ app.add_middleware(
 # Configure Rate Limiting Middleware (NFR 2.6 - Nimra Iftikhar)
 app.add_middleware(RateLimitMiddleware)
 
-# Register Routers
-app.include_router(health_router, prefix=settings.API_V1_STR)
-app.include_router(health_router, prefix="/api")
+# Register Routers across both /api and /api/v1 prefixes
+for prefix in list(dict.fromkeys([settings.API_V1_STR, "/api", "/api/v1"])):
+    app.include_router(health_router, prefix=prefix)
+    app.include_router(auth_router, prefix=f"{prefix}/auth")
+    app.include_router(awareness_router, prefix=f"{prefix}/awareness")
+    app.include_router(map_router, prefix=f"{prefix}/map")
+    app.include_router(feed_router, prefix=f"{prefix}/feed")
 app.include_router(health_router, prefix="")
-app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth")
-app.include_router(awareness_router, prefix=f"{settings.API_V1_STR}/awareness")
-app.include_router(map_router, prefix=f"{settings.API_V1_STR}/map")
-app.include_router(feed_router, prefix=f"{settings.API_V1_STR}/feed")
 
 
 
@@ -167,11 +167,11 @@ async def apple_touch_icon():
 
 
 @app.get("/", tags=["Root"])
+@app.get("/index.html", include_in_schema=False)
 async def root(request: Request):
     """Root endpoint providing index HTML for browsers and JSON navigation for API clients."""
-    accept = request.headers.get("accept", "")
     index_file = pages_dir / "index.html"
-    if "text/html" in accept and index_file.exists():
+    if index_file.exists():
         return FileResponse(str(index_file))
     return {
         "message": "Welcome to QATRA Emergency Blood Response Platform API",

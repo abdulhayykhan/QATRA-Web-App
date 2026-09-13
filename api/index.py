@@ -24,6 +24,8 @@ app = None
 try:
     from app.main import app as _real_app
     app = _real_app
+    from app.core.database import init_db_schema
+    init_db_schema()
 except Exception as e:
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse

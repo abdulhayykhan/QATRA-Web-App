@@ -207,7 +207,8 @@ async function renderSlipDocument(rawUrl) {
       loading.style.display = 'none';
       img.style.display = 'block';
     };
-    fullscreenBtn.href = rawUrl;
+    fullscreenBtn.dataset.url = rawUrl;
+    fullscreenBtn.onclick = () => window.open(rawUrl, '_blank');
     fullscreenBtn.style.display = 'inline-block';
     return;
   }
@@ -239,7 +240,8 @@ async function renderSlipDocument(rawUrl) {
       img.style.display = 'block';
     }
 
-    fullscreenBtn.href = currentBlobUrl;
+    fullscreenBtn.dataset.url = currentBlobUrl;
+    fullscreenBtn.onclick = () => window.open(currentBlobUrl, '_blank');
     fullscreenBtn.style.display = 'inline-block';
 
   } catch (err) {
