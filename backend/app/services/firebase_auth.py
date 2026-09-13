@@ -23,6 +23,10 @@ def get_firebase_app() -> firebase_admin.App:
         _firebase_app = firebase_admin.get_app()
         return _firebase_app
 
+    project_id = settings.FIREBASE_PROJECT_ID or "qatra-web-app"
+    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+    os.environ.setdefault("GCLOUD_PROJECT", project_id)
+
     cred = None
 
     # Priority 1: Service account JSON file path
@@ -35,26 +39,38 @@ def get_firebase_app() -> firebase_admin.App:
 
     for p in service_account_paths:
         if p and os.path.exists(p):
-            cred = credentials.Certificate(p)
-            break
+            try:
+                cred = credentials.Certificate(p)
+                break
+            except Exception as e:
+                print(f"Warning: Failed loading Firebase credentials from {p}: {e}")
 
     # Priority 2: In-memory credentials from environment variables
     if cred is None and settings.FIREBASE_PRIVATE_KEY and settings.FIREBASE_CLIENT_EMAIL:
         cert_dict = {
             "type": "service_account",
-            "project_id": settings.FIREBASE_PROJECT_ID or "qatra-web-app",
+            "project_id": project_id,
             "private_key": settings.FIREBASE_PRIVATE_KEY.replace("\\n", "\n"),
             "client_email": settings.FIREBASE_CLIENT_EMAIL,
             "token_uri": "https://oauth2.googleapis.com/token",
         }
-        cred = credentials.Certificate(cert_dict)
-
-    if cred is not None:
-        _firebase_app = firebase_admin.initialize_app(cred)
-    else:
-        # Fallback to default application credentials if available
         try:
-            _firebase_app = firebase_admin.initialize_app()
+            cred = credentials.Certificate(cert_dict)
+        except Exception as e:
+            print(f"Warning: Failed creating Firebase credentials from env vars: {e}")
+
+    app_options = {"projectId": project_id}
+    if cred is not None:
+        try:
+            _firebase_app = firebase_admin.initialize_app(cred, options=app_options)
+        except Exception as e:
+            print(f"Warning: Failed initializing Firebase Admin with credentials: {e}")
+            _firebase_app = None
+
+    if _firebase_app is None:
+        # Fallback to default application credentials with explicit project_id option
+        try:
+            _firebase_app = firebase_admin.initialize_app(options=app_options)
         except Exception as e:
             # Allow startup in development even if credentials aren't set yet
             print(f"Warning: Firebase Admin initialization deferred: {e}")
