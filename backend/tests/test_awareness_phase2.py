@@ -536,3 +536,36 @@ def test_health_feedback_rbac_guards():
         json={"donor_id": 1, "screening_outcome": "Passed"},
     )
     assert res_post_guard.status_code == 403
+
+
+def test_get_live_articles_endpoint():
+    """Verify GET /api/awareness/live-articles returns real scientific articles and blogs."""
+    res = client.get("/api/awareness/live-articles?limit=5")
+    assert res.status_code == 200
+    articles = res.json()
+    assert isinstance(articles, list)
+    assert len(articles) > 0
+    assert len(articles) <= 5
+
+    first = articles[0]
+    assert "id" in first
+    assert "title" in first and len(first["title"]) > 10
+    assert "authors" in first
+    assert "journal" in first
+    assert "abstract" in first and len(first["abstract"]) > 40
+    assert "summary" in first
+    assert "url" in first and first["url"].startswith("http")
+    assert first["category"] == "research"
+    assert first["content_type"] == "article"
+
+
+def test_get_live_articles_with_query_and_limit():
+    """Verify live articles query parameter and limit behavior."""
+    res = client.get("/api/awareness/live-articles?query=iron&limit=2")
+    assert res.status_code == 200
+    articles = res.json()
+    assert isinstance(articles, list)
+    assert len(articles) <= 2
+    assert len(articles) >= 1
+    assert any("iron" in a["title"].lower() or "iron" in a["abstract"].lower() for a in articles)
+

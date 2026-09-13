@@ -131,6 +131,46 @@
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
+    .live-article-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .live-article-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .live-badge-source {
+      background: #EBF5FF;
+      color: #0071E3;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .live-badge-journal {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      max-width: 230px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .event-card {
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
@@ -204,6 +244,7 @@
       <!-- Category Pills -->
       <div class="category-pills" id="category-pills">
         <div class="cat-pill active" data-cat="">All Content</div>
+        <div class="cat-pill" data-cat="live_articles">📰 Research & Blogs (Live API)</div>
         <div class="cat-pill" data-cat="myths_facts">💡 Myths vs Facts</div>
         <div class="cat-pill" data-cat="basics">🩸 Donation 101</div>
         <div class="cat-pill" data-cat="health_prep">🥗 Prep & Diet</div>
