@@ -21,17 +21,17 @@
     .stepper {
       display: flex;
       justify-content: space-between;
-      margin-bottom: var(--space-lg);
+      margin-bottom: 24px;
       position: relative;
     }
     .stepper::before {
       content: '';
       position: absolute;
-      top: 14px;
+      top: 15px;
       left: 20px;
       right: 20px;
       height: 2px;
-      background: var(--border-color);
+      background: rgba(0, 0, 0, 0.06);
       z-index: 1;
     }
     .step-node {
@@ -40,35 +40,41 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       font-size: 11px;
       font-weight: 600;
       color: var(--text-muted);
+      letter-spacing: 0.02em;
     }
     .step-circle {
-      width: 30px;
-      height: 30px;
-      border-radius: var(--radius-full);
-      background: var(--bg-surface);
-      border: 2px solid var(--border-color-strong);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1.5px solid rgba(0, 0, 0, 0.12);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
+      font-size: 13px;
+      box-shadow: var(--shadow-sm);
       transition: all var(--transition-fast);
     }
     .step-node.active .step-circle {
       background: var(--primary-red);
-      color: #fff;
+      color: #FFFFFF;
       border-color: var(--primary-red);
+      box-shadow: 0 2px 8px rgba(201, 42, 42, 0.3);
     }
     .step-node.completed .step-circle {
-      background: var(--color-success);
-      color: #fff;
-      border-color: var(--color-success);
+      background: #34C759;
+      color: #FFFFFF;
+      border-color: #34C759;
+      box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
     }
     .step-node.active span {
       color: var(--primary-red);
+      font-weight: 700;
     }
     .step-content {
       display: none;
@@ -83,11 +89,11 @@
       justify-content: center;
       gap: 12px;
       background: #FFFFFF;
-      color: #374151;
-      border: 1px solid var(--border-color-strong);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      font-size: 14px;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-full);
+      padding: 12px 20px;
+      font-size: 14.5px;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
@@ -95,22 +101,35 @@
       transition: all var(--transition-fast);
     }
     .google-btn:hover {
-      background: #F9FAFB;
-      border-color: #D1D5DB;
+      background: #F9F9FA;
+      border-color: rgba(0, 0, 0, 0.16);
+    }
+    .google-btn:active {
+      transform: scale(0.97);
     }
     .checkbox-item {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 12px;
+      gap: 12px;
+      padding: 14px 16px;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      margin-bottom: var(--space-sm);
-      background: var(--bg-surface);
+      margin-bottom: 12px;
+      background: #FFFFFF;
       cursor: pointer;
+      font-size: 13.5px;
+      line-height: 1.45;
+      transition: all var(--transition-fast);
+    }
+    .checkbox-item:hover {
+      border-color: rgba(201, 42, 42, 0.25);
+      background: rgba(201, 42, 42, 0.02);
     }
     .checkbox-item input {
       margin-top: 3px;
+      accent-color: var(--primary-red);
+      width: 16px;
+      height: 16px;
     }
   </style>
   <link rel="stylesheet" href="/static/css/apple.css">

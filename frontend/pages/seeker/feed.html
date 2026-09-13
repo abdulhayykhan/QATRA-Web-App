@@ -18,28 +18,28 @@
 
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
-    /* Feed Screen Styles (PRD Section 5 & Wireframe pg 22) */
+    /* Feed Screen Styles (PRD Section 5 & Apple HIG Pure White) */
     .feed-header-title {
-      font-size: 17px;
-      font-weight: 800;
-      letter-spacing: -0.3px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .feed-tabs-container {
       display: flex;
-      background: var(--bg-subtle);
+      background: rgba(0, 0, 0, 0.04);
       border-radius: var(--radius-full);
       padding: 4px;
-      margin-bottom: var(--space-md);
-      border: 1px solid var(--border-color);
+      margin-bottom: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.04);
     }
 
     .feed-tab-btn {
       flex: 1;
-      padding: 8px 12px;
+      padding: 8px 14px;
       border-radius: var(--radius-full);
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 500;
       border: none;
       background: transparent;
       color: var(--text-muted);
@@ -49,34 +49,43 @@
       justify-content: center;
       gap: 6px;
       transition: all var(--transition-fast);
+      user-select: none;
+    }
+
+    .feed-tab-btn:hover {
+      color: var(--text-main);
     }
 
     .feed-tab-btn.active {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       color: var(--primary-red);
-      box-shadow: var(--shadow-sm);
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.03);
     }
 
     .search-filter-bar {
       display: flex;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-sm);
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .search-filter-input {
       flex: 1;
-      padding: 8px 14px;
-      font-size: 13px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-color-strong);
-      background: var(--bg-surface);
+      padding: 10px 16px;
+      font-size: 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-color);
+      background: #FFFFFF;
       color: var(--text-main);
       outline: none;
+      box-shadow: var(--shadow-sm);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      -webkit-appearance: none;
     }
 
     .search-filter-input:focus {
       border-color: var(--primary-red);
-      box-shadow: 0 0 0 2px var(--primary-red-light);
+      box-shadow: 0 0 0 4px rgba(201, 42, 42, 0.12);
     }
 
     .filter-chips-scroll {
@@ -84,7 +93,7 @@
       gap: 6px;
       overflow-x: auto;
       padding-bottom: 6px;
-      margin-bottom: var(--space-md);
+      margin-bottom: 20px;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
@@ -94,35 +103,39 @@
     }
 
     .chip-btn {
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: var(--radius-full);
-      border: 1px solid var(--border-color-strong);
-      background: var(--bg-surface);
-      font-size: 12px;
+      border: 1px solid var(--border-color);
+      background: #FFFFFF;
+      font-size: 12.5px;
       font-weight: 600;
       color: var(--text-main);
       white-space: nowrap;
       cursor: pointer;
       transition: all var(--transition-fast);
+      box-shadow: var(--shadow-sm);
     }
 
     .chip-btn:hover {
       border-color: var(--primary-red);
+      background: rgba(201, 42, 42, 0.03);
     }
 
     .chip-btn.active {
       background: var(--primary-red);
       color: #FFFFFF;
       border-color: var(--primary-red);
+      box-shadow: 0 2px 8px rgba(201, 42, 42, 0.28);
     }
 
     .skeleton-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: var(--space-md);
-      margin-bottom: var(--space-md);
+      padding: 20px;
+      margin-bottom: 20px;
       animation: skeleton-pulse 1.4s infinite ease-in-out;
+      box-shadow: var(--shadow-sm);
     }
 
     @keyframes skeleton-pulse {
@@ -133,8 +146,8 @@
 
     .skeleton-line {
       height: 12px;
-      background: var(--border-color-strong);
-      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: var(--radius-full);
       margin-bottom: 8px;
     }
 
@@ -142,39 +155,41 @@
     .awareness-cards-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-sm);
-      margin-bottom: var(--space-md);
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
     .awareness-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: var(--space-md);
+      border-radius: var(--radius-lg);
+      padding: 18px 14px;
       text-align: center;
       text-decoration: none;
       color: var(--text-main);
-      transition: transform var(--transition-fast), border-color var(--transition-fast);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
     }
 
     .awareness-card:hover {
       transform: translateY(-2px);
-      border-color: var(--primary-red);
-      box-shadow: var(--shadow-sm);
+      border-color: rgba(201, 42, 42, 0.25);
+      box-shadow: var(--shadow-md);
     }
 
     .awareness-card-icon {
       font-size: 26px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .awareness-card-title {
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 700;
+      letter-spacing: -0.01em;
     }
 
     .awareness-card-subtitle {
-      font-size: 11px;
+      font-size: 11.5px;
       color: var(--text-muted);
       margin-top: 2px;
       margin-bottom: 0;

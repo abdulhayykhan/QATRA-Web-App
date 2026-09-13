@@ -21,7 +21,7 @@
     .queue-layout {
       display: grid;
       grid-template-columns: 1fr;
-      gap: var(--space-md);
+      gap: 20px;
     }
     @media (min-width: 768px) {
       .queue-layout {
@@ -33,39 +33,42 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: var(--space-sm);
+      gap: 10px;
     }
     .queue-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 12px;
+      padding: 14px 16px;
       cursor: pointer;
+      box-shadow: var(--shadow-sm);
       transition: all var(--transition-fast);
     }
     .queue-card:hover, .queue-card.selected {
       border-color: var(--primary-red);
-      background: var(--primary-red-subtle);
+      background: rgba(201, 42, 42, 0.04);
+      box-shadow: var(--shadow-md);
     }
     .detail-panel {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
+      border-radius: var(--radius-xl);
+      padding: 24px;
       box-shadow: var(--shadow-sm);
     }
     .slip-viewer-box {
       width: 100%;
       min-height: 320px;
       max-height: 520px;
-      background: #1A1A1A;
-      border-radius: var(--radius-md);
-      margin: var(--space-md) 0;
+      background: #111827;
+      border-radius: var(--radius-lg);
+      margin: 16px 0;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      box-shadow: var(--shadow-sm);
     }
     .slip-image-view {
       max-width: 100%;
@@ -78,28 +81,6 @@
       height: 480px;
       border: none;
       background: #fff;
-    }
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: var(--space-md);
-    }
-    .modal-overlay.active {
-      display: flex;
-    }
-    .modal-card {
-      background: var(--bg-surface);
-      border-radius: var(--radius-lg);
-      max-width: 480px;
-      width: 100%;
-      padding: var(--space-lg);
-      box-shadow: var(--shadow-lg);
-      animation: fadeIn 0.2s ease-out;
     }
   </style>
   <link rel="stylesheet" href="/static/css/apple.css">

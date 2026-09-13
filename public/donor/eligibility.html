@@ -21,12 +21,12 @@
     .quiz-progress {
       display: flex;
       gap: 8px;
-      margin-bottom: var(--space-lg);
+      margin-bottom: 24px;
     }
     .quiz-progress-bar {
       flex: 1;
       height: 6px;
-      background: var(--border-color);
+      background: rgba(0, 0, 0, 0.06);
       border-radius: var(--radius-full);
       transition: background var(--transition-normal);
     }
@@ -41,34 +41,35 @@
       animation: fadeIn 0.3s ease;
     }
     .quiz-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
-      margin-bottom: var(--space-lg);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
+      margin-bottom: 24px;
       box-shadow: var(--shadow-sm);
     }
     .radio-card-group {
       display: flex;
       flex-direction: column;
-      gap: var(--space-sm);
-      margin: var(--space-md) 0;
+      gap: 10px;
+      margin: 20px 0;
     }
     .radio-card {
-      border: 1.5px solid var(--border-color-strong);
+      border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      padding: 14px 16px;
+      padding: 14px 18px;
       display: flex;
       align-items: center;
       gap: 12px;
       cursor: pointer;
       font-weight: 500;
+      font-size: 14.5px;
       transition: all var(--transition-fast);
-      background: var(--bg-surface);
+      background: #FFFFFF;
     }
     .radio-card:hover {
-      border-color: var(--primary-red);
-      background: var(--primary-red-subtle);
+      border-color: rgba(201, 42, 42, 0.3);
+      background: rgba(201, 42, 42, 0.03);
     }
     .radio-card input[type="radio"],
     .radio-card input[type="checkbox"] {
@@ -78,40 +79,42 @@
     }
     .radio-card.selected {
       border-color: var(--primary-red);
-      background: var(--primary-red-subtle);
+      background: rgba(201, 42, 42, 0.05);
       font-weight: 600;
+      box-shadow: 0 0 0 1px var(--primary-red);
     }
     .result-box {
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
       text-align: center;
-      margin-bottom: var(--space-md);
+      margin-bottom: 20px;
     }
     .result-box.eligible {
-      background: var(--color-success-light);
-      border: 2px solid var(--color-success);
+      background: rgba(52, 199, 89, 0.08);
+      border: 1px solid rgba(52, 199, 89, 0.25);
     }
     .result-box.warning {
-      background: var(--color-warning-light);
-      border: 2px solid var(--color-warning);
+      background: rgba(255, 149, 0, 0.08);
+      border: 1px solid rgba(255, 149, 0, 0.25);
     }
     .result-box.deferred {
-      background: var(--color-danger-light);
-      border: 2px solid var(--color-danger);
+      background: rgba(255, 59, 48, 0.08);
+      border: 1px solid rgba(255, 59, 48, 0.25);
     }
     .step-breakdown-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: var(--space-md);
-      margin-bottom: var(--space-md);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 20px;
       text-align: left;
+      box-shadow: var(--shadow-sm);
     }
     .step-breakdown-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 0;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border-color);
       font-size: 14px;
     }
@@ -119,11 +122,11 @@
       border-bottom: none;
     }
     .disclaimer-card {
-      background: #FFFBEB;
-      border: 1px solid #FDE68A;
+      background: rgba(255, 149, 0, 0.06);
+      border: 1px solid rgba(255, 149, 0, 0.18);
       border-radius: var(--radius-md);
-      padding: 14px;
-      margin-top: var(--space-md);
+      padding: 16px;
+      margin-top: 20px;
       text-align: left;
     }
   </style>

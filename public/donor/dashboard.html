@@ -19,34 +19,34 @@
   <link rel="stylesheet" href="/static/css/tokens.css">
   <style>
     .donor-profile-header {
-      background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-crimson) 100%);
-      color: #fff;
-      padding: var(--space-lg) var(--space-md);
-      border-radius: var(--radius-lg);
-      margin-bottom: var(--space-md);
-      box-shadow: var(--shadow-md);
+      background: linear-gradient(135deg, #DE3535 0%, #C92A2A 100%);
+      color: #FFFFFF;
+      padding: 24px 22px;
+      border-radius: var(--radius-xl);
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(201, 42, 42, 0.22);
     }
     .status-toggle-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: var(--space-md);
+      padding: 18px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: var(--space-md);
+      margin-bottom: 20px;
       box-shadow: var(--shadow-sm);
       transition: all var(--transition-normal);
     }
     .status-toggle-card.locked {
       background: var(--bg-canvas);
-      border-color: var(--border-color-strong);
+      border-color: rgba(0, 0, 0, 0.1);
       opacity: 0.85;
     }
     .toggle-switch {
       position: relative;
       display: inline-block;
-      width: 52px;
+      width: 50px;
       height: 28px;
       flex-shrink: 0;
     }
@@ -59,38 +59,39 @@
       position: absolute;
       cursor: pointer;
       inset: 0;
-      background-color: var(--border-color-strong);
-      transition: .3s;
+      background-color: rgba(0, 0, 0, 0.14);
+      transition: background-color 0.25s ease;
       border-radius: var(--radius-full);
     }
     .toggle-slider:before {
       position: absolute;
       content: "";
-      height: 20px;
-      width: 20px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .3s;
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #FFFFFF;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       border-radius: 50%;
     }
     input:checked + .toggle-slider {
-      background-color: var(--color-success);
+      background-color: #34C759;
     }
     input:checked + .toggle-slider:before {
-      transform: translateX(24px);
+      transform: translateX(22px);
     }
     input:disabled + .toggle-slider {
-      background-color: #D1D5DB;
+      background-color: rgba(0, 0, 0, 0.08);
       cursor: not-allowed;
     }
     .cooldown-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: var(--space-lg);
+      padding: 24px;
       text-align: center;
-      margin-bottom: var(--space-md);
+      margin-bottom: 20px;
       box-shadow: var(--shadow-sm);
       position: relative;
     }
@@ -98,7 +99,7 @@
       position: relative;
       width: 120px;
       height: 120px;
-      margin: 0 auto var(--space-md) auto;
+      margin: 0 auto 16px auto;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -110,7 +111,7 @@
     }
     .cooldown-ring-bg {
       fill: none;
-      stroke: var(--bg-subtle);
+      stroke: rgba(0, 0, 0, 0.05);
       stroke-width: 8;
     }
     .cooldown-ring-progress {
@@ -134,48 +135,49 @@
       font-weight: 800;
       line-height: 1;
       color: var(--text-main);
+      letter-spacing: -0.02em;
     }
     .cooldown-ring-label {
       font-size: 10px;
       font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.06em;
       margin-top: 2px;
     }
     .emergency-alert-card {
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--primary-red);
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
-      margin-bottom: var(--space-sm);
-      background: var(--bg-surface);
-      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(201, 42, 42, 0.18);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      background: #FFFFFF;
+      box-shadow: 0 4px 16px -2px rgba(201, 42, 42, 0.08);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .cooldown-notice-card {
-      background: #FFFBEB;
-      border: 1px solid #FDE68A;
+      background: rgba(255, 149, 0, 0.06);
+      border: 1px solid rgba(255, 149, 0, 0.18);
       border-radius: var(--radius-md);
-      padding: var(--space-md);
-      margin-bottom: var(--space-md);
+      padding: 16px;
+      margin-bottom: 20px;
     }
     .health-feedback-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
-      padding: var(--space-md);
-      margin-bottom: var(--space-md);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
     }
     .health-tip-item {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-size: 13px;
-      line-height: 1.4;
+      line-height: 1.5;
     }
     .health-tip-item:last-child {
       margin-bottom: 0;
