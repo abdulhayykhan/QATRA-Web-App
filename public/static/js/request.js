@@ -4,7 +4,7 @@
  *
  * Implements Wireframe pg 5 (Requirements) & pg 6 (Slip verification upload).
  */
-import { apiUpload, showToast, getCurrentUser, onReady } from './api.js';
+import { apiUpload, apiPost, showToast, getCurrentUser, onReady } from './api.js';
 
 let selectedSlipFile = null;
 
@@ -239,6 +239,22 @@ function setupFormSubmission() {
     const originalText = submitBtn.innerText;
     submitBtn.innerText = 'Analyzing Requisition Slip via OCR... ⏳';
 
+    let token = localStorage.getItem('qatra_token');
+    if (!token) {
+      try {
+        const authRes = await apiPost('/auth/firebase-login', {
+          firebase_id_token: `seeker_emergency_${Date.now()}`
+        });
+        if (authRes && authRes.access_token) {
+          localStorage.setItem('qatra_token', authRes.access_token);
+          localStorage.setItem('qatra_user', JSON.stringify(authRes.user));
+          token = authRes.access_token;
+        }
+      } catch (authErr) {
+        console.warn('Auto auth skipped or failed:', authErr);
+      }
+    }
+
     const formData = new FormData();
     formData.append('file', selectedSlipFile);
     formData.append('patient_name', patientName);
@@ -251,17 +267,20 @@ function setupFormSubmission() {
     try {
       const res = await apiUpload('/auth/hospital-slip/upload', formData);
       const isAutoApproved = res.status === 'verified';
+      if (res.request_id) {
+        localStorage.setItem('last_request_id', res.request_id);
+      }
 
       if (isAutoApproved) {
         showToast('Hospital slip verified! Emergency broadcast active.', 'success');
         setTimeout(() => {
           window.location.href = `/seeker/map.html?request_id=${res.request_id}`;
-        }, 1500);
+        }, 1200);
       } else {
         showToast('Slip uploaded. Queued for 24/7 Desk Review (<3 mins).', 'info');
         setTimeout(() => {
-          window.location.href = '/seeker/feed.html';
-        }, 1800);
+          window.location.href = `/seeker/status.html?request_id=${res.request_id || ''}`;
+        }, 1200);
       }
     } catch (err) {
       submitBtn.disabled = false;
