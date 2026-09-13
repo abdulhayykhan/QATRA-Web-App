@@ -90,6 +90,22 @@ class AwarenessContentResponse(AwarenessContentBase):
         from_attributes = True
 
 
+class LiveArticleResponse(BaseModel):
+    """External peer-reviewed article and blog response from live literature APIs."""
+    id: str
+    title: str
+    authors: str
+    journal: str
+    pub_year: str
+    abstract: str
+    summary: str
+    doi: Optional[str] = None
+    url: str
+    category: str = "research"
+    read_time_minutes: int = 4
+    content_type: str = "article"
+
+
 # ==============================================================================
 # 3. Event & Registration Schemas (FR 4.3)
 # ==============================================================================

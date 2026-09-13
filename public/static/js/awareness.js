@@ -9,6 +9,7 @@ let activeCategory = '';
 let searchQuery = '';
 let selectedEvent = null;
 let cachedContent = [];
+let cachedLiveArticles = [];
 let cachedEvents = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -63,6 +64,8 @@ async function loadContent() {
       await fetchEvents();
     } else if (activeCategory === 'my_registrations') {
       await fetchMyRegistrations(container);
+    } else if (activeCategory === 'live_articles') {
+      await fetchLiveArticles();
     } else {
       await fetchArticlesAndMyths();
     }
@@ -81,11 +84,37 @@ async function loadContent() {
  */
 async function fetchArticlesAndMyths() {
   const params = {};
-  if (activeCategory && !['events', 'my_registrations'].includes(activeCategory)) {
+  if (activeCategory && !['events', 'my_registrations', 'live_articles'].includes(activeCategory)) {
     params.category = activeCategory;
   }
 
-  cachedContent = await apiGet('/awareness/content', params);
+  const promises = [apiGet('/awareness/content', params)];
+  if (!activeCategory) {
+    promises.push(
+      apiGet('/awareness/live-articles', { limit: 6 }).catch(err => {
+        console.warn('Could not load live articles:', err);
+        return [];
+      })
+    );
+  } else {
+    promises.push(Promise.resolve([]));
+  }
+
+  const [content, liveArticles] = await Promise.all(promises);
+  cachedContent = content || [];
+  cachedLiveArticles = liveArticles || [];
+  renderCurrentView();
+}
+
+/**
+ * Fetch live peer-reviewed medical articles from Europe PMC API
+ */
+async function fetchLiveArticles() {
+  const params = { limit: 12 };
+  if (searchQuery) {
+    params.query = searchQuery;
+  }
+  cachedLiveArticles = await apiGet('/awareness/live-articles', params);
   renderCurrentView();
 }
 
@@ -107,6 +136,8 @@ function renderCurrentView() {
     renderEventsList(container);
   } else if (activeCategory === 'my_registrations') {
     // Handled directly in fetchMyRegistrations
+  } else if (activeCategory === 'live_articles') {
+    renderLiveArticlesList(container);
   } else {
     renderArticlesList(container);
   }
@@ -117,6 +148,7 @@ function renderCurrentView() {
  */
 function renderArticlesList(container) {
   let items = cachedContent || [];
+  let liveItems = cachedLiveArticles || [];
 
   if (searchQuery) {
     items = items.filter(item => {
@@ -127,9 +159,20 @@ function renderArticlesList(container) {
       const matchBody = item.body_text?.toLowerCase().includes(searchQuery);
       return matchTitle || matchMyth || matchFact || matchSummary || matchBody;
     });
+
+    liveItems = liveItems.filter(item => {
+      const q = searchQuery.toLowerCase();
+      return (
+        item.title?.toLowerCase().includes(q) ||
+        item.abstract?.toLowerCase().includes(q) ||
+        item.summary?.toLowerCase().includes(q) ||
+        item.journal?.toLowerCase().includes(q) ||
+        item.authors?.toLowerCase().includes(q)
+      );
+    });
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && liveItems.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 40px; color: var(--text-muted);">
         <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
@@ -147,6 +190,46 @@ function renderArticlesList(container) {
     } else {
       container.appendChild(renderArticleCard(item));
     }
+  });
+
+  if (!activeCategory && liveItems.length > 0) {
+    liveItems.forEach(item => {
+      container.appendChild(renderLiveArticleCard(item));
+    });
+  }
+}
+
+/**
+ * Render Live Peer-Reviewed Articles List
+ */
+function renderLiveArticlesList(container) {
+  let items = cachedLiveArticles || [];
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    items = items.filter(item => (
+      item.title?.toLowerCase().includes(q) ||
+      item.abstract?.toLowerCase().includes(q) ||
+      item.summary?.toLowerCase().includes(q) ||
+      item.journal?.toLowerCase().includes(q) ||
+      item.authors?.toLowerCase().includes(q)
+    ));
+  }
+
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <div style="font-size: 32px; margin-bottom: 8px;">🔬</div>
+        <p style="font-weight: 600;">No peer-reviewed articles match "${searchQuery}".</p>
+        <span style="font-size: 13px;">Try searching for terms like "iron", "safety", or "blood transfusion".</span>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+  items.forEach(item => {
+    container.appendChild(renderLiveArticleCard(item));
   });
 }
 
@@ -248,6 +331,82 @@ function renderArticleCard(item) {
       fullBody.style.display = isExpanded ? 'none' : 'block';
       summary.style.display = isExpanded ? 'block' : 'none';
       toggleBtn.innerText = isExpanded ? 'Read Full Article ↓' : 'Show Less ↑';
+    });
+  }
+
+  return card;
+}
+
+/**
+ * Create Peer-Reviewed Live Medical Article / Blog Card (Apple HIG)
+ */
+function renderLiveArticleCard(item) {
+  const card = document.createElement('div');
+  card.className = 'live-article-card';
+
+  const shortSummary = item.summary || (item.abstract ? item.abstract.slice(0, 160) + '...' : '');
+  const hasLongAbstract = item.abstract && item.abstract.length > 180;
+
+  card.innerHTML = `
+    <div>
+      <div class="live-article-badge-row">
+        <span class="live-badge-source">🔬 Peer-Reviewed Study</span>
+        <span class="live-badge-journal" title="${item.journal || 'Medical Journal'}">
+          📖 ${item.journal || 'Medical Journal'}
+        </span>
+        <span class="badge badge-gray" style="font-size: 11px;">📅 ${item.pub_year || '2023'}</span>
+        <span style="font-size: 11px; color: var(--text-muted); margin-left: auto;">⏱️ ${item.read_time_minutes || 4} min</span>
+      </div>
+
+      <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.35; color: var(--text-main);">
+        ${item.title}
+      </h3>
+
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+        <span>👥</span>
+        <span style="font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ${item.authors || 'Medical Research Group'}
+        </span>
+      </div>
+
+      <div style="background: rgba(0, 113, 227, 0.05); border-left: 3px solid #0071E3; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #0071E3; text-transform: uppercase; margin-bottom: 2px;">
+          💡 Key Findings / Takeaway
+        </div>
+        <p class="article-summary" style="font-size: 13px; color: var(--text-main); line-height: 1.45; margin: 0;">
+          ${shortSummary}
+        </p>
+      </div>
+
+      ${hasLongAbstract ? `
+        <div class="full-article-abstract" style="display: none; font-size: 13px; color: var(--text-main); line-height: 1.5; margin-bottom: 10px; background: var(--bg-canvas); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <div style="font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Full Abstract</div>
+          ${item.abstract}
+        </div>
+        <button type="button" class="toggle-abstract-btn" style="background: none; border: none; color: #0071E3; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 10px; display: inline-flex; align-items: center; gap: 4px;">
+          Read Full Abstract ↓
+        </button>
+      ` : ''}
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; pt: 8px; border-top: 1px solid var(--border-color); margin-top: 6px; padding-top: 8px;">
+      <span style="font-size: 11px; color: var(--text-muted);">
+        ${item.doi ? `DOI: ${item.doi}` : 'Europe PMC Open Access'}
+      </span>
+      <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" style="font-size: 11.5px; padding: 4px 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+        Open Publication ↗
+      </a>
+    </div>
+  `;
+
+  if (hasLongAbstract) {
+    const toggleBtn = card.querySelector('.toggle-abstract-btn');
+    const fullAbstract = card.querySelector('.full-article-abstract');
+
+    toggleBtn?.addEventListener('click', () => {
+      const isExpanded = fullAbstract.style.display === 'block';
+      fullAbstract.style.display = isExpanded ? 'none' : 'block';
+      toggleBtn.innerText = isExpanded ? 'Read Full Abstract ↓' : 'Show Less ↑';
     });
   }
 
