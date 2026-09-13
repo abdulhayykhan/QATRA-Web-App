@@ -14,17 +14,22 @@ let lastKnownRadius = 10.0;
 
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
-  currentRequestId = urlParams.get('request_id') || localStorage.getItem('last_request_id') || '101';
+  currentRequestId = urlParams.get('request_id') || localStorage.getItem('last_request_id');
 
-  loadRequestStatus();
-  loadProximityMatches();
-  setupActions();
-
-  // Poll status every 5 seconds for real-time seeker updates
-  pollTimer = setInterval(() => {
-    loadRequestStatus(true);
+  if (currentRequestId) {
+    loadRequestStatus();
+    loadProximityMatches();
+    // Poll status every 5 seconds for real-time seeker updates
+    pollTimer = setInterval(() => {
+      loadRequestStatus(true);
+      loadProximityMatches(true);
+    }, 5000);
+  } else {
+    // Render default compatible donors guide
     loadProximityMatches(true);
-  }, 5000);
+  }
+
+  setupActions();
 });
 
 window.addEventListener('beforeunload', () => {

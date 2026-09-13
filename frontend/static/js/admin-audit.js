@@ -11,6 +11,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAuditLogs() {
   const tbody = document.getElementById('audit-table-body');
+  const token = localStorage.getItem('qatra_token');
+  if (!token) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+          <div style="font-size: 32px; margin-bottom: 8px;">🔒</div>
+          <p style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: var(--text-main);">Administrator Access Required</p>
+          <span style="font-size: 13px;">Please log in with verified administrator credentials to view compliance audit records.</span>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   try {
     const data = await apiGet('/auth/admin/audit-logs');
     const logs = data.items || [];

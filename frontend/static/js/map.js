@@ -61,6 +61,14 @@ function initMap() {
     maxZoom: 19
   }).addTo(map);
 
+  // Fix Leaflet zoom control links to eliminate dead '#' anchor warnings
+  setTimeout(() => {
+    const zoomIn = document.querySelector('.leaflet-control-zoom-in');
+    const zoomOut = document.querySelector('.leaflet-control-zoom-out');
+    if (zoomIn) zoomIn.setAttribute('href', 'javascript:void(0)');
+    if (zoomOut) zoomOut.setAttribute('href', 'javascript:void(0)');
+  }, 100);
+
   // Draw initial concentric rings around center
   renderConcentricRings(userCoords.lat, userCoords.lng, currentRadiusKm);
 }

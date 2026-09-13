@@ -18,12 +18,19 @@ let isSpeaker = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
-  currentRequestId = params.get('request_id') || '101';
-  const proxyChannel = params.get('proxy_channel') || `px-${currentRequestId}402`;
+  currentRequestId = params.get('request_id');
+  const token = localStorage.getItem('qatra_token');
+  const proxyChannel = params.get('proxy_channel') || `px-${currentRequestId || 'demo'}402`;
 
   document.getElementById('proxy-channel-id-text').innerText = proxyChannel;
 
-  initiateProxyCall();
+  if (currentRequestId && token) {
+    initiateProxyCall();
+  } else {
+    document.getElementById('virtual-number-display').innerText = '+92 21 3000 0000';
+    startCallCountdown();
+  }
+
   setupCallControls();
   setupChat();
   setupNavigation();
