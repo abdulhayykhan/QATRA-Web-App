@@ -104,8 +104,25 @@ async function request(endpoint, options = {}) {
     // Handle 401 Unauthorized
     if (response.status === 401 && !endpoint.includes('/auth/firebase-login')) {
       if (token) {
-        showToast('Session expired. Please sign in again.', 'warning');
-        logout();
+        localStorage.removeItem('qatra_token');
+        localStorage.removeItem('qatra_user');
+
+        const currentPath = window.location.pathname;
+        const protectedRoutes = ['/admin/', '/donor/dashboard.html', '/seeker/coordination.html', '/seeker/status.html'];
+        const isProtectedRoute = protectedRoutes.some(route => currentPath.includes(route));
+
+        if (isProtectedRoute) {
+          showToast('Session expired. Please sign in again.', 'warning');
+          setTimeout(() => {
+            window.location.href = '/index.html';
+          }, 800);
+        } else {
+          // Reset header session UI on public pages without redirecting
+          const loginBtn = document.getElementById('btn-header-login');
+          const userMenu = document.getElementById('user-header-menu');
+          if (loginBtn) loginBtn.style.display = 'inline-flex';
+          if (userMenu) userMenu.style.display = 'none';
+        }
       }
       throw new Error('Unauthorized');
     }

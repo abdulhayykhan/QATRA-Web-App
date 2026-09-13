@@ -205,6 +205,47 @@ async def get_current_user(
     return user
 
 
+async def get_current_user_optional(
+    authorization: Optional[str] = Header(None, description="Bearer <app_jwt_or_firebase_id_token>"),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """
+    Optional authentication dependency.
+    Extracts Bearer token and resolves user if present and valid.
+    Returns None if missing, malformed, or expired without raising HTTPException(401).
+    """
+    if not authorization:
+        return None
+
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return None
+
+    token = parts[1]
+    user: Optional[User] = None
+
+    try:
+        payload = decode_access_token(token)
+        user_id = payload.get("sub")
+        if user_id is not None:
+            user = db.query(User).filter(User.id == int(user_id)).first()
+    except Exception:
+        pass
+
+    if user is None:
+        try:
+            fb_payload = verify_firebase_token(token)
+            firebase_uid = fb_payload.get("uid")
+            if firebase_uid:
+                user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
+        except Exception:
+            pass
+
+    if user and user.is_active:
+        return user
+    return None
+
+
 def require_role(allowed_roles: Union[List[str], str]):
     """
     Role-Based Access Control (RBAC) dependency factory.
