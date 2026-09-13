@@ -45,7 +45,7 @@
     {
       "src": "/static/(.*)",
       "headers": {
-        "Cache-Control": "public, max-age=86400"
+        "Cache-Control": "public, max-age=300, stale-while-revalidate=86400"
       },
       "dest": "/public/static/$1"
     },
