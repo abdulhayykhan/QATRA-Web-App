@@ -3,13 +3,15 @@
  * Enables PWA capabilities, offline asset caching, and fast app shell loads.
  */
 
-const CACHE_NAME = 'qatra-v2.5.0';
+const CACHE_NAME = 'qatra-v3.0.0';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/static/css/tokens.css',
   '/static/css/apple.css',
   '/static/js/api.js',
+  '/static/js/auth-modal.js',
+  '/static/js/motion-interactions.js',
   '/static/js/pwa.js',
   '/media/logo.png',
   '/static/icons/icon-192.png',
@@ -56,6 +58,22 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('tile.openstreetmap.org') ||
     url.hostname.includes('cartocdn.com')
   ) {
+    return;
+  }
+
+  // JavaScript Modules: Network-first to always run latest deployed code
+  if (url.pathname.startsWith('/static/js/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
     return;
   }
 
