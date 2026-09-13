@@ -41,6 +41,71 @@ export function showToast(message, type = 'info', duration = 3500) {
 }
 
 /**
+ * Global In-App Confirmation Modal (Non-blocking, DOM-native)
+ * Replaces window.confirm to avoid freezing headless browser test sessions and provide rich UI.
+ * @param {Object} options
+ * @returns {Promise<boolean>}
+ */
+export function showConfirmDialog({
+  title = 'Confirmation Required',
+  message = 'Are you sure you wish to proceed?',
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  danger = false
+} = {}) {
+  return new Promise((resolve) => {
+    let backdrop = document.getElementById('qatra-confirm-modal');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'qatra-confirm-modal';
+      backdrop.style.cssText = `
+        position: fixed; inset: 0; z-index: 99999;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem;
+      `;
+      document.body.appendChild(backdrop);
+    }
+
+    backdrop.innerHTML = `
+      <div role="dialog" aria-modal="true" style="
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        max-width: 420px;
+        width: 100%;
+        padding: 24px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      ">
+        <h3 style="margin: 0 0 10px 0; font-size: 1.2rem; font-weight: 700;">${title}</h3>
+        <p style="margin: 0 0 24px 0; font-size: 0.95rem; color: #64748b; line-height: 1.5;">${message}</p>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button id="qatra-confirm-cancel-btn" class="btn btn-secondary" style="padding: 8px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #cbd5e1; background: #f1f5f9; color: #334155;">
+            ${cancelLabel}
+          </button>
+          <button id="qatra-confirm-ok-btn" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" style="padding: 8px 16px; border-radius: 8px; cursor: pointer; background: ${danger ? '#dc2626' : '#b91c1c'}; color: #ffffff; border: none;">
+            ${confirmLabel}
+          </button>
+        </div>
+      </div>
+    `;
+
+    backdrop.style.display = 'flex';
+
+    const cleanup = (val) => {
+      backdrop.style.display = 'none';
+      backdrop.innerHTML = '';
+      resolve(val);
+    };
+
+    document.getElementById('qatra-confirm-cancel-btn')?.addEventListener('click', () => cleanup(false), { once: true });
+    document.getElementById('qatra-confirm-ok-btn')?.addEventListener('click', () => cleanup(true), { once: true });
+  });
+}
+
+/**
  * Safe DOM Ready execution helper.
  * If DOM is already interactive/complete, runs immediately; otherwise waits for DOMContentLoaded.
  * @param {Function} fn
@@ -117,8 +182,25 @@ async function request(endpoint, options = {}) {
     // Handle 401 Unauthorized
     if (response.status === 401 && !endpoint.includes('/auth/firebase-login')) {
       if (token) {
-        showToast('Session expired. Please sign in again.', 'warning');
-        logout();
+        localStorage.removeItem('qatra_token');
+        localStorage.removeItem('qatra_user');
+
+        const currentPath = window.location.pathname;
+        const protectedRoutes = ['/admin/', '/donor/dashboard.html', '/seeker/coordination.html', '/seeker/status.html'];
+        const isProtectedRoute = protectedRoutes.some(route => currentPath.includes(route));
+
+        if (isProtectedRoute) {
+          showToast('Session expired. Please sign in again.', 'warning');
+          setTimeout(() => {
+            window.location.href = '/index.html';
+          }, 800);
+        } else {
+          // Reset header session UI on public pages without redirecting
+          const loginBtn = document.getElementById('btn-header-login');
+          const userMenu = document.getElementById('user-header-menu');
+          if (loginBtn) loginBtn.style.display = 'inline-flex';
+          if (userMenu) userMenu.style.display = 'none';
+        }
       }
       throw new Error('Unauthorized');
     }

@@ -6,7 +6,7 @@
  * - Auto-expansion status tracker (FR 1.3.3)
  * - Real-time in-app chat & direct coordination handoff
  */
-import { apiGet, apiPost, showToast, formatUrgency, onReady } from './api.js';
+import { apiGet, apiPost, showToast, formatUrgency, onReady, showConfirmDialog } from './api.js';
 
 let currentRequestId = null;
 let pollTimer = null;
@@ -145,7 +145,13 @@ function setupActions() {
   });
 
   closeBtn.addEventListener('click', async () => {
-    if (!confirm('Are you sure you wish to close this emergency request?')) return;
+    const confirmed = await showConfirmDialog({
+      title: 'Close Emergency Request',
+      message: 'Are you sure you wish to close this emergency request?',
+      confirmLabel: 'Close Request',
+      danger: true
+    });
+    if (!confirmed) return;
 
     try {
       await apiPost(`/feed/${currentRequestId}/close`, { reason: 'Closed by seeker override' });

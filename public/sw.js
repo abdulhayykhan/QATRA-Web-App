@@ -3,7 +3,7 @@
  * Enables PWA capabilities, offline asset caching, and fast app shell loads.
  */
 
-const CACHE_NAME = 'qatra-v3.1.0';
+const CACHE_NAME = 'qatra-v3.0.0';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -13,18 +13,25 @@ const PRECACHE_ASSETS = [
   '/static/js/auth-modal.js',
   '/static/js/motion-interactions.js',
   '/static/js/pwa.js',
-  '/favicon.ico',
-  '/static/icons/favicon.png',
-  '/static/icons/favicon-32.png',
-  '/static/icons/apple-touch-icon.png',
   '/media/logo.png',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png',
+  '/static/icons/favicon.png',
+  '/static/icons/apple-touch-icon.png',
+  '/manifest.json'
 ];
 
-// 1. Install: Cache core application shell
+// 1. Install: Precache essential app shell assets with individual resilience
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of PRECACHE_ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn('[QATRA SW] Optional precache skipped:', asset);
+        }
+      }
     }).then(() => self.skipWaiting())
   );
 });
@@ -55,9 +62,9 @@ self.addEventListener('fetch', (event) => {
   }
 
   // JavaScript Modules: Network-first to always run latest deployed code
-  if (url.pathname.startsWith('/static/js/') || url.pathname.startsWith('/js/')) {
+  if (url.pathname.startsWith('/static/js/')) {
     event.respondWith(
-      fetch(event.request, { cache: 'no-cache' })
+      fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();

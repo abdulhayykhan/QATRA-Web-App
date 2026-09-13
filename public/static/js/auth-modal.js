@@ -3,7 +3,7 @@
  * Connects Firebase Web SDK Google Auth with backend POST /api/auth/firebase-login
  * Owner: Saghir Ahmed
  */
-import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady } from './api.js';
+import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady, showConfirmDialog } from './api.js';
 
 onReady(() => {
   setupHeaderSession();
@@ -40,8 +40,14 @@ export function setupHeaderSession() {
       }
     }
 
-    logoutBtn?.addEventListener('click', () => {
-      if (confirm('Sign out from QATRA session?')) {
+    logoutBtn?.addEventListener('click', async () => {
+      const confirmed = await showConfirmDialog({
+        title: 'Sign Out',
+        message: 'Are you sure you wish to sign out from your QATRA session?',
+        confirmLabel: 'Sign Out',
+        danger: true
+      });
+      if (confirmed) {
         logout();
       }
     });

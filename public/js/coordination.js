@@ -6,7 +6,7 @@
  * - Real-time In-App Chat: Both parties exchange live coordination messages via GET/POST /api/coordination/{request_id}/messages
  * - Turn-by-turn Hospital Navigation & Match Cancellation
  */
-import { apiPost, apiGet, showToast, onReady } from './api.js';
+import { apiPost, apiGet, showToast, onReady, showConfirmDialog } from './api.js';
 
 let currentRequestId = null;
 let currentViewerRole = 'seeker';
@@ -250,7 +250,13 @@ function setupNavigation() {
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', async () => {
-      if (!confirm('Cancel this match? The request will immediately re-open to alert other ranked donors.')) {
+      const confirmed = await showConfirmDialog({
+        title: 'Cancel Match',
+        message: 'Cancel this match? The request will immediately re-open to alert other ranked donors.',
+        confirmLabel: 'Cancel Match',
+        danger: true
+      });
+      if (!confirmed) {
         return;
       }
 
