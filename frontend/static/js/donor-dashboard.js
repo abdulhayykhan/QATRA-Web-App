@@ -3,13 +3,13 @@
  * Implements Wireframes 14 (Donor Home), 18 (Donation Complete), and 19 (Cooldown State View).
  * Owner: Yumna Abbasi
  */
-import { apiGet, apiPost, showToast, getCurrentUser, getAuthToken, logout } from './api.js';
+import { apiGet, apiPost, showToast, getCurrentUser, getAuthToken, logout, onReady } from './api.js';
 
 const CIRCUMFERENCE = 339.292; // 2 * PI * 54 (SVG circle radius 54)
 let isOnCooldown = false;
 let daysRemaining = 0;
 
-document.addEventListener('DOMContentLoaded', async () => {
+onReady(async () => {
   loadUserProfile();
   await loadDashboardState();
   setupAvailabilityToggle();

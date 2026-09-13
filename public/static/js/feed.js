@@ -5,7 +5,7 @@
  * Coordinates live appeals, dual Urgent vs Awareness tabs, filter chips,
  * and the reusable Post Card component.
  */
-import { apiGet, showToast, getCurrentUser } from './api.js';
+import { apiGet, showToast, getCurrentUser, onReady } from './api.js';
 import { createPostCard } from './components/post-card.js';
 
 let activeBloodFilter = '';
@@ -14,7 +14,7 @@ let searchKeyword = '';
 let currentTab = 'urgent'; // 'urgent' | 'awareness'
 let searchDebounceTimeout = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   setupTabs();
   setupFilterChips();
   setupSearch();

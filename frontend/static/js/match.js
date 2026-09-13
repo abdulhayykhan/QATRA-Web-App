@@ -2,11 +2,11 @@
  * QATRA — Seeker Matchmaker & Masked Proxy Contact Controller (Feature 1)
  * Polls real-time fulfillment status and launches virtual bridge calls.
  */
-import { apiGet, apiPost, showToast } from './api.js';
+import { apiGet, apiPost, showToast, onReady } from './api.js';
 
 let countdownInterval = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   setupProxyCall();
 });
 

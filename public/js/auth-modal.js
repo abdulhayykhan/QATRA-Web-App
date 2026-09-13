@@ -3,9 +3,9 @@
  * Connects Firebase Web SDK Google Auth with backend POST /api/auth/firebase-login
  * Owner: Saghir Ahmed
  */
-import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout } from './api.js';
+import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady } from './api.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   setupHeaderSession();
   setupAuthModal();
 });

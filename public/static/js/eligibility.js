@@ -3,11 +3,11 @@
  * Evaluates donor answers against clinical rules via stateless scoring API (FR 4.1).
  * Owner: Yumna Abbasi
  */
-import { apiPost, showToast } from './api.js';
+import { apiPost, showToast, onReady } from './api.js';
 
 let currentStep = 1;
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   setupRadioCards();
   setupNavigation();
 });

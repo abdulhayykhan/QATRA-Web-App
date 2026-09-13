@@ -2,9 +2,9 @@
  * QATRA — Security & Compliance Audit Trail Controller (NFR 2.5)
  * Fetches tamper-evident database audit logs for sensitive data operations.
  */
-import { apiGet, showToast, formatTimeAgo } from './api.js';
+import { apiGet, showToast, formatTimeAgo, onReady } from './api.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   loadAuditLogs();
   document.getElementById('refresh-audit-btn').addEventListener('click', loadAuditLogs);
 });

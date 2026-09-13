@@ -247,7 +247,15 @@ window.addEventListener('appinstalled', () => {
 });
 
 // 9. Auto-initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+onReady(() => {
   if (isRunningStandalone()) {
     document.querySelectorAll('.pwa-install-trigger').forEach((btn) => {
       btn.style.display = 'none';

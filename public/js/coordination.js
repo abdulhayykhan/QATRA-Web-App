@@ -8,7 +8,7 @@
  * - In-app proxy messaging and turn-by-turn routing
  * - Cancel match and re-dispatch (POST /api/map/requests/{id}/cancel)
  */
-import { apiPost, apiGet, showToast } from './api.js';
+import { apiPost, apiGet, showToast, onReady } from './api.js';
 
 let currentRequestId = null;
 let countdownSeconds = 600; // 10 minutes
@@ -16,7 +16,7 @@ let countdownInterval = null;
 let isMuted = false;
 let isSpeaker = false;
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   const params = new URLSearchParams(window.location.search);
   currentRequestId = params.get('request_id');
   const token = localStorage.getItem('qatra_token');

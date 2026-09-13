@@ -4,11 +4,11 @@
  *
  * Implements Wireframe pg 5 (Requirements) & pg 6 (Slip verification upload).
  */
-import { apiUpload, showToast, getCurrentUser } from './api.js';
+import { apiUpload, showToast, getCurrentUser, onReady } from './api.js';
 
 let selectedSlipFile = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   setupBloodGroupGrid();
   setupComponentChips();
   setupUnitsStepper();
