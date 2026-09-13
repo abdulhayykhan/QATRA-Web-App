@@ -13,6 +13,7 @@ if ('serviceWorker' in navigator) {
       .register('/sw.js', { scope: '/' })
       .then((reg) => {
         console.log('[QATRA PWA] Service Worker active with scope:', reg.scope);
+        reg.update();
       })
       .catch((err) => {
         console.warn('[QATRA PWA] Service Worker registration failed:', err);

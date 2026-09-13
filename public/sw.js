@@ -3,7 +3,7 @@
  * Enables PWA capabilities, offline asset caching, and fast app shell loads.
  */
 
-const CACHE_NAME = 'qatra-v1.0.3';
+const CACHE_NAME = 'qatra-v2.5.0';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -51,8 +51,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Exclude non-GET requests and API calls from SW cache
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // Exclude non-GET requests, API calls, and map tile hosts from SW cache
+  if (
+    event.request.method !== 'GET' ||
+    url.pathname.startsWith('/api/') ||
+    url.hostname.includes('tile.openstreetmap.org') ||
+    url.hostname.includes('cartocdn.com')
+  ) {
     return;
   }
 

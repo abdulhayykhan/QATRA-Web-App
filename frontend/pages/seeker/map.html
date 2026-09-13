@@ -343,9 +343,21 @@
     </nav>
   </div>
 
+  <script>
+    // Ensure any legacy service worker cache containing outdated tiles/scripts is immediately cleared
+    if ('caches' in window) {
+      caches.keys().then(keys => {
+        keys.forEach(k => {
+          if (k.startsWith('qatra-v1')) {
+            caches.delete(k);
+          }
+        });
+      });
+    }
+  </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="/static/js/pwa.js"></script>
-  <script type="module" src="/static/js/map.js"></script>
-  <script type="module" src="/static/js/motion-interactions.js"></script>
+  <script type="module" src="/static/js/pwa.js?v=2.5.0"></script>
+  <script type="module" src="/static/js/map.js?v=2.5.0"></script>
+  <script type="module" src="/static/js/motion-interactions.js?v=2.5.0"></script>
 </body>
 </html>
