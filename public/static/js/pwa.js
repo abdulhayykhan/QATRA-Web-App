@@ -50,7 +50,7 @@ export function showPwaInstallPopup(force = false) {
     return;
   }
 
-  if (!force && sessionStorage.getItem('qatra_pwa_dismissed') === 'true') {
+  if (!force && (sessionStorage.getItem('qatra_pwa_dismissed') === 'true' || localStorage.getItem('qatra_pwa_dismissed') === 'true')) {
     return;
   }
 
@@ -210,6 +210,7 @@ export function hidePwaInstallPopup() {
   if (overlay) {
     overlay.classList.remove('active');
     sessionStorage.setItem('qatra_pwa_dismissed', 'true');
+    localStorage.setItem('qatra_pwa_dismissed', 'true');
   }
 }
 

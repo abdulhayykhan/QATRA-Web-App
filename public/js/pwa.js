@@ -50,7 +50,7 @@ export function showPwaInstallPopup(force = false) {
     return;
   }
 
-  if (!force && sessionStorage.getItem('qatra_pwa_dismissed') === 'true') {
+  if (!force && (sessionStorage.getItem('qatra_pwa_dismissed') === 'true' || localStorage.getItem('qatra_pwa_dismissed') === 'true')) {
     return;
   }
 
@@ -68,7 +68,7 @@ export function showPwaInstallPopup(force = false) {
         <button type="button" class="pwa-sheet-close" id="pwa-sheet-close-btn" aria-label="Close">✕</button>
 
         <div class="pwa-sheet-header">
-          <img src="/media/logo.png" alt="QATRA" class="pwa-sheet-icon" />
+          <img src="/media/logo.png" alt="QATRA" class="pwa-sheet-icon" onerror="this.onerror=null; this.src='/static/icons/icon-192.png';" />
           <div class="pwa-sheet-titles">
             <h3 class="pwa-sheet-title" id="pwa-title">Install QATRA App</h3>
             <div class="pwa-sheet-badge">
@@ -174,11 +174,19 @@ export function showPwaInstallPopup(force = false) {
     });
   }
 
-  // Animate in
+  // Animate in and manage focus
   requestAnimationFrame(() => {
     overlay.classList.add('active');
+    overlay.querySelector('#pwa-action-install')?.focus();
   });
 }
+
+// Escape key listener for modal dismissal
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    hidePwaInstallPopup();
+  }
+});
 
 function showInstructionGuide() {
   const guide = document.getElementById('pwa-instructions-container');
@@ -202,6 +210,7 @@ export function hidePwaInstallPopup() {
   if (overlay) {
     overlay.classList.remove('active');
     sessionStorage.setItem('qatra_pwa_dismissed', 'true');
+    localStorage.setItem('qatra_pwa_dismissed', 'true');
   }
 }
 
