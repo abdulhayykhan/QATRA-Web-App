@@ -6,13 +6,13 @@
  * - Auto-expansion status tracker (FR 1.3.3)
  * - Masked identity coordination handoff (NFR 2.2)
  */
-import { apiGet, apiPost, showToast, formatUrgency } from './api.js';
+import { apiGet, apiPost, showToast, formatUrgency, onReady } from './api.js';
 
 let currentRequestId = null;
 let pollTimer = null;
 let lastKnownRadius = 10.0;
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   const urlParams = new URLSearchParams(window.location.search);
   currentRequestId = urlParams.get('request_id') || localStorage.getItem('last_request_id');
 

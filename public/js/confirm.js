@@ -2,9 +2,9 @@
  * QATRA — Donation Completion & Cooldown Activation Controller
  * Handles post-donation feedback submission (FR 4.4) and activates cooldown hold.
  */
-import { apiPost, showToast } from './api.js';
+import { apiPost, showToast, onReady } from './api.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   const form = document.getElementById('feedback-form');
   const btn = document.getElementById('submit-feedback-btn');
 

@@ -606,12 +606,12 @@ This platform was designed, architected, and built for the **Alkhidmat Summer So
 
 | Team Member | Project Role | Academic Department | Core Responsibilities |
 | :--- | :--- | :--- | :--- |
-| **Abdul Hayy Khan** | **Team Lead & System Architect** | Computer Systems Engineering | System Architecture, Apple HIG Design System, PWA Integration, Vercel Serverless Architecture, DevOps & CI/CD. |
-| **Hareem Israr** | **Geospatial & Proximity Lead** | Computer Systems Engineering | Live Map Canvas, Haversine Matching, Radius Ring Expansion, Geolocation Tracking, and Proxy Call Bridging. |
-| **Saghir Ahmed** | **Auth & Verification Desk Lead** | Computer Systems Engineering | Firebase Google Auth, CNIC Mod-10 Validation, Hospital Slip OCR Vision, 24/7 Verification Desk, and 90-Day Cooldown. |
-| **Mahrukh Baig** | **Urgent Appeals & Social Feed Lead** | Computer Systems Engineering | Public Appeals Stream, Blood Group Filter Chips, "I Can Donate" One-Tap Dispatch, WhatsApp Share Generator, Request Auto-Close. |
-| **Yumna Abbasi** | **Awareness & Community Drive Lead** | Computer Systems Engineering | 4-Step Medical Eligibility Quiz, Educational Content Library (Myths vs Facts), Campus Drive Registrations, and Health Feedback. |
-| **Nimra Iftikhar** | **Information Security & NFR Lead** | Computer Systems Engineering | Sliding-Window Rate Limiting Middleware, AES-256-GCM Vault Cryptography, Tamper-Evident Security Audit Logs, Privacy Masking. |
+| **Abdul Hayy Khan** | **Team Lead & System Architect** | Artificial Intelligence (AI) | System Architecture, Apple HIG Design System, PWA Integration, Vercel Serverless Architecture, DevOps & CI/CD. |
+| **Hareem Israr** | **Geospatial & Proximity Lead** | Computer Science (CS) | Live Map Canvas, Haversine Matching, Radius Ring Expansion, Geolocation Tracking, and Proxy Call Bridging. |
+| **Saghir Ahmed** | **Auth & Verification Desk Lead** | Cyber Security (CY) | Firebase Google Auth, CNIC Mod-10 Validation, Hospital Slip OCR Vision, 24/7 Verification Desk, and 90-Day Cooldown. |
+| **Mahrukh Baig** | **Urgent Appeals & Social Feed Lead** | Artificial Intelligence (AI) | Public Appeals Stream, Blood Group Filter Chips, "I Can Donate" One-Tap Dispatch, WhatsApp Share Generator, Request Auto-Close. |
+| **Yumna Abbasi** | **Awareness & Community Drive Lead** | Cyber Security (CY) | 4-Step Medical Eligibility Quiz, Educational Content Library (Myths vs Facts), Campus Drive Registrations, and Health Feedback. |
+| **Nimra Iftikhar** | **Information Security & NFR Lead** | Artificial Intelligence (AI) | Sliding-Window Rate Limiting Middleware, AES-256-GCM Vault Cryptography, Tamper-Evident Security Audit Logs, Privacy Masking. |
 
 ---
 

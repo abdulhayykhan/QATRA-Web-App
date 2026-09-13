@@ -3,7 +3,7 @@
  * Fetches educational resources, myth-busters, and manages blood drive registrations.
  * Owner: Yumna Abbasi
  */
-import { apiGet, apiPost, showToast, getCurrentUser, getAuthToken } from './api.js';
+import { apiGet, apiPost, showToast, getCurrentUser, getAuthToken, onReady } from './api.js';
 
 let activeCategory = '';
 let searchQuery = '';
@@ -136,7 +136,7 @@ const FALLBACK_EVENTS = [
   }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   setupCategoryPills();
   setupSearch();
   setupModal();

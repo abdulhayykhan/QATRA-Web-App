@@ -326,6 +326,7 @@ async def upload_hospital_slip(
     patient_name: str = Form(..., min_length=2, max_length=255),
     hospital_name: str = Form(..., min_length=2, max_length=255),
     blood_group: str = Form(..., description="e.g. A+, B+, O-, AB+"),
+    component_type: Optional[str] = Form("Whole Blood"),
     units_needed: int = Form(1, ge=1, le=20),
     hospital_address: Optional[str] = Form(None),
     hospital_latitude: Optional[float] = Form(24.8607),
@@ -341,13 +342,11 @@ async def upload_hospital_slip(
     4. Save Emergency Request entity.
     5. Log compliance audit event.
     """
-    # Enforce role: verified seeker or admin (or user with verified CNIC)
-    if current_user.role not in [UserRole.VERIFIED_SEEKER.value, UserRole.ADMIN.value]:
-        if not current_user.cnic_verified:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. CNIC verification is required before uploading emergency hospital slips.",
-            )
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is suspended or inactive.",
+        )
 
     file_bytes = await file.read()
     if not file_bytes:
@@ -388,7 +387,7 @@ async def upload_hospital_slip(
         hospital_latitude=hospital_latitude or 24.8607,
         hospital_longitude=hospital_longitude or 67.0011,
         blood_group=blood_group,
-        component_type="Whole Blood",
+        component_type=component_type or "Whole Blood",
         units_needed=units_needed,
         units_fulfilled=0,
         urgency=urgency or "within_24_hours",

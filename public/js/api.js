@@ -41,6 +41,19 @@ export function showToast(message, type = 'info', duration = 3500) {
 }
 
 /**
+ * Safe DOM Ready execution helper.
+ * If DOM is already interactive/complete, runs immediately; otherwise waits for DOMContentLoaded.
+ * @param {Function} fn
+ */
+export function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+/**
  * Authentication & Token Storage Helpers
  */
 export function getAuthToken() {

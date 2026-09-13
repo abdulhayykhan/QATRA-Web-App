@@ -5,12 +5,12 @@
  * Implements Wireframe pg 11 (Closure, Rating, and Seeker Feedback)
  * Calling POST /api/feed/{request_id}/close
  */
-import { apiGet, apiPost, showToast, getCurrentUser } from './api.js';
+import { apiGet, apiPost, showToast, getCurrentUser, onReady } from './api.js';
 
 let currentRating = 5;
 let currentRequestId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   const urlParams = new URLSearchParams(window.location.search);
   currentRequestId = urlParams.get('request_id');
 

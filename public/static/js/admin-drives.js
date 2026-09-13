@@ -2,7 +2,7 @@
  * QATRA — Admin Drive Management Desk Controller
  * Manages campus drive scheduling, donor slot capacity, and attendance checks.
  */
-import { apiGet, apiPost, showToast } from './api.js';
+import { apiGet, apiPost, showToast, onReady } from './api.js';
 
 const FALLBACK_DRIVES = [
   {
@@ -34,7 +34,7 @@ const FALLBACK_DRIVES = [
   }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   loadDrives();
   setupModal();
 });

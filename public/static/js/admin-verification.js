@@ -3,14 +3,14 @@
  * Handles low-confidence OCR manual escalation queues (FR 2.2.3 / PRD Section 4).
  * Owner: Saghir Ahmed
  */
-import { apiGet, apiPost, showToast, getAuthToken, getCurrentUser, setAuthToken, setCurrentUser, formatTimeAgo } from './api.js';
+import { apiGet, apiPost, showToast, getAuthToken, getCurrentUser, setAuthToken, setCurrentUser, formatTimeAgo, onReady } from './api.js';
 
 let queueItems = [];
 let selectedItem = null;
 let currentBlobUrl = null;
 let pendingDecision = null; // 'approved' | 'rejected'
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   verifyAdminAccess();
   setupActionButtons();
   setupReviewModal();

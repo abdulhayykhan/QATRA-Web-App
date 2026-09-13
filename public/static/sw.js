@@ -3,7 +3,7 @@
  * Enables PWA capabilities, offline asset caching, and fast app shell loads.
  */
 
-const CACHE_NAME = 'qatra-v2.5.0';
+const CACHE_NAME = 'qatra-v3.1.0';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -13,25 +13,18 @@ const PRECACHE_ASSETS = [
   '/static/js/auth-modal.js',
   '/static/js/motion-interactions.js',
   '/static/js/pwa.js',
-  '/media/logo.png',
-  '/static/icons/icon-192.png',
-  '/static/icons/icon-512.png',
+  '/favicon.ico',
   '/static/icons/favicon.png',
+  '/static/icons/favicon-32.png',
   '/static/icons/apple-touch-icon.png',
-  '/manifest.json'
+  '/media/logo.png',
 ];
 
-// 1. Install: Precache essential app shell assets with individual resilience
+// 1. Install: Cache core application shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      for (const asset of PRECACHE_ASSETS) {
-        try {
-          await cache.add(asset);
-        } catch (err) {
-          console.warn('[QATRA SW] Optional precache skipped:', asset);
-        }
-      }
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(PRECACHE_ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
@@ -58,6 +51,22 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('tile.openstreetmap.org') ||
     url.hostname.includes('cartocdn.com')
   ) {
+    return;
+  }
+
+  // JavaScript Modules: Network-first to always run latest deployed code
+  if (url.pathname.startsWith('/static/js/') || url.pathname.startsWith('/js/')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-cache' })
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
     return;
   }
 

@@ -3,7 +3,7 @@
  * Handles Google Sign-In, Pakistani CNIC checksum validation, and health pre-screening.
  * Owner: Saghir Ahmed
  */
-import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser } from './api.js';
+import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, onReady } from './api.js';
 
 let currentStep = 1;
 let registrationState = {
@@ -27,7 +27,7 @@ const PROVINCE_MAP = {
   '8': 'Azad Jammu & Kashmir'
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   checkExistingSession();
   setupStep1Google();
   setupStep2Profile();

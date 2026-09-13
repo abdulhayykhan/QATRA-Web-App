@@ -7,7 +7,7 @@
  * - Expandable summary card with Accept / Decline actions
  * - Geo-Fenced Push Notification Modal & Web Notification API
  */
-import { apiGet, apiPost, showToast, getCurrentUser } from './api.js';
+import { apiGet, apiPost, showToast, getCurrentUser, onReady } from './api.js';
 
 // Karachi Hospitals Master Fallback Coordinate List
 const KARACHI_HOSPITALS = [
@@ -31,7 +31,7 @@ let currentRadiusKm = 15;
 let lastLocationUpdateTs = 0;
 let userCoords = { lat: 24.8607, lng: 67.0011 }; // Default Karachi center
 
-document.addEventListener('DOMContentLoaded', () => {
+onReady(() => {
   initMap();
   setupSearch();
   setupRadiusChips();
