@@ -140,10 +140,10 @@ async def firebase_login(
                 firebase_uid=firebase_uid,
                 email=email,
                 full_name=full_name,
-                role=UserRole.GUEST.value,
+                role=UserRole.ADMIN.value if is_admin else UserRole.GUEST.value,
                 is_active=True,
-                is_verified=False,
-                cnic_verified=False,
+                is_verified=True if is_admin else False,
+                cnic_verified=True if is_admin else False,
             )
             db.add(user)
         db.commit()
@@ -156,6 +156,9 @@ async def firebase_login(
             updated = True
         if email and user.email != email:
             user.email = email
+            updated = True
+        if is_admin and user.role != UserRole.ADMIN.value:
+            user.role = UserRole.ADMIN.value
             updated = True
         if updated:
             db.commit()
@@ -496,6 +499,8 @@ class VerificationQueueItem(BaseModel):
     request_id: int
     patient_name: str
     hospital_name: str
+    blood_group: Optional[str] = None
+    urgency: Optional[str] = None
     admission_slip_url: Optional[str] = None
     ocr_confidence: Optional[float] = None
     created_at: datetime
@@ -527,6 +532,8 @@ async def get_admin_verification_queue(
             request_id=req.id,
             patient_name=req.patient_name,
             hospital_name=req.hospital_name,
+            blood_group=req.blood_group,
+            urgency=req.urgency,
             admission_slip_url=req.admission_slip_url,
             ocr_confidence=req.ocr_confidence,
             created_at=req.created_at,

@@ -394,6 +394,12 @@ function setupAvailabilityToggle() {
   });
 
   async function syncLocation(lat, lng) {
+    const user = getCurrentUser();
+    if (!user || user.role === 'guest') {
+      desc.innerText = 'Broadcasts your proximity to emergency blood requests in Karachi.';
+      return;
+    }
+
     try {
       await apiPost('/map/donor/location', { latitude: lat, longitude: lng });
       desc.innerText = 'Broadcasts your proximity to emergency blood requests in Karachi.';

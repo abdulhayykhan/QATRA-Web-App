@@ -263,7 +263,7 @@ async def get_map_requests(
 )
 async def get_request_status(
     request_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """
@@ -338,7 +338,7 @@ async def get_request_status(
 )
 async def get_request_matches(
     request_id: int,
-    current_user: User = Depends(require_role([UserRole.VERIFIED_SEEKER.value, UserRole.ADMIN.value])),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """

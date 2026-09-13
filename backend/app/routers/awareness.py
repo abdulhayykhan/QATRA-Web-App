@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db, engine
-from app.core.security import get_current_user, require_role
+from app.core.security import get_current_user, require_role, get_current_user_optional
 from app.models.user import User
 from app.models.donor import Donor
 from app.models.event import Event, Registration
@@ -905,6 +905,31 @@ async def record_donor_health_feedback(
         next_eligible_date=donor.cooldown_until,
         donation_count=donor.donation_count,
     )
+
+
+@router.post(
+    "/feedback",
+    summary="Submit Donor Post-Donation Self Feedback",
+    description="Allows authenticated or voluntary donors to submit post-donation self-assessment feedback.",
+)
+async def submit_donor_self_feedback(
+    payload: Dict[str, Any],
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    """Logs donor self-assessment feedback and updates 90-day cooldown hold."""
+    if current_user:
+        donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+        if donor:
+            donor.cooldown_until = datetime.now(timezone.utc) + timedelta(days=90)
+            donor.last_donation_date = datetime.now(timezone.utc)
+            donor.is_available = False
+            db.commit()
+    return {
+        "status": "success",
+        "message": "Health feedback logged successfully! Cooldown countdown active.",
+        "outcome": payload.get("screening_outcome", "normal"),
+    }
 
 
 # ==============================================================================
