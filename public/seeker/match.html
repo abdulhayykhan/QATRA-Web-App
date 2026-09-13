@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
-  <title>QATRA — Donor Matchmaker & Masked Call</title>
+  <title>QATRA — Donor Matchmaker & In-App Coordination</title>
 
   <!-- PWA & Favicon Meta Tags -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -64,15 +64,8 @@
       justify-content: space-between;
       align-items: center;
       box-shadow: var(--shadow-sm);
-    }
-    .proxy-call-box {
-      background: var(--bg-surface);
-      border: 2px solid var(--color-success);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
-      text-align: center;
-      margin-top: var(--space-md);
-      animation: fadeIn 0.3s ease;
+      flex-wrap: wrap;
+      gap: 12px;
     }
   </style>
   <link rel="stylesheet" href="/static/css/apple.css">
@@ -111,77 +104,60 @@
     <!-- Main Content -->
     <main class="app-content">
       <div class="form-container-md">
-      <!-- Radar Status Card -->
-      <div class="match-header-card">
-        <div class="pulse-ring" id="radar-icon">📡</div>
-        <h2 id="radar-title" style="margin-bottom: 2px;">Searching Nearby Donors...</h2>
-        <p id="radar-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">
-          Scanning 5km to 15km radius rings in Karachi for compatible blood types.
-        </p>
+        <!-- Radar Status Card -->
+        <div class="match-header-card">
+          <div class="pulse-ring" id="radar-icon">📡</div>
+          <h2 id="radar-title" style="margin-bottom: 2px;">Searching Nearby Donors...</h2>
+          <p id="radar-desc" style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">
+            Scanning 5km to 15km radius rings in Karachi for compatible blood types.
+          </p>
 
-        <div style="display: flex; justify-content: space-around; font-size: 12px; background: var(--bg-canvas); padding: 10px; border-radius: var(--radius-md);">
-          <div>
-            <div style="font-size: 16px; font-weight: 700;" id="stat-alerted">8</div>
-            <div style="color: var(--text-muted);">Donors Alerted</div>
-          </div>
-          <div>
-            <div style="font-size: 16px; font-weight: 700;" id="stat-accepted">1</div>
-            <div style="color: var(--text-muted);">Accepted</div>
-          </div>
-          <div>
-            <div style="font-size: 16px; font-weight: 700;" id="stat-radius">10 km</div>
-            <div style="color: var(--text-muted);">Scan Radius</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Responding Donors List -->
-      <h3 style="font-size: 14px; margin-bottom: var(--space-sm);">Matched Donors En Route</h3>
-      <div id="matched-donors-list">
-        <div class="donor-match-card">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="font-size: 28px;">🚗</div>
+          <div style="display: flex; justify-content: space-around; font-size: 12px; background: var(--bg-canvas); padding: 10px; border-radius: var(--radius-md);">
             <div>
-              <strong style="font-size: 14px;">Anonymous Donor #D-402</strong>
-              <div style="font-size: 12px; color: var(--text-muted);">
-                📍 3.4 km away • ⏱️ ETA: ~14 mins
-              </div>
+              <div style="font-size: 16px; font-weight: 700;" id="stat-alerted">8</div>
+              <div style="color: var(--text-muted);">Donors Alerted</div>
+            </div>
+            <div>
+              <div style="font-size: 16px; font-weight: 700;" id="stat-accepted">1</div>
+              <div style="color: var(--text-muted);">Accepted</div>
+            </div>
+            <div>
+              <div style="font-size: 16px; font-weight: 700;" id="stat-radius">10 km</div>
+              <div style="color: var(--text-muted);">Scan Radius</div>
             </div>
           </div>
-          <button class="btn btn-sm btn-success" id="call-proxy-btn" style="width: auto;">
-            📞 Masked Call
-          </button>
-        </div>
-      </div>
-
-      <!-- Masked Proxy Contact Dialog -->
-      <div id="proxy-call-container" class="proxy-call-box" style="display: none;">
-        <div style="font-size: 32px; margin-bottom: 4px;">🛡️</div>
-        <h3>Privacy-Preserving Contact (NFR 2.3)</h3>
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: var(--space-md);">
-          Neither party's personal phone number is revealed. Calls route via Alkhidmat's secure virtual bridge.
-        </p>
-
-        <div style="background: var(--bg-canvas); padding: 12px; border-radius: var(--radius-md); font-family: monospace; font-size: 18px; font-weight: 700; color: var(--color-success); margin-bottom: var(--space-sm);" id="proxy-virtual-number">
-          +92-21-3000-0000
         </div>
 
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: var(--space-md);" id="proxy-timer">
-          Session expires in: 9 mins 58 secs
+        <!-- Responding Donors List -->
+        <h3 style="font-size: 14px; margin-bottom: var(--space-sm);">Matched Donors En Route</h3>
+        <div id="matched-donors-list">
+          <div class="donor-match-card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="font-size: 28px;">🚗</div>
+              <div>
+                <strong style="font-size: 14px;" id="matched-donor-name">Anonymous Donor #D-402</strong>
+                <div style="font-size: 12px; color: var(--text-muted);" id="matched-donor-subtext">
+                  📍 3.4 km away • ⏱️ ETA: ~14 mins
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <a id="btn-match-call-donor" href="tel:+923001234567" class="btn btn-sm btn-success" style="width: auto; text-decoration: none; font-weight: 600;">
+                📞 Call Donor
+              </a>
+              <a id="btn-match-chat-donor" href="/seeker/coordination.html" class="btn btn-sm btn-primary" style="width: auto; text-decoration: none; font-weight: 600;">
+                💬 In-App Chat
+              </a>
+            </div>
+          </div>
         </div>
 
-        <div style="display: flex; gap: var(--space-sm);">
-          <a href="tel:+922130000000" class="btn btn-success" style="flex: 1;">Dial Virtual Bridge 📞</a>
-          <button id="close-proxy-btn" class="btn btn-secondary btn-sm" style="width: 80px;">Done</button>
+        <!-- Action Button -->
+        <div style="margin-top: var(--space-lg);">
+          <a href="/donor/confirm.html" class="btn btn-outline" style="text-align: center;">
+            Mark Donation Complete & Close Request ✅
+          </a>
         </div>
-      </div>
-
-      <!-- Action Button -->
-      <div style="margin-top: var(--space-lg);">
-        <a href="/donor/confirm.html" class="btn btn-outline" style="text-align: center;">
-          Mark Donation Complete & Close Request ✅
-        </a>
-      </div>
       </div>
     </main>
 

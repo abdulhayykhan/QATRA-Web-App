@@ -19,16 +19,6 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def initialize_test_database():
-    """Ensure all SQLAlchemy model tables are created before running the test suite."""
-    from app.core.database import engine
-    from app.models import Base
-
-    Base.metadata.create_all(bind=engine)
-    yield
-
-
 @pytest.fixture(autouse=True)
 def reset_rate_limiter_before_each_test():
     """Reset the sliding window rate limiter before every single test.

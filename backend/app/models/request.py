@@ -40,6 +40,7 @@ class Request(Base, TimestampMixin):
     # Matching parameters
     search_radius_km: Mapped[float] = mapped_column(Float, default=10.0, nullable=False)
     expansion_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    matched_donor_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # Verification details
     admission_slip_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)

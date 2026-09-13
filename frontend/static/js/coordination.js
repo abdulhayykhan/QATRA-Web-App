@@ -1,109 +1,189 @@
 /**
- * QATRA — Masked Proxy Call & Coordination Engine (Feature 1)
- * Wireframes pg. 10 & 17:
- * - Initiates masked call bridge (POST /api/map/proxy-call/{id}/initiate)
- * - Zero raw phone number exposure (NFR 2.2)
- * - 10-minute session countdown timer
- * - Interactive call controls (Mute, Speaker, End)
- * - In-app proxy messaging and turn-by-turn routing
- * - Cancel match and re-dispatch (POST /api/map/requests/{id}/cancel)
+ * QATRA — Real-Time Emergency Coordination & In-App Chat Engine
+ * - Resolves session details via GET /api/coordination/{request_id}
+ * - Unidirectional calling: Seeker receives donor phone number for direct calling (tel:+92...)
+ * - Strict donor privacy guard: Donors cannot call seeker (no call button, seeker phone withheld)
+ * - Real-time In-App Chat: Both parties exchange live coordination messages via GET/POST /api/coordination/{request_id}/messages
+ * - Turn-by-turn Hospital Navigation & Match Cancellation
  */
 import { apiPost, apiGet, showToast, onReady } from './api.js';
 
 let currentRequestId = null;
-let countdownSeconds = 600; // 10 minutes
-let countdownInterval = null;
-let isMuted = false;
-let isSpeaker = false;
+let currentViewerRole = 'seeker';
+let lastMessageCount = 0;
+let chatPollInterval = null;
 
 onReady(() => {
   const params = new URLSearchParams(window.location.search);
-  currentRequestId = params.get('request_id');
-  const token = localStorage.getItem('qatra_token');
-  const proxyChannel = params.get('proxy_channel') || `px-${currentRequestId || 'demo'}402`;
+  currentRequestId = params.get('request_id') || '1';
+  const roleOverride = params.get('as_role');
 
-  document.getElementById('proxy-channel-id-text').innerText = proxyChannel;
-
-  if (currentRequestId && token) {
-    initiateProxyCall();
-  } else {
-    document.getElementById('virtual-number-display').innerText = '+92 21 3000 0000';
-    startCallCountdown();
-  }
-
-  setupCallControls();
+  loadCoordinationSession(roleOverride);
   setupChat();
   setupNavigation();
+
+  // Poll chat every 3 seconds
+  if (chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(pollChatMessages, 3000);
 });
 
 /**
- * 1. Initiate Masked Call Bridge (NFR 2.2)
+ * 1. Load Session Details & Enforce Calling Permissions
  */
-async function initiateProxyCall() {
+async function loadCoordinationSession(roleOverride = null) {
   try {
-    const res = await apiPost(`/map/proxy-call/${currentRequestId}/initiate`).catch(() => null);
+    const url = `/coordination/${currentRequestId}` + (roleOverride ? `?as_role=${roleOverride}` : '');
+    const data = await apiGet(url).catch(() => null);
 
-    if (res) {
-      document.getElementById('virtual-number-display').innerText = res.virtual_number || '+92 21 3000 0000';
-      document.getElementById('proxy-channel-id-text').innerText = res.proxy_call_id || `px-${currentRequestId}`;
-      countdownSeconds = res.expires_in_seconds || 600;
+    if (data) {
+      currentViewerRole = data.viewer_role || (roleOverride || 'seeker');
+
+      // Update donor badge and info
+      if (data.matched_donor) {
+        const donorNameEl = document.getElementById('matched-donor-display-name');
+        if (donorNameEl) donorNameEl.innerText = data.matched_donor.name || 'Anonymous Donor #D-402';
+
+        const bloodTagEl = document.getElementById('matched-donor-blood-tag');
+        if (bloodTagEl) bloodTagEl.innerText = data.matched_donor.blood_group || 'B+';
+
+        const navBloodBadge = document.getElementById('nav-blood-badge');
+        if (navBloodBadge) navBloodBadge.innerText = `${data.matched_donor.blood_group || 'B+'} Needed`;
+
+        const distEl = document.getElementById('nav-distance');
+        if (distEl) distEl.innerText = `${data.matched_donor.distance_km || 2.4} km`;
+
+        const etaEl = document.getElementById('nav-eta');
+        if (etaEl) etaEl.innerText = `${data.matched_donor.estimated_arrival_minutes || 14} mins`;
+      }
+
+      // Update hospital details
+      if (data.hospital) {
+        const hospName = document.getElementById('nav-hospital-name');
+        if (hospName) hospName.innerText = data.hospital.name || 'Civil Hospital Karachi';
+
+        const hospAddr = document.getElementById('nav-hospital-address');
+        if (hospAddr) hospAddr.innerText = data.hospital.address || 'Mission Rd, New Karachi';
+
+        const gpsBtn = document.getElementById('btn-open-gps-directions');
+        if (gpsBtn && data.hospital.latitude && data.hospital.longitude) {
+          gpsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${data.hospital.latitude},${data.hospital.longitude}`;
+        }
+      }
+
+      // Apply Unidirectional Calling Rules
+      const seekerCallBox = document.getElementById('seeker-call-container');
+      const donorNoticeBox = document.getElementById('donor-advisory-container');
+      const callBtn = document.getElementById('btn-call-donor');
+      const numberText = document.getElementById('donor-call-number-text');
+
+      if (data.can_call && data.call_phone_number) {
+        // Seeker View: Direct calling enabled
+        if (seekerCallBox) seekerCallBox.style.display = 'block';
+        if (donorNoticeBox) donorNoticeBox.style.display = 'none';
+        if (callBtn) callBtn.href = `tel:${data.call_phone_number}`;
+        if (numberText) numberText.innerText = `(${data.call_phone_number})`;
+      } else {
+        // Donor View: Direct calling strictly prohibited
+        if (seekerCallBox) seekerCallBox.style.display = 'none';
+        if (donorNoticeBox) donorNoticeBox.style.display = 'block';
+      }
+    } else {
+      // Fallback for demo/offline simulation
+      applyFallbackSession(roleOverride);
     }
 
-    startCallCountdown();
+    await pollChatMessages();
   } catch (err) {
-    console.warn('Proxy call fallback active:', err);
-    startCallCountdown();
+    console.warn('Coordination session fallback active:', err);
+    applyFallbackSession(roleOverride);
   }
 }
 
-function startCallCountdown() {
-  const timerDisplay = document.getElementById('call-timer-display');
+function applyFallbackSession(roleOverride) {
+  currentViewerRole = roleOverride === 'donor' ? 'donor' : 'seeker';
+  const seekerCallBox = document.getElementById('seeker-call-container');
+  const donorNoticeBox = document.getElementById('donor-advisory-container');
+  const callBtn = document.getElementById('btn-call-donor');
+  const numberText = document.getElementById('donor-call-number-text');
 
-  countdownInterval = setInterval(() => {
-    countdownSeconds--;
-    if (countdownSeconds <= 0) {
-      clearInterval(countdownInterval);
-      timerDisplay.innerText = 'Call Ended';
-      showToast('Proxy call session expired (10 min limit reached).', 'warning');
-      return;
-    }
-
-    const mins = Math.floor(countdownSeconds / 60);
-    const secs = countdownSeconds % 60;
-    timerDisplay.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }, 1000);
+  if (currentViewerRole === 'seeker') {
+    if (seekerCallBox) seekerCallBox.style.display = 'block';
+    if (donorNoticeBox) donorNoticeBox.style.display = 'none';
+    if (callBtn) callBtn.href = 'tel:+923001234567';
+    if (numberText) numberText.innerText = '(+92 300 1234567)';
+  } else {
+    if (seekerCallBox) seekerCallBox.style.display = 'none';
+    if (donorNoticeBox) donorNoticeBox.style.display = 'block';
+  }
 }
 
 /**
- * 2. Interactive Call Controls
+ * 2. Real-Time Chat Message Polling
  */
-function setupCallControls() {
-  const btnMute = document.getElementById('btn-mute');
-  const btnSpeaker = document.getElementById('btn-speaker');
-  const btnEnd = document.getElementById('btn-end-call');
+async function pollChatMessages() {
+  const container = document.getElementById('chat-messages-container');
+  if (!container) return;
 
-  btnMute.addEventListener('click', () => {
-    isMuted = !isMuted;
-    btnMute.classList.toggle('active', isMuted);
-    btnMute.innerHTML = isMuted ? '🎙️' : '🔇';
-    showToast(isMuted ? 'Microphone muted.' : 'Microphone unmuted.', 'info');
-  });
+  try {
+    const messages = await apiGet(`/coordination/${currentRequestId}/messages`).catch(() => null);
 
-  btnSpeaker.addEventListener('click', () => {
-    isSpeaker = !isSpeaker;
-    btnSpeaker.classList.toggle('active', isSpeaker);
-    showToast(isSpeaker ? 'Speakerphone ON.' : 'Speakerphone OFF.', 'info');
-  });
+    if (Array.isArray(messages) && messages.length > 0) {
+      // Only re-render if message count changed or empty
+      if (messages.length !== lastMessageCount) {
+        container.innerHTML = '';
+        messages.forEach(msg => {
+          renderBubble(msg, container);
+        });
+        container.scrollTop = container.scrollHeight;
+        lastMessageCount = messages.length;
+      }
+    } else if (container.children.length === 0) {
+      // Fallback initial greeting
+      renderBubble({
+        id: 1,
+        sender_role: 'donor',
+        sender_name: 'Volunteer Donor',
+        text: 'Hello! I have confirmed your emergency blood alert. I am on my way to the blood bank.',
+        timestamp: new Date().toISOString()
+      }, container);
+      lastMessageCount = 1;
+    }
+  } catch (err) {
+    console.warn('Chat poll fallback:', err);
+  }
+}
 
-  btnEnd.addEventListener('click', () => {
-    if (countdownInterval) clearInterval(countdownInterval);
-    document.getElementById('call-timer-display').innerText = 'Call Disconnected';
-    showToast('Proxy call ended.', 'info');
-  });
+function renderBubble(msg, container) {
+  const isOutgoing = (msg.sender_role === currentViewerRole);
+  const bubble = document.createElement('div');
+  bubble.className = `message-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+
+  const timeStr = msg.timestamp
+    ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  const roleLabel = msg.sender_role === 'seeker' ? '🚨 Seeker' : '🩸 Donor';
+
+  bubble.innerHTML = `
+    <div class="bubble-meta" style="color: ${isOutgoing ? 'rgba(255,255,255,0.9)' : 'var(--color-primary)'};">
+      ${escapeHtml(msg.sender_name || (msg.sender_role === 'seeker' ? 'Emergency Seeker' : 'Volunteer Donor'))} • ${roleLabel}
+    </div>
+    <div class="bubble-body">${escapeHtml(msg.text)}</div>
+    ${timeStr ? `<div class="bubble-time">${timeStr}</div>` : ''}
+  `;
+
+  container.appendChild(bubble);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 /**
- * 3. In-App Proxy Chat Stream
+ * 3. Chat Form & Presets Setup
  */
 function setupChat() {
   const form = document.getElementById('chat-form');
@@ -111,59 +191,78 @@ function setupChat() {
   const container = document.getElementById('chat-messages-container');
   const chips = document.querySelectorAll('.preset-chip');
 
-  function appendMessage(text, isOutgoing = true) {
-    const bubble = document.createElement('div');
-    bubble.className = `message-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
-    bubble.innerText = text;
-    container.appendChild(bubble);
-    container.scrollTop = container.scrollHeight;
+  if (form && input) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+
+      // Optimistic instant render
+      const optimisticMsg = {
+        id: Date.now(),
+        sender_role: currentViewerRole,
+        sender_name: currentViewerRole === 'seeker' ? 'Emergency Seeker' : 'Volunteer Donor',
+        text: text,
+        timestamp: new Date().toISOString()
+      };
+      if (container) {
+        renderBubble(optimisticMsg, container);
+        container.scrollTop = container.scrollHeight;
+        lastMessageCount++;
+      }
+
+      try {
+        await apiPost(`/coordination/${currentRequestId}/messages`, {
+          text: text,
+          sender_role: currentViewerRole
+        });
+        showToast('Message sent.', 'info');
+      } catch (err) {
+        console.warn('Message send network warning:', err);
+      }
+    });
   }
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (!text) return;
-    appendMessage(text, true);
-    input.value = '';
-
-    // Simulate instant proxy delivery acknowledgment
-    setTimeout(() => {
-      showToast('Proxy message delivered.', 'info');
-    }, 400);
-  });
 
   chips.forEach(chip => {
     chip.addEventListener('click', () => {
-      appendMessage(chip.innerText, true);
+      if (input) {
+        input.value = chip.innerText.replace(/^[^\s]+\s/, ''); // Remove leading emoji for clean editing or send
+        form.dispatchEvent(new Event('submit'));
+      }
     });
   });
 }
 
 /**
- * 4. Navigation Directions & Match Cancellation (Wireframe pg. 17)
+ * 4. Navigation & Directions
  */
 function setupNavigation() {
   const gpsBtn = document.getElementById('btn-open-gps-directions');
   const cancelBtn = document.getElementById('btn-cancel-match');
 
-  // Direct turn-by-turn routing to Civil Hospital Karachi
   const hospitalLat = 24.8569;
   const hospitalLng = 67.0112;
-  gpsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${hospitalLat},${hospitalLng}`;
+  if (gpsBtn && !gpsBtn.href.includes('google.com/maps')) {
+    gpsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${hospitalLat},${hospitalLng}`;
+  }
 
-  cancelBtn.addEventListener('click', async () => {
-    if (!confirm('Cancel this match? The request will immediately re-open and alert the next ranked donors.')) {
-      return;
-    }
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', async () => {
+      if (!confirm('Cancel this match? The request will immediately re-open to alert other ranked donors.')) {
+        return;
+      }
 
-    try {
-      await apiPost(`/map/requests/${currentRequestId}/cancel`);
-      showToast('Match cancelled. Request re-opened to next-ranked donors.', 'warning');
-      setTimeout(() => {
-        window.location.href = `/seeker/status.html?request_id=${currentRequestId}`;
-      }, 1200);
-    } catch (err) {
-      showToast(err.message || 'Error cancelling match', 'error');
-    }
-  });
+      try {
+        await apiPost(`/map/requests/${currentRequestId}/cancel`);
+        showToast('Match cancelled. Request re-opened to next-ranked donors.', 'warning');
+        setTimeout(() => {
+          window.location.href = `/seeker/status.html?request_id=${currentRequestId}`;
+        }, 1200);
+      } catch (err) {
+        showToast(err.message || 'Error cancelling match', 'error');
+      }
+    });
+  }
 }

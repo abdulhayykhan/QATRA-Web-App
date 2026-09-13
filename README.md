@@ -62,7 +62,7 @@ Pakistan faces an acute healthcare crisis where demand for safe, screened blood 
 QATRA provides an integrated end-to-end digital infrastructure partnering with organizations like **Alkhidmat Foundation**:
 1. **15-Minute Hyper-Local Proximity Radar**: Concentric geospatial dispatch (5 km $\rightarrow$ 10 km $\rightarrow$ 15 km) connects hospital emergency rooms directly to pre-screened, verified donors currently within transit distance.
 2. **Automated Hospital Admission Slip OCR**: High-confidence machine vision scans hospital stamps, Medical Record Numbers (MRN), and attending physician signatures. Flagged low-confidence uploads escalate instantly to a 24/7 Human Verification Desk.
-3. **Zero-Exposure Masked Proxy Dialer**: Seekers and donors coordinate emergency logistics via in-app masked telephone channels (`+92-21-3000-0000`). Personal phone numbers and 13-digit Pakistani CNICs are never exposed.
+3. **Real-Time In-App Coordination & Direct Seeker Calling**: Seekers and donors coordinate emergency logistics via real-time in-app chat. Emergency seekers can directly call accepted dispatch donors (`tel:+92XXXXXXXXXX`) while donor privacy is strictly protected (donors cannot call seekers; seeker phone numbers are never exposed).
 4. **90-Day Medical Cooldown Safeguards**: Automated biological cooldown trackers prevent donor exploitation and maintain physiological well-being.
 5. **Real-Time Social Appeals Feed**: Direct WhatsApp link generation provides structured, verified cards with progress meters (`units_fulfilled / units_needed`) that automatically close when filled.
 6. **Stateless 4-Step Eligibility & Awareness Hub**: Educational content debunking donation myths alongside campus blood drive scheduling.
@@ -74,7 +74,7 @@ QATRA provides an integrated end-to-end digital infrastructure partnering with o
 
 | Feature Module | PRD Ref | Primary Owner | Architectural Implementation |
 | :--- | :---: | :---: | :--- |
-| **Live Map & Proximity Matching** | FR 1 | **Hareem Israr** | Leaflet.js interactive canvas, Karachi hospital autocomplete, Haversine geospatial radius expansion (5–15 km), real-time donor location pinging, and masked proxy calling. |
+| **Live Map & Proximity Matching** | FR 1 | **Hareem Israr** | Leaflet.js interactive canvas, Karachi hospital autocomplete, Haversine geospatial radius expansion (5–15 km), real-time donor location pinging, in-app chat, and unidirectional seeker calling. |
 | **Authentication & Verification Desk** | FR 2 | **Saghir Ahmed** | Google Sign-In via Firebase Auth, 13-digit Pakistani CNIC Mod-10 checksum validation, hospital admission slip OCR parsing, 24/7 desk review queue, and 90-day cooldown tracking. |
 | **Social & Urgent Request Feed** | FR 3 | **Mahrukh Baig** | Public appeals feed with instant filter chips, "I Can Donate" one-tap response, structured WhatsApp share generator, and automatic request auto-close upon unit fulfillment. |
 | **Awareness & Eligibility Module** | FR 4 | **Yumna Abbasi** | 4-step medical pre-screening quiz, categorized educational content library (Myths vs. Facts), campus blood drive management, and post-donation health guidelines. |
@@ -213,12 +213,15 @@ sequenceDiagram
     
     Donor->>Web: Taps Accept Emergency Request
     Web->>API: POST /api/map/requests/:id/accept
-    API-->>Web: Match Confirmed (Proxy Channel px-99218 Created)
+    API-->>Web: Match Confirmed (Matched Donor Assigned)
     
-    Seeker->>Web: Taps Call Matched Donor
-    Web->>API: POST /api/map/proxy-call/:id/initiate
-    API-->>Seeker: Virtual Number (+92-21-3000-0000) Connected
-    Note over Seeker,Donor: Both parties coordinate safely without exposing personal phone numbers
+    Note over Seeker,Donor: Live Coordination & Real-Time In-App Chat Active
+    Seeker->>Web: Taps Call Donor (Direct Phone Link)
+    Web-->>Seeker: Direct dial via tel:+92300XXXXXXX
+    Donor->>Web: Sends In-App Chat Update
+    Web->>API: POST /api/coordination/:id/messages
+    API-->>Seeker: In-App Message Delivered
+    Note over Seeker,Donor: Donor cannot call seeker; seeker phone strictly withheld
 ```
 
 ---
@@ -381,10 +384,10 @@ QATRA-Web-App/
 │   │   │   └── register.html          # Donor Onboarding Wizard (Google + CNIC)
 │   │   ├── seeker/
 │   │   │   ├── closure.html           # Request Fulfillment & Case Closure
-│   │   │   ├── coordination.html      # Donor-Seeker Proxy Coordination Panel
+│   │   │   ├── coordination.html      # Donor-Seeker Live Coordination & In-App Chat
 │   │   │   ├── feed.html              # Public Appeals Feed with Blood Group Filters
 │   │   │   ├── map.html               # Live Geospatial Proximity Map (Leaflet)
-│   │   │   ├── match.html             # Radar Distance Matchmaker & Masked Dialer
+│   │   │   ├── match.html             # Radar Distance Matchmaker & Dispatch Coordination
 │   │   │   ├── request.html           # Emergency Request & Hospital Slip Drag-Drop
 │   │   │   └── status.html            # Real-Time Fulfillment Progress Radar
 │   │   └── index.html                 # Splash Screen with Dual Urgency CTA
@@ -534,10 +537,12 @@ All routes are mounted under the base `/api` prefix:
 - `GET /api/map/requests`: Returns nearby verified emergency requests formatted for Leaflet.
 - `GET /api/map/requests/{id}/status`: Real-time fulfillment polling and radius expansion radar.
 - `GET /api/map/requests/{id}/matches`: Haversine proximity-ranked donor candidate list.
-- `POST /api/map/requests/{id}/accept`: Donor accepts proximity alert; creates proxy channel.
+- `POST /api/map/requests/{id}/accept`: Donor accepts proximity alert; assigns matched donor.
 - `POST /api/map/requests/{id}/decline`: Donor declines alert without penalty.
 - `POST /api/map/requests/{id}/cancel`: Cancels prior acceptance and re-dispatches to next donor.
-- `POST /api/map/proxy-call/{id}/initiate`: Bridges anonymous voice call via masked proxy number.
+- `GET /api/coordination/{id}`: Resolves coordination session, seeker calling permissions, and donor phone.
+- `GET /api/coordination/{id}/messages`: Streams in-app chat history between seeker and dispatch donor.
+- `POST /api/coordination/{id}/messages`: Submits in-app chat message between seeker and donor.
 
 ### Urgent Social Feed & Sharing (Mahrukh Baig)
 - `GET /api/feed`: Paginated public stream of active verified blood appeals with filters.

@@ -73,8 +73,9 @@ class MapRequestStatusResponse(BaseModel):
 class DonorAcceptResponse(BaseModel):
     request_id: int
     status: str = "matched"
-    message: str = "Match confirmed. Initializing masked proxy contact."
-    proxy_channel_id: str
+    message: str = "Match confirmed. Live coordination and in-app chat initialized."
+    matched_donor_id: Optional[int] = None
+    proxy_channel_id: Optional[str] = None
 
 
 class DonorDeclineResponse(BaseModel):
@@ -87,13 +88,6 @@ class DonorCancelResponse(BaseModel):
     request_id: int
     status: str = "re_dispatched"
     message: str = "Acceptance cancelled. Request re-opened to next-ranked donors."
-
-
-class ProxyCallInitiateResponse(BaseModel):
-    proxy_call_id: str
-    virtual_number: str = "+922130000000"
-    status: str = "connecting"
-    expires_in_seconds: int = 600
 
 
 # In-memory decline registry for session lifetime (donor_id -> Set[request_id])
@@ -421,8 +415,9 @@ async def accept_proximity_alert(
 
     blood_request.status = "matched"
     blood_request.units_fulfilled = min(blood_request.units_needed, blood_request.units_fulfilled + 1)
+    blood_request.matched_donor_id = current_user.id
 
-    proxy_channel_id = f"px-{blood_request.id}{donor_id}"
+    proxy_channel_id = f"coord-{blood_request.id}-{donor_id}"
 
     log_audit_event(
         db=db,
@@ -430,7 +425,7 @@ async def accept_proximity_alert(
         target_resource="requests",
         target_id=str(request_id),
         user_id=current_user.id,
-        details=f"Donor {donor_id} accepted alert. Proxy channel: {proxy_channel_id}",
+        details=f"Donor {donor_id} accepted alert. Coordination channel: {proxy_channel_id}",
     )
 
     db.commit()
@@ -439,7 +434,8 @@ async def accept_proximity_alert(
     return DonorAcceptResponse(
         request_id=blood_request.id,
         status="matched",
-        message="Match confirmed. Initializing masked proxy contact.",
+        message="Match confirmed. Live coordination and in-app chat initialized.",
+        matched_donor_id=current_user.id,
         proxy_channel_id=proxy_channel_id,
     )
 
@@ -541,57 +537,4 @@ async def cancel_proximity_acceptance(
         status="re_dispatched",
         message="Acceptance cancelled. Request re-opened to next-ranked donors.",
     )
-
-
-# ==============================================================================
-# 4.8 POST /api/map/proxy-call/{request_id}/initiate (NFR 2.2 Masked Proxy Contact)
-# ==============================================================================
-
-@router.post(
-    "/proxy-call/{request_id}/initiate",
-    response_model=ProxyCallInitiateResponse,
-    summary="Initiate Masked Proxy Contact Bridge",
-    description="Generates virtual contact bridge and encrypted session token without exposing real phone numbers (NFR 2.2).",
-)
-async def initiate_proxy_call(
-    request_id: int,
-    current_user: User = Depends(require_role([
-        UserRole.VERIFIED_SEEKER.value,
-        UserRole.VERIFIED_DONOR.value,
-        UserRole.ADMIN.value,
-    ])),
-    db: Session = Depends(get_db),
-):
-    """
-    1. Verify emergency request.
-    2. Confirm caller is either the seeker or matched donor or system admin.
-    3. Return virtual call bridge session (10-minute validity) per NFR 2.2.
-    4. Log audit record.
-    """
-    blood_request = db.query(Request).filter(Request.id == request_id).first()
-    if not blood_request:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Blood request with ID {request_id} not found.",
-        )
-
-    proxy_call_id = f"call_br_{request_id}_{int(datetime.now(timezone.utc).timestamp()) % 100000}"
-
-    log_audit_event(
-        db=db,
-        action="PROXY_CALL_INITIATE",
-        target_resource="requests",
-        target_id=str(request_id),
-        user_id=current_user.id,
-        details=f"Initiated masked call bridge: {proxy_call_id}",
-    )
-
-    return ProxyCallInitiateResponse(
-        proxy_call_id=proxy_call_id,
-        virtual_number="+922130000000",
-        status="connecting",
-        expires_in_seconds=600,
-    )
-
-
 

@@ -331,12 +331,12 @@ function setupCardActions() {
       acceptBtn.innerText = 'Accepting...';
       
       const res = await apiPost(`/map/requests/${reqId}/accept`);
-      showToast('Match confirmed! Masked proxy channel initialized.', 'success');
+      showToast('Match confirmed! Live coordination and in-app chat initialized.', 'success');
 
       // Update UI to matched state
       document.getElementById('card-actions-row').classList.add('hidden');
       document.getElementById('card-matched-row').classList.remove('hidden');
-      coordBtn.href = `/seeker/coordination.html?request_id=${reqId}&proxy_channel=${res.proxy_channel_id || ''}`;
+      coordBtn.href = `/seeker/coordination.html?request_id=${reqId}`;
     } catch (err) {
       showToast(err.message || 'Could not accept alert', 'error');
     } finally {

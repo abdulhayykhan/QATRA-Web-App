@@ -9,7 +9,7 @@ Covers:
 - POST /api/map/requests/{request_id}/accept (FR 1.4.3 match confirmation, proxy channel generation)
 - POST /api/map/requests/{request_id}/decline (FR 1.4.2 donor decline registry)
 - POST /api/map/requests/{request_id}/cancel (PRD Section 3.4 acceptance cancellation & re-dispatch)
-- POST /api/map/proxy-call/{request_id}/initiate (NFR 2.2 masked proxy calling)
+- Coordination & in-app chat permissions (unidirectional calling & strict donor privacy guard)
 - Unit tests for Haversine distance, bounding box, and blood compatibility matrix
 """
 import time
@@ -407,8 +407,8 @@ def test_donor_accept_proxy_call_and_cancel_flow():
     assert res_accept.status_code == 200
     accept_data = res_accept.json()
     assert accept_data["status"] == "matched"
-    assert "proxy_channel_id" in accept_data
-    assert accept_data["proxy_channel_id"].startswith(f"px-{req_id}")
+    assert "Live coordination" in accept_data["message"]
+    assert accept_data["matched_donor_id"] == donor_user_id
 
     # Verify request status in DB updated to "matched"
     db = SessionLocal()
@@ -417,19 +417,24 @@ def test_donor_accept_proxy_call_and_cancel_flow():
     assert req_db.units_fulfilled == 1
     db.close()
 
-    # 2. Initiate masked proxy call bridge (NFR 2.2)
-    res_proxy = client.post(
-        f"/api/map/proxy-call/{req_id}/initiate",
+    # 2. Check coordination session: Seeker gets donor phone, Donor gets chat only
+    res_coord_seeker = client.get(
+        f"/api/coordination/{req_id}",
+        headers={"Authorization": f"Bearer {seeker_token}"},
+    )
+    assert res_coord_seeker.status_code == 200
+    seeker_coord = res_coord_seeker.json()
+    assert seeker_coord["can_call"] is True
+    assert seeker_coord["call_phone_number"] is not None
+
+    res_coord_donor = client.get(
+        f"/api/coordination/{req_id}",
         headers={"Authorization": f"Bearer {donor_token}"},
     )
-    assert res_proxy.status_code == 200
-    proxy_data = res_proxy.json()
-    assert proxy_data["status"] == "connecting"
-    assert "proxy_call_id" in proxy_data
-    assert "virtual_number" in proxy_data
-    assert proxy_data["virtual_number"] == "+922130000000"
-    # Ensure real phone number is masked and not returned in payload
-    assert "phone" not in proxy_data
+    assert res_coord_donor.status_code == 200
+    donor_coord = res_coord_donor.json()
+    assert donor_coord["can_call"] is False
+    assert donor_coord["call_phone_number"] is None
 
     # 3. Donor cancels acceptance (PRD Sec 3.4)
     res_cancel = client.post(
