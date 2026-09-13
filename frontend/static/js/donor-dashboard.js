@@ -93,8 +93,8 @@ async function loadDashboardState() {
     }
   }
 
-  // Fetch Cooldown from backend if not locally simulated
-  if (!cooldownData) {
+  // Fetch Cooldown from backend if not locally simulated and user is logged in
+  if (!cooldownData && getAuthToken()) {
     try {
       cooldownData = await apiGet('/auth/donor/cooldown');
     } catch (err) {
@@ -102,11 +102,13 @@ async function loadDashboardState() {
     }
   }
 
-  // Fetch Health Feedback & Guidelines (FR 4.4)
-  try {
-    healthData = await apiGet('/awareness/donor/health-feedback');
-  } catch (err) {
-    console.warn('Could not fetch /awareness/donor/health-feedback, using default guidelines.');
+  // Fetch Health Feedback & Guidelines (FR 4.4) if user is logged in
+  if (getAuthToken()) {
+    try {
+      healthData = await apiGet('/awareness/donor/health-feedback');
+    } catch (err) {
+      console.warn('Could not fetch /awareness/donor/health-feedback, using default guidelines.');
+    }
   }
 
   // Render Cooldown and Dashboard Views
