@@ -61,12 +61,22 @@ function initMap() {
     maxZoom: 19
   }).addTo(map);
 
-  // Fix Leaflet zoom control links to eliminate dead '#' anchor warnings
+  // Fix Leaflet zoom controls to be accessible buttons without dead href
   setTimeout(() => {
     const zoomIn = document.querySelector('.leaflet-control-zoom-in');
     const zoomOut = document.querySelector('.leaflet-control-zoom-out');
-    if (zoomIn) zoomIn.setAttribute('href', 'javascript:void(0)');
-    if (zoomOut) zoomOut.setAttribute('href', 'javascript:void(0)');
+    if (zoomIn) {
+      zoomIn.removeAttribute('href');
+      zoomIn.setAttribute('role', 'button');
+      zoomIn.setAttribute('tabindex', '0');
+      zoomIn.setAttribute('aria-label', 'Zoom in');
+    }
+    if (zoomOut) {
+      zoomOut.removeAttribute('href');
+      zoomOut.setAttribute('role', 'button');
+      zoomOut.setAttribute('tabindex', '0');
+      zoomOut.setAttribute('aria-label', 'Zoom out');
+    }
   }, 100);
 
   // Draw initial concentric rings around center
