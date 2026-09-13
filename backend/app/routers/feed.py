@@ -10,7 +10,7 @@ Endpoints:
 """
 import logging
 from typing import Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -78,6 +78,66 @@ def format_event_as_feed_item(event: Event) -> FeedItemResponse:
     )
 
 
+def ensure_seed_feed(db: Session) -> None:
+    """Seed initial verified emergency requests if table is empty."""
+    try:
+        if db.query(Request).count() == 0:
+            now = datetime.now(timezone.utc)
+            seed_requests = [
+                Request(
+                    patient_name="Zainab Bibi",
+                    hospital_name="Civil Hospital Karachi",
+                    hospital_address="Mission Rd, near Civil Hospital, Nanak Wara, Karachi",
+                    latitude=24.8596,
+                    longitude=67.0105,
+                    blood_group="O-",
+                    component_type="whole_blood",
+                    units_needed=2,
+                    units_fulfilled=0,
+                    urgency="within_2_hours",
+                    status="verified",
+                    ocr_confidence=0.92,
+                    created_at=now,
+                ),
+                Request(
+                    patient_name="Ahmed Ali Khan",
+                    hospital_name="Jinnah Postgraduate Medical Centre (JPMC)",
+                    hospital_address="Rafiqui Sarwar Shaheed Rd, Cantt, Karachi",
+                    latitude=24.8532,
+                    longitude=67.0458,
+                    blood_group="A+",
+                    component_type="platelets",
+                    units_needed=1,
+                    units_fulfilled=0,
+                    urgency="within_24_hours",
+                    status="verified",
+                    ocr_confidence=0.88,
+                    created_at=now - timedelta(hours=1),
+                ),
+                Request(
+                    patient_name="Fatima Noor",
+                    hospital_name="The Indus Hospital",
+                    hospital_address="Plot C-76, Sector 31/5, Korangi Crossing, Karachi",
+                    latitude=24.8305,
+                    longitude=67.1264,
+                    blood_group="B+",
+                    component_type="whole_blood",
+                    units_needed=3,
+                    units_fulfilled=1,
+                    urgency="within_2_hours",
+                    status="verified",
+                    ocr_confidence=0.95,
+                    created_at=now - timedelta(minutes=45),
+                ),
+            ]
+            for req in seed_requests:
+                db.add(req)
+            db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Feed auto-seeding skipped: {e}")
+
+
 # ==============================================================================
 # 5.1 GET /api/feed
 # ==============================================================================
@@ -110,6 +170,8 @@ def get_feed(
     4. Sort requests by urgency (within_2_hours first) and recency.
     5. Paginate and return structured items.
     """
+    ensure_seed_feed(db)
+
     # Check cache (NFR 1.2 & NFR 1.3 - sub-2-second performance)
     cache_key = f"{blood_group}:{urgency}:{location}:{include_drive_events}:{event_id}:{page}:{limit}"
     cached_result = get_cached_feed(cache_key)

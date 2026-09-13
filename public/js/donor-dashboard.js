@@ -281,8 +281,9 @@ async function loadEmergencyAlerts() {
   if (!container) return;
 
   try {
-    const feed = await apiGet('/feed/requests', { status: 'active' });
-    const requests = Array.isArray(feed) ? feed : (feed?.requests || []);
+    const feed = await apiGet('/feed');
+    const items = feed?.items || (Array.isArray(feed) ? feed : []);
+    const requests = items.filter(i => !i.item_type || i.item_type === 'request');
 
     if (requests.length > 0) {
       container.innerHTML = '';

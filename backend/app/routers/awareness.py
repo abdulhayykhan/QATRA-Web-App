@@ -426,8 +426,17 @@ def ensure_seed_events(db: Session) -> None:
         if count == 0:
             organizer = db.query(User).filter(User.role.in_(["organizer", "admin"])).first()
             if not organizer:
-                organizer = db.query(User).first()
-            organizer_id = organizer.id if organizer else 1
+                organizer = User(
+                    email="organizer@qatra.org",
+                    full_name="QATRA Community Organizer",
+                    phone="+923001234567",
+                    role="organizer",
+                    is_active=True,
+                )
+                db.add(organizer)
+                db.commit()
+                db.refresh(organizer)
+            organizer_id = organizer.id
 
             seed_events = [
                 Event(
