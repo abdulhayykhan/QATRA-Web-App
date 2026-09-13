@@ -15,10 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
   currentRequestId = urlParams.get('request_id');
 
   if (!currentRequestId) {
-    showToast('No request specified. Redirecting to appeals feed...', 'warning');
-    setTimeout(() => {
-      window.location.href = '/seeker/feed.html';
-    }, 1500);
+    const headline = document.getElementById('closure-headline');
+    if (headline) headline.innerText = 'No Active Request Selected';
+    const hosp = document.getElementById('closure-hospital-name');
+    if (hosp) hosp.innerText = 'Select an active request from the appeals feed to submit closure rating';
+    const btn = document.getElementById('confirm-close-btn');
+    if (btn) {
+      btn.innerText = 'Browse Active Appeals Feed →';
+      btn.onclick = () => { window.location.href = '/seeker/feed.html'; };
+    }
+    setupStarRating();
+    setupReasonToggle();
     return;
   }
 
