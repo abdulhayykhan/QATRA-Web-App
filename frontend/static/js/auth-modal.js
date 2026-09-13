@@ -4,6 +4,7 @@
  * Owner: Saghir Ahmed
  */
 import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady, showConfirmDialog } from './api.js';
+import { signInWithGoogle, checkGoogleRedirectResult } from './firebase-config.js';
 
 onReady(() => {
   setupHeaderSession();
@@ -68,6 +69,21 @@ export function setupAuthModal() {
   const roleDonorBtn = document.getElementById('role-donor-btn');
   const roleAdminBtn = document.getElementById('role-admin-btn');
 
+  // Check for return from mobile redirect authentication
+  checkGoogleRedirectResult().then(async (result) => {
+    if (result && result.idToken) {
+      try {
+        await handleAuthSession(result.idToken);
+      } catch (err) {
+        showToast(err.message || 'Google Sign-In failed on mobile redirect.', 'error');
+      }
+    }
+  }).catch((err) => {
+    if (err.code !== 'CANCELED') {
+      console.warn('[QATRA Auth] Redirect check warning:', err);
+    }
+  });
+
   openBtn?.addEventListener('click', () => {
     modal?.classList.add('active');
   });
@@ -82,16 +98,21 @@ export function setupAuthModal() {
     }
   });
 
-  // Google Sign-In
+  // Google Sign-In with real Firebase provider and mobile fallback
   googleBtn?.addEventListener('click', async () => {
     googleBtn.disabled = true;
     googleBtn.innerText = 'Connecting to Google... ⏳';
 
     try {
-      const mockToken = `test_google_token_${Date.now()}`;
-      await handleAuthSession(mockToken);
+      const authResult = await signInWithGoogle();
+      if (!authResult || authResult.redirecting) {
+        return; // Redirecting to Google OAuth flow
+      }
+      await handleAuthSession(authResult.idToken);
     } catch (err) {
-      showToast(err.message || 'Google authentication failed.', 'error');
+      if (err.code !== 'CANCELED') {
+        showToast(err.message || 'Google authentication failed.', 'error');
+      }
     } finally {
       googleBtn.disabled = false;
       googleBtn.innerHTML = `

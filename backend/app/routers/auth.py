@@ -83,6 +83,7 @@ async def firebase_login(
     3. Issue application-level session JWT.
     """
     id_token = payload.firebase_id_token
+    is_admin = False
 
     # Handle test, mock, or demo tokens seamlessly across test and frontend workflows
     if id_token.startswith("mock_") or id_token.startswith("test_") or id_token.startswith("demo_"):
@@ -115,6 +116,14 @@ async def firebase_login(
                 }
             else:
                 raise
+
+        # Check admin claims or authorized admin email patterns
+        fb_email = fb_user.get("email") or ""
+        is_admin = bool(
+            fb_user.get("admin")
+            or fb_user.get("role") == "admin"
+            or ("@alkhidmat.org" in fb_email and "admin" in fb_email)
+        )
 
     firebase_uid = fb_user.get("uid")
     email = fb_user.get("email")

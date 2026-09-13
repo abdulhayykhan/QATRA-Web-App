@@ -4,6 +4,7 @@
  * Owner: Saghir Ahmed
  */
 import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, onReady } from './api.js';
+import { signInWithGoogle, checkGoogleRedirectResult } from './firebase-config.js';
 
 let currentStep = 1;
 let registrationState = {
@@ -28,6 +29,30 @@ const PROVINCE_MAP = {
 };
 
 onReady(() => {
+  // Check for return from mobile Google redirect sign-in
+  checkGoogleRedirectResult().then(async (result) => {
+    if (result && result.idToken) {
+      try {
+        const response = await apiPost('/auth/firebase-login', {
+          firebase_id_token: result.idToken
+        });
+        setAuthToken(response.access_token);
+        setCurrentUser(response.user);
+        registrationState.fullName = response.user.full_name || result.user.displayName || 'Alkhidmat Volunteer';
+        const nameInput = document.getElementById('donor-fullname');
+        if (nameInput) nameInput.value = registrationState.fullName;
+        showToast('Google Identity authenticated successfully!', 'success');
+        goToStep(2);
+      } catch (err) {
+        showToast(err.message || 'Google Sign-In failed on mobile redirect.', 'error');
+      }
+    }
+  }).catch((err) => {
+    if (err.code !== 'CANCELED') {
+      console.warn('[QATRA Auth] Redirect check warning:', err);
+    }
+  });
+
   checkExistingSession();
   setupStep1Google();
   setupStep2Profile();
@@ -77,14 +102,49 @@ function goToStep(stepNumber) {
 
 function setupStep1Google() {
   const googleBtn = document.getElementById('google-signin-btn');
-  if (!googleBtn) return;
+  const demoBtn = document.getElementById('demo-donor-btn');
 
-  googleBtn.addEventListener('click', async () => {
-    googleBtn.innerText = 'Connecting to Google Identity... ⏳';
-    googleBtn.disabled = true;
+  // Real Google Sign-In with Firebase Provider
+  if (googleBtn) {
+    googleBtn.addEventListener('click', async () => {
+      googleBtn.innerText = 'Connecting to Google Identity... ⏳';
+      googleBtn.disabled = true;
+
+      try {
+        const authResult = await signInWithGoogle();
+        if (!authResult || authResult.redirecting) {
+          return; // Redirecting to Google OAuth flow on mobile
+        }
+        const response = await apiPost('/auth/firebase-login', {
+          firebase_id_token: authResult.idToken
+        });
+
+        setAuthToken(response.access_token);
+        setCurrentUser(response.user);
+
+        registrationState.fullName = response.user.full_name || authResult.user.displayName || 'Alkhidmat Volunteer';
+        const nameInput = document.getElementById('donor-fullname');
+        if (nameInput) nameInput.value = registrationState.fullName;
+
+        showToast('Google Identity authenticated successfully!', 'success');
+        goToStep(2);
+      } catch (err) {
+        if (err.code !== 'CANCELED') {
+          showToast(err.message || 'Google Sign-In failed. Please retry.', 'error');
+        }
+      } finally {
+        googleBtn.innerText = 'Continue with Google';
+        googleBtn.disabled = false;
+      }
+    });
+  }
+
+  // Optional Demo Volunteer bypass for testing environments
+  demoBtn?.addEventListener('click', async () => {
+    demoBtn.innerText = 'Setting up demo account... ⏳';
+    demoBtn.disabled = true;
 
     try {
-      // Use Firebase token or test mock token in test/dev
       const mockGoogleToken = `test_google_token_${Date.now()}`;
       const response = await apiPost('/auth/firebase-login', {
         firebase_id_token: mockGoogleToken
@@ -97,13 +157,13 @@ function setupStep1Google() {
       const nameInput = document.getElementById('donor-fullname');
       if (nameInput) nameInput.value = registrationState.fullName;
 
-      showToast('Google Identity authenticated successfully!', 'success');
+      showToast('Demo Volunteer session established!', 'success');
       goToStep(2);
     } catch (err) {
-      showToast(err.message || 'Google Sign-In failed. Please retry.', 'error');
+      showToast(err.message || 'Demo session failed.', 'error');
     } finally {
-      googleBtn.innerText = 'Continue with Google';
-      googleBtn.disabled = false;
+      demoBtn.innerText = 'Continue as Demo Volunteer';
+      demoBtn.disabled = false;
     }
   });
 }
