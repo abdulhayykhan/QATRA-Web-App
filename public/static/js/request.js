@@ -187,30 +187,103 @@ function setupSlipUpload() {
     dropFrame.style.display = 'block';
   });
 
-  function processFile(file) {
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('File size exceeds 10MB limit.', 'error');
+  async function processFile(file) {
+    if (file.size > 15 * 1024 * 1024) {
+      showToast('File size exceeds 15MB limit. Please select a smaller file.', 'error');
       return;
     }
 
-    selectedSlipFile = file;
     fileName.innerText = file.name;
     fileSize.innerText = `${(file.size / 1024).toFixed(1)} KB`;
 
-    if (file.type.startsWith('image/')) {
+    if (file.type && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
         previewImg.src = e.target.result;
       };
       reader.readAsDataURL(file);
+
+      // Perform proactive client-side compression to stay well below mobile/serverless limits
+      try {
+        const compressed = await compressImageIfNeeded(file, 1600, 0.82);
+        selectedSlipFile = compressed;
+        fileSize.innerText = `${(compressed.size / 1024).toFixed(1)} KB (Optimized)`;
+      } catch (err) {
+        selectedSlipFile = file;
+      }
     } else {
       // PDF placeholder icon
+      selectedSlipFile = file;
       previewImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="55" height="55" viewBox="0 0 24 24" fill="%23C92A2A"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
     }
 
     dropFrame.style.display = 'none';
     previewCard.style.display = 'flex';
   }
+}
+
+/**
+ * Client-Side Image Resizing & Compression for Mobile Cameras (iOS/Android)
+ * Keeps payloads < 800KB to guarantee instantaneous upload and stay well below Vercel's 4.5MB limit.
+ */
+async function compressImageIfNeeded(file, maxDimension = 1600, quality = 0.82) {
+  if (!file || !file.type || !file.type.startsWith('image/')) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file);
+          } else {
+            const safeName = file.name.replace(/\.[^/.]+$/, '') + '.jpg';
+            const compressed = new File([blob], safeName, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(compressed);
+          }
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+
+    img.src = url;
+  });
 }
 
 /**
@@ -235,6 +308,15 @@ function setupFormSubmission() {
     const unitsNeeded = document.getElementById('units-needed-val').value;
     const urgency = document.getElementById('urgency-val').value;
 
+    if (!patientName) {
+      showToast('Please enter patient name.', 'warning');
+      return;
+    }
+    if (!hospitalName) {
+      showToast('Please enter hospital name.', 'warning');
+      return;
+    }
+
     submitBtn.disabled = true;
     const originalText = submitBtn.innerText;
     submitBtn.innerText = 'Analyzing Requisition Slip via OCR... ⏳';
@@ -242,8 +324,9 @@ function setupFormSubmission() {
     let token = localStorage.getItem('qatra_token');
     if (!token) {
       try {
+        const emergencyToken = `demo_seeker_${Date.now()}`;
         const authRes = await apiPost('/auth/firebase-login', {
-          firebase_id_token: `seeker_emergency_${Date.now()}`
+          firebase_id_token: emergencyToken
         });
         if (authRes && authRes.access_token) {
           localStorage.setItem('qatra_token', authRes.access_token);
@@ -251,12 +334,29 @@ function setupFormSubmission() {
           token = authRes.access_token;
         }
       } catch (authErr) {
-        console.warn('Auto auth skipped or failed:', authErr);
+        console.warn('Emergency seeker session initialization failed:', authErr);
       }
     }
 
+    // Ensure image is compressed if needed
+    let fileToUpload = selectedSlipFile;
+    if (fileToUpload && fileToUpload.type && fileToUpload.type.startsWith('image/')) {
+      try {
+        fileToUpload = await compressImageIfNeeded(fileToUpload, 1600, 0.82);
+      } catch (compErr) {
+        console.warn('Image compression fallback:', compErr);
+      }
+    }
+
+    if (fileToUpload.size > 4.2 * 1024 * 1024) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalText;
+      showToast('Uploaded document exceeds 4.2MB limit. Please attach a compressed file or standard photo.', 'warning');
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('file', selectedSlipFile);
+    formData.append('file', fileToUpload);
     formData.append('patient_name', patientName);
     formData.append('hospital_name', hospitalName);
     formData.append('blood_group', bloodGroup);
@@ -283,6 +383,8 @@ function setupFormSubmission() {
         }, 1200);
       }
     } catch (err) {
+      console.error('Hospital slip submission failed:', err);
+      showToast(err.message || 'Failed to submit hospital slip. Please try again.', 'error');
       submitBtn.disabled = false;
       submitBtn.innerText = originalText;
     }

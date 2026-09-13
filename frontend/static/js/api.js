@@ -186,7 +186,7 @@ async function request(endpoint, options = {}) {
         localStorage.removeItem('qatra_user');
 
         const currentPath = window.location.pathname;
-        const protectedRoutes = ['/admin/', '/donor/dashboard.html', '/seeker/coordination.html', '/seeker/status.html'];
+        const protectedRoutes = ['/admin/', '/donor/dashboard.html', '/seeker/coordination.html'];
         const isProtectedRoute = protectedRoutes.some(route => currentPath.includes(route));
 
         if (isProtectedRoute) {
@@ -215,7 +215,7 @@ async function request(endpoint, options = {}) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMsg = errorData.detail || errorData.message || `Request failed with status ${response.status}`;
+      const errorMsg = errorData.detail || errorData.message || (response.status === 413 ? 'Uploaded image or document is too large. Please take a standard photo or attach a smaller file.' : `Request failed with status ${response.status}`);
       showToast(errorMsg, 'error');
       throw new Error(errorMsg);
     }

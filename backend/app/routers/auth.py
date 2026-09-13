@@ -85,12 +85,20 @@ async def firebase_login(
     id_token = payload.firebase_id_token
     is_admin = False
 
-    # Handle test, mock, or demo tokens seamlessly across test and frontend workflows
-    if id_token.startswith("mock_") or id_token.startswith("test_") or id_token.startswith("demo_"):
+    # Handle test, mock, demo, or seeker emergency tokens seamlessly across test and frontend workflows
+    if (
+        id_token.startswith("mock_")
+        or id_token.startswith("test_")
+        or id_token.startswith("demo_")
+        or id_token.startswith("seeker_")
+    ):
         is_admin = "admin" in id_token
         if is_admin:
             name = "Admin User"
             email = f"{id_token.replace(':', '_')}@alkhidmat.org"
+        elif "seeker" in id_token:
+            name = "Emergency Blood Seeker"
+            email = f"{id_token.replace(':', '_')}@qatra.org"
         elif "google" in id_token:
             name = "Alkhidmat Volunteer"
             email = f"{id_token.replace(':', '_')}@alkhidmat.org"
