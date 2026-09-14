@@ -106,7 +106,7 @@ OCR_SPACE_API_KEY="your-ocr-space-api-key"
 4. In `public/static/js/firebase-config.js`, verify that your web credentials match your Firebase Console:
    ```javascript
    export const firebaseConfig = {
-     apiKey: "AIzaSy...",
+     apiKey: "YOUR_FIREBASE_WEB_API_KEY",
      authDomain: "qatra-web-app.firebaseapp.com",
      projectId: "qatra-web-app",
      storageBucket: "qatra-web-app.appspot.com",
