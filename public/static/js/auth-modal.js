@@ -4,33 +4,11 @@
  * Owner: Saghir Ahmed
  */
 import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady, showConfirmDialog } from './api.js';
-import { firebaseConfig } from './firebase-config.js';
-
-// ─── Firebase SDK (loaded from CDN via ES module) ────────────────────────────
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-
-let _firebaseApp = null;
-let _auth = null;
-
-function getFirebaseAuth() {
-  if (!_auth) {
-    _firebaseApp = initializeApp(firebaseConfig);
-    _auth = getAuth(_firebaseApp);
-  }
-  return _auth;
-}
-
-/**
- * Detect if the user is on a mobile device where popups are unreliable
- */
-function isMobile() {
-  return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
+import { firebaseConfig, signInWithGoogle, checkGoogleRedirectResult } from './firebase-config.js';
 
 onReady(async () => {
   // Check for pending redirect result first (mobile sign-in redirect flow)
-  await checkGoogleRedirectResult();
+  await checkGoogleRedirect();
   setupHeaderSession();
   setupAuthModal();
 });
@@ -39,18 +17,15 @@ onReady(async () => {
  * Handle redirect result from mobile Google Sign-In
  * Must run on every page load before anything else
  */
-async function checkGoogleRedirectResult() {
+async function checkGoogleRedirect() {
   try {
-    const auth = getFirebaseAuth();
-    const result = await getRedirectResult(auth);
-    if (result && result.user) {
-      const idToken = await result.user.getIdToken();
-      await handleAuthSession(idToken);
+    const result = await checkGoogleRedirectResult();
+    if (result && result.idToken) {
+      await handleAuthSession(result.idToken);
     }
   } catch (err) {
-    // No pending redirect or error — safe to ignore
     if (err.code !== 'auth/no-current-user') {
-      console.warn('Firebase redirect check:', err.message);
+      console.warn('[QATRA Auth] Firebase redirect check:', err.message);
     }
   }
 }
@@ -144,36 +119,17 @@ export function setupAuthModal() {
     }
 
     try {
-      const auth = getFirebaseAuth();
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
-
-      if (isMobile()) {
-        // Redirect flow on mobile (popup is blocked by iOS/Android browsers)
-        await signInWithRedirect(auth, provider);
-        // Page will reload — result handled in checkGoogleRedirectResult()
+      const authResult = await signInWithGoogle();
+      if (!authResult || authResult.redirecting) {
+        // Redirect flow initiated on mobile; result handled on page reload
         return;
       }
-
-      // Desktop: popup flow
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-      await handleAuthSession(idToken);
+      await handleAuthSession(authResult.idToken);
 
     } catch (err) {
       console.error('Google Sign-In error:', err);
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         showToast('Sign-in cancelled. Try again.', 'info');
-      } else if (err.code === 'auth/popup-blocked') {
-        showToast('Popup was blocked. Retrying with redirect…', 'warning');
-        try {
-          const auth = getFirebaseAuth();
-          const provider = new GoogleAuthProvider();
-          await signInWithRedirect(auth, provider);
-        } catch (redirectErr) {
-          showToast('Google sign-in failed. Please try again.', 'error');
-        }
       } else {
         showToast(err.message || 'Google authentication failed.', 'error');
       }
