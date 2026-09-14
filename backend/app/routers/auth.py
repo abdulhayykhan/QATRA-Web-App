@@ -83,13 +83,22 @@ async def firebase_login(
     3. Issue application-level session JWT.
     """
     id_token = payload.firebase_id_token
+    is_admin = False
 
-    # Handle test, mock, or demo tokens seamlessly across test and frontend workflows
-    if id_token.startswith("mock_") or id_token.startswith("test_") or id_token.startswith("demo_"):
-        is_admin = "admin" in id_token
+    # Handle test, mock, demo, or seeker emergency tokens seamlessly across test and frontend workflows
+    if (
+        id_token.startswith("mock_")
+        or id_token.startswith("test_")
+        or id_token.startswith("demo_")
+        or id_token.startswith("seeker_")
+    ):
+        is_admin = "admin" in id_token and "non_admin" not in id_token
         if is_admin:
             name = "Admin User"
             email = f"{id_token.replace(':', '_')}@alkhidmat.org"
+        elif "seeker" in id_token:
+            name = "Emergency Blood Seeker"
+            email = f"{id_token.replace(':', '_')}@qatra.org"
         elif "google" in id_token:
             name = "Alkhidmat Volunteer"
             email = f"{id_token.replace(':', '_')}@alkhidmat.org"
@@ -116,6 +125,14 @@ async def firebase_login(
             else:
                 raise
 
+        # Check admin claims or authorized admin email patterns
+        fb_email = fb_user.get("email") or ""
+        is_admin = bool(
+            fb_user.get("admin")
+            or fb_user.get("role") == "admin"
+            or ("@alkhidmat.org" in fb_email and "admin" in fb_email)
+        )
+
     firebase_uid = fb_user.get("uid")
     email = fb_user.get("email")
     full_name = fb_user.get("name") or (email.split("@")[0] if email else "QATRA User")
@@ -140,10 +157,10 @@ async def firebase_login(
                 firebase_uid=firebase_uid,
                 email=email,
                 full_name=full_name,
-                role=UserRole.GUEST.value,
+                role=UserRole.ADMIN.value if is_admin else UserRole.GUEST.value,
                 is_active=True,
-                is_verified=False,
-                cnic_verified=False,
+                is_verified=True if is_admin else False,
+                cnic_verified=True if is_admin else False,
             )
             db.add(user)
         db.commit()
@@ -156,6 +173,9 @@ async def firebase_login(
             updated = True
         if email and user.email != email:
             user.email = email
+            updated = True
+        if is_admin and user.role != UserRole.ADMIN.value:
+            user.role = UserRole.ADMIN.value
             updated = True
         if updated:
             db.commit()
@@ -496,6 +516,8 @@ class VerificationQueueItem(BaseModel):
     request_id: int
     patient_name: str
     hospital_name: str
+    blood_group: Optional[str] = None
+    urgency: Optional[str] = None
     admission_slip_url: Optional[str] = None
     ocr_confidence: Optional[float] = None
     created_at: datetime
@@ -527,6 +549,8 @@ async def get_admin_verification_queue(
             request_id=req.id,
             patient_name=req.patient_name,
             hospital_name=req.hospital_name,
+            blood_group=req.blood_group,
+            urgency=req.urgency,
             admission_slip_url=req.admission_slip_url,
             ocr_confidence=req.ocr_confidence,
             created_at=req.created_at,

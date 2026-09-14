@@ -274,18 +274,13 @@ def get_feed_item_detail(
     Restricted to non-pending, non-cancelled requests.
     """
     req = db.query(Request).filter(Request.id == request_id).first()
-    if not req:
+    if not req or req.status in ["pending_verification", "cancelled"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Blood request #{request_id} not found.",
         )
 
-    # Public visibility check: pending verification or cancelled requests are not visible
-    if req.status in ["pending_verification", "cancelled"]:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Blood request #{request_id} is not publicly available.",
-        )
+    # Return request details so status, match, and closure pages can render accurately
 
     return FeedDetailResponse(
         request_id=req.id,

@@ -48,21 +48,21 @@ export function createPostCard(req, options = {}) {
   }
 
   card.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-sm); margin-bottom: var(--space-xs);">
-      <div style="flex: 1; min-width: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: var(--space-xs); width: 100%; box-sizing: border-box;">
+      <div style="flex: 1; min-width: 0; overflow: hidden;">
         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 0; color: var(--text-main);">
+          <h3 style="font-size: 15.5px; font-weight: 700; margin-bottom: 0; color: var(--text-main); word-break: break-word; line-height: 1.25;">
             ${req.hospital_name || 'Hospital Karachi'}
           </h3>
           ${isRare ? '<span class="badge badge-critical" style="font-size: 10px; padding: 2px 6px;">⚡ RARE GROUP</span>' : ''}
         </div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
           Patient: <strong>${req.patient_name || 'Emergency Patient'}</strong>
           • <span>${formatTimeAgo(req.created_at)}</span>
         </div>
       </div>
-      <div style="text-align: right; flex-shrink: 0;">
-        <span class="badge badge-blood" style="font-size: 15px; font-weight: 800; padding: 4px 10px;">
+      <div style="text-align: right; flex-shrink: 0; margin-left: 6px;">
+        <span class="badge badge-blood" style="font-size: 15px; font-weight: 800; padding: 4px 10px; display: inline-block;">
           ${req.blood_group || 'O-'}
         </span>
       </div>
@@ -89,23 +89,23 @@ export function createPostCard(req, options = {}) {
     </div>
 
     <!-- Action Buttons Row -->
-    <div class="card-actions" style="display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;">
+    <div class="card-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
       ${isFulfilled ? `
-        <button class="btn btn-secondary btn-sm" disabled style="flex: 1;">
+        <button class="btn btn-secondary btn-sm" disabled style="flex: 1 1 auto; min-width: 130px;">
           Fulfilled & Closed ✅
         </button>
       ` : `
-        <button type="button" class="btn btn-primary btn-sm btn-respond" style="flex: 1;" data-id="${requestId}">
+        <button type="button" class="btn btn-primary btn-sm btn-respond" style="flex: 1 1 auto; min-width: 130px;" data-id="${requestId}">
           I Can Donate ❤️
         </button>
       `}
 
-      <button type="button" class="btn btn-secondary btn-sm btn-share" style="width: auto; padding: 6px 14px;" data-id="${requestId}" title="Share via WhatsApp">
+      <button type="button" class="btn btn-secondary btn-sm btn-share" style="flex: 0 0 auto; padding: 6px 14px;" data-id="${requestId}" title="Share via WhatsApp">
         📤 Share
       </button>
 
       ${isOwner && !isFulfilled ? `
-        <a href="/seeker/closure.html?request_id=${requestId}" class="btn btn-outline btn-sm" style="width: auto; padding: 6px 12px; color: var(--color-danger); border-color: var(--color-danger);" title="Close or Mark Fulfilled">
+        <a href="/seeker/closure.html?request_id=${requestId}" class="btn btn-outline btn-sm" style="flex: 0 0 auto; padding: 6px 12px; color: var(--color-danger); border-color: var(--color-danger);" title="Close or Mark Fulfilled">
           Close Request
         </a>
       ` : ''}

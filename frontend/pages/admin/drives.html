@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="light">
   <title>QATRA — Campus & Community Drive Management</title>
 
@@ -21,8 +21,8 @@
     .stats-overview {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-md);
-      margin-bottom: var(--space-lg);
+      gap: 20px;
+      margin-bottom: 28px;
     }
     @media (max-width: 640px) {
       .stats-overview {
@@ -30,32 +30,40 @@
       }
     }
     .stat-box {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: var(--space-md);
+      border-radius: var(--radius-lg);
+      padding: 22px 18px;
       text-align: center;
+      box-shadow: var(--shadow-sm);
     }
     .stat-number {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 800;
       color: var(--primary-red);
+      letter-spacing: -0.02em;
     }
     .drives-grid {
       display: flex;
       flex-direction: column;
-      gap: var(--space-md);
+      gap: 16px;
     }
     .drive-management-card {
-      background: var(--bg-surface);
+      background: #FFFFFF;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: var(--space-md);
+      border-radius: var(--radius-xl);
+      padding: 22px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: var(--space-md);
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .drive-management-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
   </style>
   <link rel="stylesheet" href="/static/css/apple.css">
@@ -83,12 +91,12 @@
         <a href="/admin/audit.html">🔒 Audit Trail</a>
       </nav>
 
-      <div class="header-actions">
+      <div class="header-actions" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
         <button type="button" class="btn btn-sm btn-outline pwa-install-trigger" title="Install Web App on your device">
           📲 <span class="hide-on-mobile">Install App</span>
         </button>
         <button id="new-drive-btn" class="btn btn-sm btn-primary">+ Create Drive</button>
-        <a href="/admin/audit.html" class="btn btn-sm btn-secondary">Audit Trail</a>
+        <a href="/admin/audit.html" class="btn btn-sm btn-secondary hide-on-mobile">Audit Trail</a>
       </div>
     </header>
 

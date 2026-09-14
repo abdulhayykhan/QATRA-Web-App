@@ -68,6 +68,10 @@ class MapRequestStatusResponse(BaseModel):
     donors_accepted_count: int
     current_radius_km: float
     eta_minutes: Optional[int] = None
+    patient_name: Optional[str] = None
+    hospital_name: Optional[str] = None
+    blood_group: Optional[str] = None
+    urgency: Optional[str] = None
 
 
 class DonorAcceptResponse(BaseModel):
@@ -263,7 +267,7 @@ async def get_map_requests(
 )
 async def get_request_status(
     request_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """
@@ -323,6 +327,10 @@ async def get_request_status(
         donors_accepted_count=accepted_count,
         current_radius_km=blood_request.search_radius_km,
         eta_minutes=eta,
+        patient_name=blood_request.patient_name,
+        hospital_name=blood_request.hospital_name,
+        blood_group=blood_request.blood_group,
+        urgency=blood_request.urgency,
     )
 
 
@@ -338,7 +346,7 @@ async def get_request_status(
 )
 async def get_request_matches(
     request_id: int,
-    current_user: User = Depends(require_role([UserRole.VERIFIED_SEEKER.value, UserRole.ADMIN.value])),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """

@@ -3,7 +3,7 @@
  * Implements Wireframes 14 (Donor Home), 18 (Donation Complete), and 19 (Cooldown State View).
  * Owner: Yumna Abbasi
  */
-import { apiGet, apiPost, showToast, getCurrentUser, getAuthToken, logout, onReady } from './api.js';
+import { apiGet, apiPost, showToast, getCurrentUser, getAuthToken, logout, onReady, showConfirmDialog } from './api.js';
 
 const CIRCUMFERENCE = 339.292; // 2 * PI * 54 (SVG circle radius 54)
 let isOnCooldown = false;
@@ -394,6 +394,12 @@ function setupAvailabilityToggle() {
   });
 
   async function syncLocation(lat, lng) {
+    const user = getCurrentUser();
+    if (!user || user.role === 'guest') {
+      desc.innerText = 'Broadcasts your proximity to emergency blood requests in Karachi.';
+      return;
+    }
+
     try {
       await apiPost('/map/donor/location', { latitude: lat, longitude: lng });
       desc.innerText = 'Broadcasts your proximity to emergency blood requests in Karachi.';
@@ -492,8 +498,14 @@ function activateCooldownState(days = 90) {
  * Setup Sign Out Listener
  */
 function setupLogout() {
-  document.getElementById('logout-btn')?.addEventListener('click', () => {
-    if (confirm('Are you sure you want to sign out from QATRA?')) {
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+    const confirmed = await showConfirmDialog({
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out from QATRA?',
+      confirmLabel: 'Sign Out',
+      danger: true
+    });
+    if (confirmed) {
       logout();
     }
   });

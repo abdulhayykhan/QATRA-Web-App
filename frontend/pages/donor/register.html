@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="light">
   <title>QATRA — Donor Onboarding & Verification</title>
 
@@ -21,17 +21,17 @@
     .stepper {
       display: flex;
       justify-content: space-between;
-      margin-bottom: var(--space-lg);
+      margin-bottom: 24px;
       position: relative;
     }
     .stepper::before {
       content: '';
       position: absolute;
-      top: 14px;
+      top: 15px;
       left: 20px;
       right: 20px;
       height: 2px;
-      background: var(--border-color);
+      background: rgba(0, 0, 0, 0.06);
       z-index: 1;
     }
     .step-node {
@@ -40,35 +40,41 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       font-size: 11px;
       font-weight: 600;
       color: var(--text-muted);
+      letter-spacing: 0.02em;
     }
     .step-circle {
-      width: 30px;
-      height: 30px;
-      border-radius: var(--radius-full);
-      background: var(--bg-surface);
-      border: 2px solid var(--border-color-strong);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 1.5px solid rgba(0, 0, 0, 0.12);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
+      font-size: 13px;
+      box-shadow: var(--shadow-sm);
       transition: all var(--transition-fast);
     }
     .step-node.active .step-circle {
       background: var(--primary-red);
-      color: #fff;
+      color: #FFFFFF;
       border-color: var(--primary-red);
+      box-shadow: 0 2px 8px rgba(201, 42, 42, 0.3);
     }
     .step-node.completed .step-circle {
-      background: var(--color-success);
-      color: #fff;
-      border-color: var(--color-success);
+      background: #34C759;
+      color: #FFFFFF;
+      border-color: #34C759;
+      box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
     }
     .step-node.active span {
       color: var(--primary-red);
+      font-weight: 700;
     }
     .step-content {
       display: none;
@@ -83,11 +89,11 @@
       justify-content: center;
       gap: 12px;
       background: #FFFFFF;
-      color: #374151;
-      border: 1px solid var(--border-color-strong);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      font-size: 14px;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-full);
+      padding: 12px 20px;
+      font-size: 14.5px;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
@@ -95,22 +101,35 @@
       transition: all var(--transition-fast);
     }
     .google-btn:hover {
-      background: #F9FAFB;
-      border-color: #D1D5DB;
+      background: #F9F9FA;
+      border-color: rgba(0, 0, 0, 0.16);
+    }
+    .google-btn:active {
+      transform: scale(0.97);
     }
     .checkbox-item {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 12px;
+      gap: 12px;
+      padding: 14px 16px;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      margin-bottom: var(--space-sm);
-      background: var(--bg-surface);
+      margin-bottom: 12px;
+      background: #FFFFFF;
       cursor: pointer;
+      font-size: 13.5px;
+      line-height: 1.45;
+      transition: all var(--transition-fast);
+    }
+    .checkbox-item:hover {
+      border-color: rgba(201, 42, 42, 0.25);
+      background: rgba(201, 42, 42, 0.02);
     }
     .checkbox-item input {
       margin-top: 3px;
+      accent-color: var(--primary-red);
+      width: 16px;
+      height: 16px;
     }
   </style>
   <link rel="stylesheet" href="/static/css/apple.css">
@@ -185,6 +204,13 @@
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
           </svg>
           <span>Continue with Google</span>
+        </button>
+
+        <div style="text-align: center; margin: var(--space-md) 0 var(--space-sm) 0; color: var(--text-muted); font-size: 13px;">
+          <span>— or quick evaluation —</span>
+        </div>
+        <button type="button" id="demo-donor-btn" class="btn btn-secondary" style="width: 100%; border-radius: 980px; font-weight: 500;">
+          Continue as Demo Volunteer
         </button>
 
         <div style="margin-top: var(--space-lg); text-align: center; font-size: 12px; color: var(--text-muted);">
@@ -335,22 +361,22 @@
       </div>
     </main>
 
-    <!-- Bottom Navigation -->
+        <!-- Mobile Bottom Navigation (Apple Frosted Glass) -->
     <nav class="bottom-nav">
       <a href="/index.html">
-        <span class="nav-icon">🏠</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span>Home</span>
       </a>
       <a href="/seeker/feed.html">
-        <span class="nav-icon">📢</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span>Feed</span>
       </a>
       <a href="/seeker/map.html">
-        <span class="nav-icon">🗺️</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
         <span>Map</span>
       </a>
-      <a href="/donor/dashboard.html">
-        <span class="nav-icon">👤</span>
+      <a href="/donor/dashboard.html" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span>Donor</span>
       </a>
     </nav>

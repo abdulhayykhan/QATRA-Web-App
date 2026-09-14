@@ -1,16 +1,14 @@
 // ==============================================================================
 // QATRA — Firebase Frontend Client Configuration
-// Used by Feature 2 (Auth: Saghir Ahmed) for "Continue with Google"
+// Feature 2 (Auth: Saghir Ahmed) — "Continue with Google" Sign-In
 // ==============================================================================
 
-// Replace with your Firebase Web App configuration from Firebase Console:
-// Project Settings -> General -> Your apps -> Web app (</>)
 export const firebaseConfig = {
-  projectId: "qatra-web-app",
+  apiKey: "AIzaSyBz5la0e6m9_lEWb2V-hjWHVoqRt2v2fEo",
   authDomain: "qatra-web-app.firebaseapp.com",
-  storageBucket: "qatra-web-app.appspot.com",
-  // Fill these from Firebase Console:
-  apiKey: "YOUR_FIREBASE_WEB_API_KEY",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_FIREBASE_APP_ID"
+  projectId: "qatra-web-app",
+  storageBucket: "qatra-web-app.firebasestorage.app",
+  messagingSenderId: "260054324647",
+  appId: "1:260054324647:web:374648d186d9f62ecf9282",
+  measurementId: "G-LHTH4HZWDW"
 };
