@@ -374,12 +374,27 @@ async function runVisualChromeSuite() {
   // 3. /admin/audit.html
   await page.goto(`${BASE_URL}/admin/audit.html`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(800);
-  await snap('31_admin_audit_trail');
   await page.click('#refresh-audit-btn');
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(800);
+  await snap('31_admin_audit_trail');
   const auditRows = await page.$$('#audit-table-body tr');
-  console.log(`  ✓ Loaded ${auditRows.length} Tamper-Evident Audit Records`);
-  record('admin/audit.html', 'PASS', `Tested Tamper-Evident Access Log table (${auditRows.length} rows), refresh button, AES-256 compliance`);
+  const rowTexts = await page.$$eval('#audit-table-body tr', rows => 
+    rows.map(r => Array.from(r.querySelectorAll('td')).map(c => c.innerText.trim()))
+  );
+  let invalidDateCount = 0;
+  rowTexts.forEach((r, idx) => {
+    if (r[0] && r[0].toLowerCase().includes('invalid date')) {
+      invalidDateCount++;
+      console.error(`  ❌ Row ${idx + 1} has Invalid Date!`);
+    } else {
+      console.log(`  ✓ Row ${idx + 1} timestamp: "${r[0]}" | Action: "${r[1]}" | Resource: "${r[2]}"`);
+    }
+  });
+  if (invalidDateCount === 0) {
+    record('admin/audit.html', 'PASS', `Verified ${auditRows.length} audit records with valid timestamps (0 Invalid Date entries)`);
+  } else {
+    record('admin/audit.html', 'FAIL', `Found ${invalidDateCount} rows with Invalid Date`);
+  }
 
   // ==========================================================================
   // FINAL SUMMARY
