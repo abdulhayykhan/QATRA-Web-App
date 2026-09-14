@@ -59,7 +59,8 @@ async function loadAuditLogs() {
     tbody.innerHTML = '';
     logs.forEach(log => {
       const tr = document.createElement('tr');
-      const timeStr = new Date(log.created_at).toLocaleString();
+      const timeRaw = log.timestamp || log.created_at;
+      const timeStr = timeRaw ? new Date(timeRaw).toLocaleString() : 'Just now';
 
       tr.innerHTML = `
         <td style="color: var(--text-muted); font-size: 12px;">${timeStr}</td>
