@@ -111,15 +111,19 @@ Complete the emergency request form:
 > To eliminate fraudulent solicitations and commercial blood dealers, every request **must** be substantiated with an official hospital admission slip or doctor's requisition form.
 1. Tap the **Drag & Drop Slip Area** or tap **"Browse File"**.
 2. Capture a photo using your camera or upload an existing PDF, PNG, or JPG document.
-3. **Tips for Instant Approval**:
+3. **Automated Client-Side Photo Compression**:
+   - High-resolution smartphone photos (5–15 MB) are automatically compressed to <800 KB directly in the browser via HTML5 Canvas before uploading.
+   - This ensures ultra-fast transmission even over spotty 3G/4G cellular networks.
+   - An immediate visual preview appears instantly upon selecting your image.
+4. **Tips for Instant Approval**:
    - Ensure adequate lighting with all 4 corners of the paper visible.
    - Make sure the **hospital header**, **doctor's stamp/signature**, and **patient name** are sharp and legible.
-   - File size must be under 10 MB.
 
 ### Step 4: Automated OCR & 24/7 Desk Verification
-1. Once uploaded, QATRA’s machine vision OCR engine scans the slip in $< 3$ seconds:
-   - **Confidence $\ge 85\%$**: Status updates immediately to `verified`. Proximity matching starts instantly.
-   - **Confidence $< 85\%$**: The slip is seamlessly routed to the **24/7 Human Verification Desk** staffed by Alkhidmat Foundation operators. Average verification takes under 4 minutes.
+1. Once submitted, QATRA’s machine vision OCR engine scans the slip in $< 3$ seconds:
+   - **Confidence $\ge 80\%$**: Status updates immediately to `verified`. Proximity matching starts instantly.
+   - **Confidence $< 80\%$ or Timeout**: The slip is seamlessly routed to the **24/7 Human Verification Desk** staffed by Alkhidmat Foundation operators with status `pending_verification`. Average desk verification takes under 4 minutes.
+2. Request details are immediately cached in your browser so your patient name, hospital, and blood group display instantly on the status radar without waiting for background API calls.
 
 ### Step 5: Live Geospatial Radar & Concentric Radius Expansion
 Once verified, you will be redirected to the **Live Status Radar** (`/seeker/status.html`):
@@ -261,7 +265,11 @@ Inspect the document for mandatory compliance points:
 ### Auditing Tamper-Evident Security Logs
 1. Navigate to `/admin/audit.html`.
 2. Review all access to sensitive records (CNIC decryptions, slip reviews, admin status overrides).
-3. Every log record includes operator ID, target resource, cryptographic action, and UTC timestamp (NFR 2.5).
+3. **Features**:
+   - **Human-Readable Timestamps**: Formatted automatically according to the operator's locale (e.g., `Sep 14, 2026, 07:30 PM`) with zero invalid date artifacts.
+   - **Filter by Action**: Instantly filter audit records by `LOGIN_SUCCESS`, `VERIFY_SLIP`, `DONOR_REGISTER`, or operator ID.
+   - **CSV Export**: Export filtered audit records for institutional compliance reporting.
+4. Every log record includes operator ID, target resource, cryptographic action, and UTC timestamp (NFR 2.5).
 
 ---
 

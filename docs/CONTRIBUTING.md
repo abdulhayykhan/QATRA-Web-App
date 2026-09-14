@@ -112,7 +112,7 @@ develop (Integration Branch)
 All pull requests must maintain **100% test passing rate**:
 
 ```bash
-# Run the entire test suite
+# Run the entire backend test suite
 pytest backend/tests -v
 
 # Run a specific test module
@@ -120,23 +120,35 @@ pytest backend/tests/test_auth_phase2.py
 pytest backend/tests/test_map_phase2.py
 pytest backend/tests/test_feed_phase2.py
 pytest backend/tests/test_awareness_phase2.py
+pytest backend/tests/test_coordination_chat.py
 pytest backend/tests/test_nfr_security_phase2.py
+
+# Run Playwright Chrome End-to-End & Mobile Visual Suites
+node tests/dom_testing/test_master_end_to_end.js
+node tests/dom_testing/visual_chrome_mobile_suite.js
 ```
 
 ### Writing New Tests
 1. Add new tests under `backend/tests/`.
 2. Use the shared database session fixture from `tests/conftest.py`.
 3. If testing rate-limited endpoints, ensure the rate limiter cache is cleared using `limiter.clear()`.
+4. If testing frontend DOM components, add assertions to `tests/dom_testing/` verifying 0 unhandled console errors and mobile responsiveness across 320px–412px viewport widths.
 
 ---
 
-## 6. Pull Request Protocol & Approval Sequence
+## 6. Pull Request Protocol & Branch Protection
 
+### Two-Tier Branch Protection Rules
+- **`main`**: Production branch deploying automatically to [https://qatra-web-app.vercel.app](https://qatra-web-app.vercel.app). Protected by `enforce_admins: true` and required pull request reviews. Direct pushes are rejected by remote hooks.
+- **`develop`**: Primary integration branch where member features and bugfixes are integrated.
+
+### Step-by-Step Contribution Workflow
 1. **Commit Messages**: Follow Conventional Commits format:
    - `feat(module): description`
    - `fix(module): description`
    - `docs(module): description`
    - `test(module): description`
+   - `chore(module): description`
 
 2. **Push to GitHub**:
    ```bash
@@ -148,9 +160,10 @@ pytest backend/tests/test_nfr_security_phase2.py
    - Title: Clear, descriptive summary of changes.
    - Body: List components modified, verification steps executed, and test pass counts.
 
-4. **Review & Approval**:
+4. **Review & Integration**:
    - Every PR requires review and approval by the Team Lead (**Abdul Hayy Khan**).
-   - Once approved and GitHub Actions checks are green, merge into `develop`.
+   - Once all CI checks are green (Ruff linter + Pytest suite), merge into `develop`.
+   - Periodically, `develop` is merged into `main` via PR to trigger continuous production release to Vercel.
 
 ---
 

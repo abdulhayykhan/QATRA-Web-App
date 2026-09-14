@@ -191,7 +191,31 @@ Admin manual approval or rejection of a flagged admission slip.
 }
 ```
 
-### 3.7 `GET /api/auth/donor/cooldown`
+### 3.7 `GET /api/auth/admin/audit-logs`
+Retrieves paginated tamper-evident security audit trail logs for administrative and compliance review (NFR 2.5).
+- **Auth**: Required (`admin`)
+- **Query Parameters**: `page` (int, default: 1), `limit` (int, default: 20), `action` (string, optional), `admin_user_id` (int, optional), `start_date` (ISO string, optional), `end_date` (ISO string, optional)
+- **Response**: `200 OK`
+```json
+{
+  "total": 142,
+  "page": 1,
+  "limit": 20,
+  "items": [
+    {
+      "id": 104,
+      "user_id": 1,
+      "action": "VERIFY_SLIP",
+      "target_resource": "requests/204",
+      "details": "Hospital slip approved by desk operator Zubair Khan",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-09-14T19:30:00Z"
+    }
+  ]
+}
+```
+
+### 3.8 `GET /api/auth/donor/cooldown`
 Returns donor's current 90-day cooldown status.
 - **Auth**: Required (`verified_donor`)
 - **Response**: `200 OK`
@@ -205,7 +229,7 @@ Returns donor's current 90-day cooldown status.
 }
 ```
 
-### 3.8 `POST /api/auth/donor/pre-screen`
+### 3.9 `POST /api/auth/donor/pre-screen`
 Submits interactive pre-screening checklist scoring.
 - **Auth**: Required (`verified_donor`, `guest`)
 - **Request Body**:
