@@ -274,7 +274,7 @@ def get_feed_item_detail(
     Restricted to non-pending, non-cancelled requests.
     """
     req = db.query(Request).filter(Request.id == request_id).first()
-    if not req:
+    if not req or req.status in ["pending_verification", "cancelled"]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Blood request #{request_id} not found.",

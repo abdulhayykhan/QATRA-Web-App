@@ -92,7 +92,7 @@ async def firebase_login(
         or id_token.startswith("demo_")
         or id_token.startswith("seeker_")
     ):
-        is_admin = "admin" in id_token
+        is_admin = "admin" in id_token and "non_admin" not in id_token
         if is_admin:
             name = "Admin User"
             email = f"{id_token.replace(':', '_')}@alkhidmat.org"
