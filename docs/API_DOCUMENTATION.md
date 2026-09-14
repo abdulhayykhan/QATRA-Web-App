@@ -21,6 +21,7 @@
   - [`POST /api/auth/hospital-slip/upload`](#post-apiauthhospital-slipupload)
   - [`GET /api/auth/admin/verification-queue`](#get-apiauthadminverification-queue)
   - [`POST /api/auth/admin/verify-slip/{id}`](#post-apiauthadminverify-slipid)
+  - [`GET /api/auth/admin/audit-logs`](#get-apiauthadminaudit-logs)
   - [`GET /api/auth/donor/cooldown`](#get-apiauthdonorcooldown)
   - [`POST /api/auth/donor/pre-screen`](#post-apiauthdonorpre-screen)
 - [4. Live Map & Proximity Matching API (Hareem Israr)](#4-live-map--proximity-matching-api-hareem-israr)
@@ -243,12 +244,41 @@ Approves or rejects a flagged slip with reviewer notes.
   "notes": "Doctor registration verified via Sindh Medical Council database."
 }
 ```
-- **Response**: `200 OK`
 ```json
 {
   "request_id": 102,
   "status": "verified",
   "verified_by_admin_id": 1
+}
+```
+
+### `GET /api/auth/admin/audit-logs`
+Retrieves paginated tamper-evident security audit logs for compliance, security tracking, and administrative review (NFR 2.5).
+- **Access**: Required (`admin`)
+- **Query Parameters**:
+  - `page` (int, default: 1): Page offset.
+  - `limit` (int, default: 20): Logs per page (max 100).
+  - `action` (string, optional): Filter by action name (e.g., `VERIFY_SLIP`, `DONOR_REGISTER`, `LOGIN_SUCCESS`).
+  - `admin_user_id` (int, optional): Filter by operator user ID.
+  - `start_date` (ISO string, optional): Earliest timestamp filter.
+  - `end_date` (ISO string, optional): Latest timestamp filter.
+- **Response**: `200 OK`
+```json
+{
+  "total": 142,
+  "page": 1,
+  "limit": 20,
+  "items": [
+    {
+      "id": 104,
+      "user_id": 1,
+      "action": "VERIFY_SLIP",
+      "target_resource": "requests/204",
+      "details": "Hospital slip approved by desk operator Zubair Khan",
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-09-14T19:30:00Z"
+    }
+  ]
 }
 ```
 

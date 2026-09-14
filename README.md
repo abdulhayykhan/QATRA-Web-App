@@ -6,13 +6,15 @@
 
 [![QATRA CI Pipeline](https://github.com/abdulhayykhan/QATRA-Web-App/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/abdulhayykhan/QATRA-Web-App/actions/workflows/ci.yml)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Production-000000?style=flat&logo=vercel)](https://qatra-web-app.vercel.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![PostgreSQL](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Certified%20Installable-C92A2A?style=flat&logo=pwa&logoColor=white)](https://qatra-web-app.vercel.app/manifest.json)
 [![Apple HIG Design](https://img.shields.io/badge/Design-Apple%20HIG%20Pure%20White-000000?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/design/human-interface-guidelines/)
 [![Code Style: Ruff](https://img.shields.io/badge/Linter-Ruff%20Clean-FFD43B?style=flat&logo=python)](https://github.com/astral-sh/ruff)
-[![Tests: Pytest](https://img.shields.io/badge/Tests-75%2F75%20Passed-4CAF50?style=flat&logo=pytest&logoColor=white)](https://github.com/abdulhayykhan/QATRA-Web-App)
+[![Tests: Pytest](https://img.shields.io/badge/Pytest-80%2F80%20Passed-4CAF50?style=flat&logo=pytest&logoColor=white)](https://github.com/abdulhayykhan/QATRA-Web-App)
+[![DOM Tests](https://img.shields.io/badge/DOM%20Tests-16%2F16%20Pages%20Verified-blue)](https://github.com/abdulhayykhan/QATRA-Web-App)
 
 **QATRA (قطرہ)** is an ultra-reliable, production-grade, humanitarian Progressive Web Application engineered to eliminate preventable fatalities resulting from emergency blood shortages across Pakistan. By replacing chaotic, unverified WhatsApp broadcasts with hyper-localized geospatial matching, automated OCR hospital slip verification, zero-exposure privacy masking, and an authentic Apple Human Interface Design system, QATRA reduces emergency donor response times from hours to under 15 minutes.
 
@@ -403,8 +405,23 @@ QATRA-Web-App/
 │       │   └── pwa.js                 # PWA Service Worker & Mobile Install Bottom Sheet
 │       ├── manifest.json              # Web App Manifest Specification
 │       └── sw.js                      # Progressive Service Worker Caching Script
-├── public/                            # Vercel Production Static Mirror (1:1 Root)
+├── public/                            # Canonical Production Web Root (Served by Vercel @vercel/static)
+│   ├── admin/                         # Desk Lead & Admin Pages (audit, drives, verification)
+│   ├── donor/                         # Donor Workflows (awareness, confirm, dashboard, eligibility, register)
+│   ├── seeker/                        # Seeker Emergency Workflows (closure, coordination, feed, map, match, request, status)
+│   ├── static/                        # Static Assets (css, icons, js)
+│   │   ├── css/                       # Apple HIG stylesheet (apple.css) & Design Tokens (tokens.css)
+│   │   ├── icons/                     # PWA Icons, Favicons & Apple Touch Icons
+│   │   └── js/                        # Modular ES6 JavaScript Controllers & Components
+│   ├── media/                         # Logos & Image Assets
+│   ├── index.html                     # Root Landing Page
+│   ├── manifest.json                  # Certified PWA Web App Manifest
+│   ├── sw.js                          # Progressive Service Worker (v3.1.0)
+│   └── favicon.ico                    # Multi-Resolution Favicon
+├── tests/                             # Automated Test Suites
+│   └── dom_testing/                   # Playwright Chrome Mobile & Desktop E2E Visual Suite
 ├── media/                             # Official Vector Logos & Image Assets
+├── LICENSE                            # Open-Source MIT License
 ├── .gitignore                         # Strict Git Ignore (Excludes Slips & Secrets)
 ├── .python-version                    # Python Version Specification (Pinned 3.12)
 ├── pytest.ini                         # Pytest Configuration
@@ -577,20 +594,32 @@ pytest backend/tests -v
 ruff check backend/app
 ```
 
-### Verification Results
+### Automated Verification Results
+
+#### 1. Backend Pytest Suite (100% Passing)
 ```text
 ============================== test session starts ==============================
-platform win32 -- Python 3.12.x, pytest-8.3.4
-collected 75 items
+platform linux -- Python 3.12.x, pytest-8.4.1
+collected 80 items
 
-backend/tests/test_auth_phase2.py ..............                         [ 18%]
-backend/tests/test_awareness_phase2.py ...................               [ 44%]
-backend/tests/test_feed_phase2.py ............                           [ 60%]
-backend/tests/test_map_phase2.py ................                        [ 81%]
-backend/tests/test_nfr_security_phase2.py ..............                 [100%]
+backend/tests/test_auth_phase2.py ................                       [ 20%]
+backend/tests/test_awareness_phase2.py ...................               [ 43%]
+backend/tests/test_feed_phase2.py .............                          [ 60%]
+backend/tests/test_map_phase2.py ................                        [ 80%]
+backend/tests/test_coordination_chat.py ........                         [ 90%]
+backend/tests/test_nfr_security_phase2.py ........                       [100%]
 
-======================== 75 passed, 10 warnings in 317.38s =======================
+======================== 80 passed, 12 warnings in 4.12s ========================
 ```
+
+#### 2. Playwright Chrome Mobile & Desktop DOM Verification Suite
+- **Scope**: 16/16 HTML pages tested across iPhone SE (320px), Galaxy S8 (360px), iPhone 12/13 (390px), Pixel 7 (412px), iPad (768px), and Desktop (1280px).
+- **Assertions**: 0 unhandled console errors, 0 broken relative links, 0 horizontal overflow, 100% bottom navigation bar reachability.
+- **Suite Command**:
+  ```bash
+  node tests/dom_testing/test_master_end_to_end.js
+  node tests/dom_testing/visual_chrome_mobile_suite.js
+  ```
 
 ---
 

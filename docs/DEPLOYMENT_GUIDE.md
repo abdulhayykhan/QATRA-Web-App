@@ -103,9 +103,9 @@ OCR_SPACE_API_KEY="your-ocr-space-api-key"
 3. Add your Vercel production domain to **Authorized Domains**:
    - `qatra-web-app.vercel.app`
    - `localhost`
-4. In `frontend/static/js/auth-modal.js` and `public/static/js/auth-modal.js`, ensure your Firebase config keys are present:
+4. In `public/static/js/firebase-config.js`, verify that your web credentials match your Firebase Console:
    ```javascript
-   const firebaseConfig = {
+   export const firebaseConfig = {
      apiKey: "AIzaSy...",
      authDomain: "qatra-web-app.firebaseapp.com",
      projectId: "qatra-web-app",
@@ -186,6 +186,35 @@ The application relies on `vercel.json` to instruct Vercel on building both the 
       "dest": "/public/manifest.json"
     },
     {
+      "src": "/favicon.ico",
+      "headers": {
+        "Content-Type": "image/x-icon",
+        "Cache-Control": "public, max-age=86400"
+      },
+      "dest": "/public/favicon.ico"
+    },
+    {
+      "src": "/static/js/(.*)",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      },
+      "dest": "/public/static/js/$1"
+    },
+    {
+      "src": "/static/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=300, stale-while-revalidate=86400"
+      },
+      "dest": "/public/static/$1"
+    },
+    {
+      "src": "/media/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=86400"
+      },
+      "dest": "/public/media/$1"
+    },
+    {
       "handle": "filesystem"
     },
     {
@@ -195,6 +224,19 @@ The application relies on `vercel.json` to instruct Vercel on building both the 
   ]
 }
 ```
+
+### Serverless Functions Storage Quota Management
+Vercel accounts have a 10 GB quota for compiled serverless functions across all retained historical deployments. To maintain account health and avoid exceeding function storage quotas:
+1. **Audit Deployments**:
+   ```bash
+   vercel api "/v6/deployments?projectId=prj_3JFIp8OwA0UI9C13uRLT7pb0lOb3&limit=50"
+   ```
+2. **Prune Obsolete Builds**:
+   Remove historical preview or superseded builds while strictly protecting active production:
+   ```bash
+   vercel rm <deployment_id_1> <deployment_id_2> --yes
+   ```
+   *Note: Vercel updates the dashboard storage usage bar during its next asynchronous billing sync cycle.*
 
 ---
 

@@ -17,7 +17,7 @@
 | **Design System** | **Apple Human Interface System (`apple.css`)** Pure White Standard |
 | **Mapping Engine** | [Leaflet.js](https://leafletjs.com/) 1.9.4 with OpenStreetMap Tiles |
 | **Cloud Hosting & Edge CDN**| [Vercel](https://vercel.com/) Serverless Functions (`@vercel/python`, AWS Lambda `iad1`) |
-| **CI/CD Quality Control** | GitHub Actions with [Ruff](https://github.com/astral-sh/ruff) Linter & [Pytest](https://docs.pytest.org/) (75/75 Automated Tests) |
+| **CI/CD Quality Control** | GitHub Actions with [Ruff](https://github.com/astral-sh/ruff) Linter & [Pytest](https://docs.pytest.org/) (80/80 Automated Tests + Playwright DOM Suite) |
 | **Target Repository** | [https://github.com/abdulhayykhan/QATRA-Web-App](https://github.com/abdulhayykhan/QATRA-Web-App) |
 | **Live Production Endpoint** | `https://qatra-web-app.vercel.app/api` |
 

@@ -309,6 +309,40 @@ The application monitors database pool connectivity during every health check pr
 
 ---
 
+## 10. Hospital Slip Resilient Upload & OCR Pipeline (FR 2.2)
+
+```mermaid
+graph TD
+    User([Seeker Takes Photo]) --> Compress[Client-Side Canvas Compression]
+    Compress --> Preview[Instant Base64 Slip Preview]
+    Preview --> Upload[Multi-part Form POST /api/map/requests]
+    Upload --> AsyncOCR[Server-side OCR Processing Engine]
+    AsyncOCR -- Confidence >= 80% --> AutoVerify[Status: Verified & Live on Radar]
+    AsyncOCR -- Confidence < 80% or Timeout --> DeskEscalate[Status: Pending Human Desk Review]
+    AutoVerify --> CacheDetails[Cache Request in LocalStorage]
+    DeskEscalate --> CacheDetails
+    CacheDetails --> Redirect[Instant Redirect to /seeker/status.html]
+```
+
+1. **Client-Side Compression**: High-resolution smartphone camera photos (often 5–15 MB) are scaled to a maximum dimension of 1600px with 82% JPEG quality using HTML5 Canvas, dropping payload size below 800 KB and eliminating mobile upload timeouts on 3G/4G networks.
+2. **Instant Preview Rendering**: The seeker is presented with an immediate visual verification of their selected slip before the network request finishes.
+3. **Fail-Safe Server OCR**: The server runs OCR analysis with a strict 10-second timeout fallback. If OCR takes longer than 10 seconds or fails to extract text, the request is preserved and routed to the 24/7 Human Verification Desk with status `pending_verification`.
+4. **Instantaneous Status Rendering**: Emergency request parameters are cached in client `localStorage` so the seeker's status radar banner renders hospital name, units, and blood group without waiting for initial API round-trips.
+
+---
+
+## 11. Authentication & OAuth Architecture (Firebase Web SDK)
+
+QATRA provides zero-friction, passwordless authentication using Google OAuth via the Firebase Web SDK:
+
+1. **Modular Web SDK Integration**: Loaded dynamically from Google's official CDN (`https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js`).
+2. **Dual-Mode Sign-In**:
+   - **Desktop / Standard Browsers**: Executes `signInWithPopup(auth, provider)` for an in-place modal experience.
+   - **Mobile Browsers with Strict Popup Blockers (iOS Safari / Android Chrome)**: Automatically falls back to `signInWithRedirect(auth, provider)` and resolves credentials on redirect back via `getRedirectResult(auth)`.
+3. **Backend Session Exchange**: The validated Firebase ID token is transmitted to `POST /api/auth/firebase-login`, which validates cryptographic signatures and issues an HMAC-SHA256 session JWT.
+
+---
+
 <div align="center">
   <b>QATRA Engineering Architecture Specification</b><br>
   <i>Designed for extreme reliability and humanitarian impact across Pakistan.</i>
