@@ -15,6 +15,41 @@ A complete, actual Chrome-based DOM interaction and visual verification loop was
 
 ---
 
+## Blood Request Slip Submission & Verification Fix (Resolved & Verified)
+
+### Problem Identified
+1. **Uncaught Async Compression Stalls**: `compressImageIfNeeded` didn't have error handling inside `canvas.toBlob`, which could hang on certain mobile devices (or older WebViews where `new File(...)` throws), causing `selectedSlipFile` to remain `null` and blocking form submission with "Please attach a hospital admission slip".
+2. **Expired / Stale Auth Token Lockout**: If a seeker had an expired or stale session token in `localStorage`, the upload request returned 401 Unauthorized, terminating the flow without auto-refreshing or retrying.
+3. **Double Click / Bubbling on File Input**: Clicking `#slip-drop-frame` caused event bubbling issues with the hidden `#slip-file-input`, triggering double invocation or closing the file chooser on mobile.
+4. **Premature Form Submit on Enter**: Pressing Enter on input fields in Step 1 triggered form submission before the user reached Step 2, showing a premature validation warning.
+5. **Missing Request Details on Status Page**: `MapRequestStatusResponse` did not return `patient_name`, `hospital_name`, `blood_group`, or `urgency`, leaving `/seeker/status.html` displaying "Loading Emergency Request..." indefinitely.
+
+### Changes Implemented
+1. **Instant File Selection & Robust Compression** ([`public/static/js/request.js`](file:///c:/Users/USER/OneDrive%20-%20Dawood%20University%20of%20Engineering%20Technology/Desktop/AKK-SSIP/Web-App/QATRA-Web-App/public/static/js/request.js)):
+   - Immediately set `selectedSlipFile = file` and reveal the preview card without waiting for asynchronous compression.
+   - Added a 4000ms safety timeout to `compressImageIfNeeded` with fallback to the original file and safe blob handling if `new File()` constructor fails.
+2. **Resilient Seeker Auth & Retry on 401**:
+   - Implemented `ensureSeekerToken()` that validates JWT expiry before sending the request.
+   - Added automatic 401 retry: on 401 response, it clears the stale token, generates a fresh seeker emergency token, and retries the upload once transparently.
+3. **Form Navigation & Event Cleanup**:
+   - Added `e.stopPropagation()` on `fileInput` and prevented premature form submit on Enter key in Step 1.
+4. **Live Request Metadata in Status Page** ([`backend/app/routers/map.py`](file:///c:/Users/USER/OneDrive%20-%20Dawood%20University%20of%20Engineering%20Technology/Desktop/AKK-SSIP/Web-App/QATRA-Web-App/backend/app/routers/map.py), [`public/static/js/status.js`](file:///c:/Users/USER/OneDrive%20-%20Dawood%20University%20of%20Engineering%20Technology/Desktop/AKK-SSIP/Web-App/QATRA-Web-App/public/static/js/status.js)):
+   - Extended `MapRequestStatusResponse` with `patient_name`, `hospital_name`, `blood_group`, and `urgency`.
+   - Updated `status.js` to render patient name, hospital, blood group badge, and urgency tier both immediately from localStorage cache and from live API status response.
+5. **Full Directory Sync**:
+   - Synced identical changes across `public/` and `frontend/` directories.
+
+### Verification Results (Playwright Headless Chrome Suite)
+- **Desktop (1280x800)**: 19 / 19 PASS (100%)
+- **Mobile iPhone (390x844)**: 19 / 19 PASS (100%)
+- **Total Assertions Verified:** 38 / 38 PASS (0 failures)
+- **Live Visual Artifacts:**
+  - Desktop: `status_verified_Desktop__1280x800_.png`
+  - Mobile iPhone: `status_verified_Mobile_iPhone__390x844_.png`
+- **Production URL:** `https://qatra-web-app.vercel.app` (Deployment `dpl_94rcm22fPmdNChcBHGYAgQ2owbhJ`)
+
+---
+
 ## Chrome Browser Subagents Live Execution Results
 
 Three dedicated Chrome browser subagents autonomously traversed and verified the end-to-end platform workflows in an actual mobile browser environment:
