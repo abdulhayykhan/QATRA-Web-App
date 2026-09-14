@@ -1,7 +1,7 @@
 {
   "name": "qatra-web-app",
   "version": "1.0.0",
-  "description": "<div align=\"center\">",
+  "description": "Emergency blood response platform connecting verified seekers to eligible donors in real-time across Pakistan.",
   "main": "index.js",
   "directories": {
     "doc": "docs",
@@ -16,7 +16,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/abdulhayykhan/QATRA-Web-App/issues"
