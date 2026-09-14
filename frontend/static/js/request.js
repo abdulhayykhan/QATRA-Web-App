@@ -4,7 +4,7 @@
  *
  * Implements Wireframe pg 5 (Requirements) & pg 6 (Slip verification upload).
  */
-import { apiUpload, apiPost, showToast, getCurrentUser, onReady } from './api.js';
+import { apiUpload, apiPost, showToast, onReady } from './api.js';
 
 let selectedSlipFile = null;
 
@@ -107,23 +107,24 @@ function setupStepNavigation() {
   const step2 = document.getElementById('form-step-2');
   const nextBtn = document.getElementById('btn-next-to-slip');
   const backBtn = document.getElementById('btn-back-to-details');
-  const dot1 = document.getElementById('dot-step-1');
   const dot2 = document.getElementById('dot-step-2');
   const line = document.getElementById('line-step-1');
+  const patientInput = document.getElementById('patient-name');
+  const hospitalInput = document.getElementById('hospital-name');
 
-  nextBtn.addEventListener('click', () => {
-    const patientName = document.getElementById('patient-name').value.trim();
-    const hospitalName = document.getElementById('hospital-name').value.trim();
+  function proceedToStep2() {
+    const patientName = patientInput.value.trim();
+    const hospitalName = hospitalInput.value.trim();
 
     if (!patientName) {
       showToast('Please enter the patient name.', 'warning');
-      document.getElementById('patient-name').focus();
+      patientInput.focus();
       return;
     }
 
     if (!hospitalName) {
       showToast('Please enter or select the hospital name.', 'warning');
-      document.getElementById('hospital-name').focus();
+      hospitalInput.focus();
       return;
     }
 
@@ -132,6 +133,23 @@ function setupStepNavigation() {
     dot2.classList.add('active');
     line.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  nextBtn.addEventListener('click', proceedToStep2);
+
+  // Prevent accidental submit on enter key in Step 1
+  patientInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      hospitalInput.focus();
+    }
+  });
+
+  hospitalInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      proceedToStep2();
+    }
   });
 
   backBtn.addEventListener('click', () => {
@@ -155,7 +173,14 @@ function setupSlipUpload() {
   const fileSize = document.getElementById('slip-file-size');
   const removeBtn = document.getElementById('slip-remove-btn');
 
-  dropFrame.addEventListener('click', () => fileInput.click());
+  // Prevent fileInput from re-triggering dropFrame click
+  fileInput.addEventListener('click', (e) => e.stopPropagation());
+
+  dropFrame.addEventListener('click', (e) => {
+    if (e.target !== fileInput) {
+      fileInput.click();
+    }
+  });
 
   dropFrame.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -193,6 +218,8 @@ function setupSlipUpload() {
       return;
     }
 
+    // 1. Immediately select file and show preview for responsive user feedback
+    selectedSlipFile = file;
     fileName.innerText = file.name;
     fileSize.innerText = `${(file.size / 1024).toFixed(1)} KB`;
 
@@ -203,17 +230,20 @@ function setupSlipUpload() {
       };
       reader.readAsDataURL(file);
 
-      // Perform proactive client-side compression to stay well below mobile/serverless limits
-      try {
-        const compressed = await compressImageIfNeeded(file, 1600, 0.82);
-        selectedSlipFile = compressed;
-        fileSize.innerText = `${(compressed.size / 1024).toFixed(1)} KB (Optimized)`;
-      } catch (err) {
-        selectedSlipFile = file;
-      }
+      // 2. Perform background client-side compression to stay well below serverless limits
+      compressImageIfNeeded(file, 1600, 0.82)
+        .then((compressed) => {
+          if (compressed && compressed.size) {
+            selectedSlipFile = compressed;
+            fileSize.innerText = `${(compressed.size / 1024).toFixed(1)} KB (Optimized)`;
+          }
+        })
+        .catch(() => {
+          // Keep original file as fallback
+          selectedSlipFile = file;
+        });
     } else {
       // PDF placeholder icon
-      selectedSlipFile = file;
       previewImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="55" height="55" viewBox="0 0 24 24" fill="%23C92A2A"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
     }
 
@@ -224,14 +254,17 @@ function setupSlipUpload() {
 
 /**
  * Client-Side Image Resizing & Compression for Mobile Cameras (iOS/Android)
- * Keeps payloads < 800KB to guarantee instantaneous upload and stay well below Vercel's 4.5MB limit.
+ * Keeps payloads < 1.5MB to guarantee instantaneous upload and stay well below Vercel limits.
  */
-async function compressImageIfNeeded(file, maxDimension = 1600, quality = 0.82) {
+function compressImageIfNeeded(file, maxDimension = 1600, quality = 0.82) {
   if (!file || !file.type || !file.type.startsWith('image/')) {
-    return file;
+    return Promise.resolve(file);
   }
 
   return new Promise((resolve) => {
+    // 4-second safety timeout so compression never blocks submission
+    const timeout = setTimeout(() => resolve(file), 4000);
+
     const img = new Image();
     const url = URL.createObjectURL(file);
 
@@ -254,6 +287,7 @@ async function compressImageIfNeeded(file, maxDimension = 1600, quality = 0.82) 
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
+        clearTimeout(timeout);
         resolve(file);
         return;
       }
@@ -261,15 +295,23 @@ async function compressImageIfNeeded(file, maxDimension = 1600, quality = 0.82) 
       ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
+          clearTimeout(timeout);
           if (!blob || blob.size >= file.size) {
             resolve(file);
           } else {
             const safeName = file.name.replace(/\.[^/.]+$/, '') + '.jpg';
-            const compressed = new File([blob], safeName, {
-              type: 'image/jpeg',
-              lastModified: Date.now(),
-            });
-            resolve(compressed);
+            try {
+              const compressed = new File([blob], safeName, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressed);
+            } catch (err) {
+              // Fallback for WebViews where new File() is restricted
+              blob.name = safeName;
+              blob.lastModified = Date.now();
+              resolve(blob);
+            }
           }
         },
         'image/jpeg',
@@ -278,12 +320,54 @@ async function compressImageIfNeeded(file, maxDimension = 1600, quality = 0.82) 
     };
 
     img.onerror = () => {
+      clearTimeout(timeout);
       URL.revokeObjectURL(url);
       resolve(file);
     };
 
     img.src = url;
   });
+}
+
+/**
+ * Ensure the client has a valid session token (user session or emergency seeker session)
+ */
+async function ensureSeekerToken() {
+  let token = localStorage.getItem('qatra_token');
+
+  // Verify JWT expiration if token exists
+  if (token) {
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now() + 60000) {
+          // Token is expired or will expire in 60s
+          token = null;
+        }
+      }
+    } catch (e) {
+      token = null;
+    }
+  }
+
+  if (!token) {
+    try {
+      const emergencyToken = `demo_seeker_${Date.now()}`;
+      const authRes = await apiPost('/auth/firebase-login', {
+        firebase_id_token: emergencyToken,
+      });
+      if (authRes && authRes.access_token) {
+        localStorage.setItem('qatra_token', authRes.access_token);
+        localStorage.setItem('qatra_user', JSON.stringify(authRes.user));
+        token = authRes.access_token;
+      }
+    } catch (authErr) {
+      console.warn('Emergency seeker session initialization failed:', authErr);
+    }
+  }
+
+  return token;
 }
 
 /**
@@ -321,54 +405,64 @@ function setupFormSubmission() {
     const originalText = submitBtn.innerText;
     submitBtn.innerText = 'Analyzing Requisition Slip via OCR... ⏳';
 
-    let token = localStorage.getItem('qatra_token');
-    if (!token) {
-      try {
-        const emergencyToken = `demo_seeker_${Date.now()}`;
-        const authRes = await apiPost('/auth/firebase-login', {
-          firebase_id_token: emergencyToken
-        });
-        if (authRes && authRes.access_token) {
-          localStorage.setItem('qatra_token', authRes.access_token);
-          localStorage.setItem('qatra_user', JSON.stringify(authRes.user));
-          token = authRes.access_token;
-        }
-      } catch (authErr) {
-        console.warn('Emergency seeker session initialization failed:', authErr);
-      }
-    }
-
-    // Ensure image is compressed if needed
-    let fileToUpload = selectedSlipFile;
-    if (fileToUpload && fileToUpload.type && fileToUpload.type.startsWith('image/')) {
-      try {
-        fileToUpload = await compressImageIfNeeded(fileToUpload, 1600, 0.82);
-      } catch (compErr) {
-        console.warn('Image compression fallback:', compErr);
-      }
-    }
-
-    if (fileToUpload.size > 4.2 * 1024 * 1024) {
-      submitBtn.disabled = false;
-      submitBtn.innerText = originalText;
-      showToast('Uploaded document exceeds 4.2MB limit. Please attach a compressed file or standard photo.', 'warning');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', fileToUpload);
-    formData.append('patient_name', patientName);
-    formData.append('hospital_name', hospitalName);
-    formData.append('blood_group', bloodGroup);
-    formData.append('component_type', componentType);
-    formData.append('units_needed', unitsNeeded);
-    formData.append('urgency', urgency);
-
     try {
-      const res = await apiUpload('/auth/hospital-slip/upload', formData);
+      // Ensure session is active
+      await ensureSeekerToken();
+
+      let fileToUpload = selectedSlipFile;
+      if (fileToUpload.size > 4.2 * 1024 * 1024) {
+        // Attempt compression if still oversized
+        fileToUpload = await compressImageIfNeeded(fileToUpload, 1200, 0.75);
+      }
+
+      if (fileToUpload.size > 4.2 * 1024 * 1024) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
+        showToast('Uploaded document exceeds 4.2MB limit. Please attach a compressed file or photo.', 'warning');
+        return;
+      }
+
+      const buildFormData = () => {
+        const fd = new FormData();
+        fd.append('file', fileToUpload);
+        fd.append('patient_name', patientName);
+        fd.append('hospital_name', hospitalName);
+        fd.append('blood_group', bloodGroup);
+        fd.append('component_type', componentType);
+        fd.append('units_needed', unitsNeeded);
+        fd.append('urgency', urgency);
+        return fd;
+      };
+
+      let res;
+      try {
+        res = await apiUpload('/auth/hospital-slip/upload', buildFormData());
+      } catch (uploadErr) {
+        // On 401 unauthorized, refresh emergency token and retry once
+        if (uploadErr.message && uploadErr.message.toLowerCase().includes('unauthorized')) {
+          localStorage.removeItem('qatra_token');
+          await ensureSeekerToken();
+          res = await apiUpload('/auth/hospital-slip/upload', buildFormData());
+        } else {
+          throw uploadErr;
+        }
+      }
+
       const isAutoApproved = res.status === 'verified';
       if (res.request_id) {
         localStorage.setItem('last_request_id', res.request_id);
+        // Cache details for instant display on status page
+        localStorage.setItem(
+          `request_${res.request_id}_details`,
+          JSON.stringify({
+            patient_name: patientName,
+            hospital_name: hospitalName,
+            blood_group: bloodGroup,
+            urgency: urgency,
+            units_needed: unitsNeeded,
+            status: res.status,
+          })
+        );
       }
 
       if (isAutoApproved) {

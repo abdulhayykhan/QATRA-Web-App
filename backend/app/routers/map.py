@@ -68,6 +68,10 @@ class MapRequestStatusResponse(BaseModel):
     donors_accepted_count: int
     current_radius_km: float
     eta_minutes: Optional[int] = None
+    patient_name: Optional[str] = None
+    hospital_name: Optional[str] = None
+    blood_group: Optional[str] = None
+    urgency: Optional[str] = None
 
 
 class DonorAcceptResponse(BaseModel):
@@ -323,6 +327,10 @@ async def get_request_status(
         donors_accepted_count=accepted_count,
         current_radius_km=blood_request.search_radius_km,
         eta_minutes=eta,
+        patient_name=blood_request.patient_name,
+        hospital_name=blood_request.hospital_name,
+        blood_group=blood_request.blood_group,
+        urgency=blood_request.urgency,
     )
 
 

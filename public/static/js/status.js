@@ -17,6 +17,15 @@ onReady(() => {
   currentRequestId = urlParams.get('request_id') || localStorage.getItem('last_request_id');
 
   if (currentRequestId) {
+    // Immediate render from cache if available
+    try {
+      const cached = localStorage.getItem(`request_${currentRequestId}_details`);
+      if (cached) {
+        const d = JSON.parse(cached);
+        applyRequestBannerDetails(d);
+      }
+    } catch (e) {}
+
     loadRequestStatus();
     loadProximityMatches();
     // Poll status every 5 seconds for real-time seeker updates
@@ -32,6 +41,29 @@ onReady(() => {
   setupActions();
 });
 
+function applyRequestBannerDetails(data) {
+  if (!data) return;
+  if (data.patient_name) {
+    const el = document.getElementById('patient-name-display');
+    if (el) el.innerText = data.patient_name;
+  }
+  if (data.hospital_name) {
+    const el = document.getElementById('hospital-name-display');
+    if (el) el.innerText = data.hospital_name;
+  }
+  if (data.blood_group) {
+    const el = document.getElementById('blood-group-badge');
+    if (el) el.innerText = data.blood_group;
+  }
+  if (data.urgency) {
+    const el = document.getElementById('urgency-tier-badge');
+    if (el) {
+      const uInfo = formatUrgency(data.urgency);
+      el.innerText = uInfo.text;
+    }
+  }
+}
+
 window.addEventListener('beforeunload', () => {
   if (pollTimer) clearInterval(pollTimer);
 });
@@ -45,6 +77,9 @@ async function loadRequestStatus(silent = false) {
   try {
     const statusData = await apiGet(`/map/requests/${currentRequestId}/status`);
     if (!statusData) return;
+
+    // Update banner with fresh backend details
+    applyRequestBannerDetails(statusData);
 
     // Update fulfillment progress
     const needed = statusData.units_needed || 1;
