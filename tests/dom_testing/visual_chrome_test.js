@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 const BASE_URL = 'https://qatra-web-app.vercel.app';
-const SCREENSHOT_DIR = 'C:\\Users\\USER\\.gemini\\antigravity-ide\\brain\\28336e01-685b-4d91-a6bd-c057d206a867\\screenshots';
+const SCREENSHOT_DIR = process.env.SCREENSHOT_DIR || 'C:\\Users\\USER\\.gemini\\antigravity\\brain\\6167b9a4-af67-4076-b32a-999dadbdfd22\\screenshots';
 
 if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
