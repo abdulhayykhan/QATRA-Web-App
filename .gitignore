@@ -109,3 +109,6 @@ Thumbs.db
 walkthrough.md
 implementation_plan.md
 task.md
+.agents/
+.claude/
+
