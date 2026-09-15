@@ -124,10 +124,16 @@ async function runVisualChromeSuite() {
   // 1. /donor/register.html
   await page.goto(`${BASE_URL}/donor/register.html`, { waitUntil: 'networkidle' });
   await snap('05_donor_register_step1');
-  const googleSignBtn = await page.$('#google-signin-btn');
-  if (googleSignBtn) {
-    await googleSignBtn.click();
+  const demoSignBtn = await page.$('#demo-donor-btn');
+  if (demoSignBtn) {
+    await demoSignBtn.click();
     await page.waitForTimeout(600);
+  } else {
+    const googleSignBtn = await page.$('#google-signin-btn');
+    if (googleSignBtn) {
+      await googleSignBtn.click();
+      await page.waitForTimeout(600);
+    }
   }
   await page.fill('#donor-fullname', 'Syed Hamza Ali');
   await page.selectOption('#donor-blood-group', 'B+');

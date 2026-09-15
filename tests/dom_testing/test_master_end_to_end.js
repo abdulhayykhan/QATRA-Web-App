@@ -78,10 +78,16 @@ async function runMasterSuite() {
 
   // 1. /donor/register.html
   await page.goto(`${BASE_URL}/donor/register.html`, { waitUntil: 'networkidle' });
-  const googleBtn = await page.$('#google-signin-btn');
-  if (googleBtn) {
-    await googleBtn.click();
+  const demoBtn = await page.$('#demo-donor-btn');
+  if (demoBtn) {
+    await demoBtn.click();
     await page.waitForTimeout(600);
+  } else {
+    const googleBtn = await page.$('#google-signin-btn');
+    if (googleBtn) {
+      await googleBtn.click();
+      await page.waitForTimeout(600);
+    }
   }
   await page.fill('#donor-fullname', 'Muhammad Usman').catch(() => {});
   await page.selectOption('#donor-blood-group', 'B+').catch(() => {});

@@ -50,14 +50,17 @@ export async function signInWithGoogle() {
   provider.addScope('email');
   provider.addScope('profile');
 
-  if (isMobileDevice()) {
-    await signInWithRedirect(auth, provider);
-    return { redirecting: true };
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const idToken = await result.user.getIdToken();
+    return { user: result.user, idToken, redirecting: false };
+  } catch (err) {
+    if (err.code === 'auth/popup-blocked' && isMobileDevice()) {
+      await signInWithRedirect(auth, provider);
+      return { redirecting: true };
+    }
+    throw err;
   }
-
-  const result = await signInWithPopup(auth, provider);
-  const idToken = await result.user.getIdToken();
-  return { user: result.user, idToken, redirecting: false };
 }
 
 /**
