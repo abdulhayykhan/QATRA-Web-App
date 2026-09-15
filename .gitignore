@@ -53,6 +53,7 @@ coverage.xml
 *.py,cover
 *.db
 *.sqlite*
+tests/dom_testing/
 
 # Node / Frontend
 node_modules/
