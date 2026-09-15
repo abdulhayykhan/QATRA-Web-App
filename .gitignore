@@ -53,6 +53,7 @@ coverage.xml
 *.py,cover
 *.db
 *.sqlite*
+tests/dom_testing/
 
 # Node / Frontend
 node_modules/
@@ -108,3 +109,6 @@ Thumbs.db
 walkthrough.md
 implementation_plan.md
 task.md
+.agents/
+.claude/
+
