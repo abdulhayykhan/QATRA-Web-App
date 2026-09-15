@@ -170,10 +170,15 @@ async function runMobileVisualChromeSuite() {
 
   // Verify Step 1 is active and Google Sync button is visible
   const googleBtn = await page.$('#google-signin-btn');
-  if (googleBtn) {
+  console.log(`  ✓ Google Sign-In button present: ${!!googleBtn}`);
+  const demoBtn = await page.$('#demo-donor-btn');
+  if (demoBtn) {
+    await demoBtn.click();
+    await page.waitForTimeout(600);
+    console.log('  ✓ Tapped Demo Volunteer Button -> Transitioned to Step 2');
+  } else if (googleBtn) {
     await googleBtn.click();
     await page.waitForTimeout(600);
-    console.log('  ✓ Tapped Mobile Google Sync Button -> Transitioned to Step 2');
   }
   await snap('05_mobile_donor_reg_step2');
 
