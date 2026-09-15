@@ -111,4 +111,6 @@ implementation_plan.md
 task.md
 .agents/
 .claude/
+skills-lock.json
+
 
