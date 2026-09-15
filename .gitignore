@@ -103,3 +103,8 @@ Thumbs.db
 !public/media/logo.png
 
 .env*
+
+# Antigravity & Agent Artifacts
+walkthrough.md
+implementation_plan.md
+task.md
