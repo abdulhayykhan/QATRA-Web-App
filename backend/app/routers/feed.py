@@ -270,8 +270,9 @@ def get_feed_item_detail(
     db: Session = Depends(get_db),
 ):
     """
-    Retrieves full details of a verified blood request.
-    Restricted to non-pending, non-cancelled requests.
+    Retrieves full details of an emergency blood request across lifecycle stages
+    (pending_verification, verified, matched, fulfilled, cancelled) so status timeline,
+    matchmaker, and closure pages can render accurately (FR 3.1).
     """
     req = db.query(Request).filter(Request.id == request_id).first()
     if not req:

@@ -31,6 +31,7 @@ from app.services.feed import (
     trigger_feed_blood_alert,
 )
 from app.services.notifications import dispatch_blood_alert
+from app.services.cache import invalidate_feed_cache
 
 client = TestClient(app)
 
@@ -220,12 +221,21 @@ def test_get_feed_single_request_not_found():
 
 
 def test_get_feed_single_request_pending_not_visible():
-    """Verify pending_verification requests are not publicly viewable."""
+    """Verify pending_verification requests are accessible by direct ID for seeker tracking but excluded from general public feed."""
+    invalidate_feed_cache()
     _, seeker_id = get_test_token_and_user(UserRole.VERIFIED_SEEKER.value)
-    req_id = create_test_request(seeker_id, status="pending_verification")
+    req_id = create_test_request(seeker_id, status="pending_verification", blood_group="AB-")
 
+    # Direct ID lookup allows seeker status tracking
     res = client.get(f"/api/feed/{req_id}")
-    assert res.status_code == 404
+    assert res.status_code == 200
+    assert res.json()["status"] == "pending_verification"
+
+    # General public feed excludes unverified pending requests
+    feed_res = client.get("/api/feed?blood_group=AB-")
+    assert feed_res.status_code == 200
+    feed_ids = [it.get("request_id") for it in feed_res.json()["items"] if it.get("item_type") == "request"]
+    assert req_id not in feed_ids
 
 
 # ==============================================================================
