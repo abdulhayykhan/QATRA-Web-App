@@ -260,6 +260,216 @@
       background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(8px);
     }
+
+    /* Custom Apple-Themed Interactive Dropdown (Hospital Selector) */
+    .hospital-select-group {
+      position: relative;
+    }
+    .custom-dropdown-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .input-with-action {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .input-leading-icon {
+      position: absolute;
+      left: 14px;
+      font-size: 18px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    #hospital-name.custom-dropdown-input,
+    .custom-dropdown-input {
+      width: 100%;
+      padding-left: 46px !important;
+      padding-right: 42px !important;
+      cursor: pointer;
+      background: #FFFFFF !important;
+      font-size: 14.5px !important;
+      font-weight: 500;
+      border: 1px solid var(--apple-separator, rgba(0, 0, 0, 0.08)) !important;
+      border-radius: var(--radius-squircle-md, 14px) !important;
+      box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #hospital-name.custom-dropdown-input:focus,
+    .custom-dropdown-input:focus {
+      border-color: var(--primary-red, #C92A2A) !important;
+      box-shadow: 0 0 0 4px rgba(201, 42, 42, 0.12) !important;
+    }
+    .dropdown-chevron-btn {
+      position: absolute;
+      right: 12px;
+      background: transparent;
+      border: none;
+      padding: 6px;
+      cursor: pointer;
+      color: var(--text-muted, #86868B);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, background 0.2s ease;
+      z-index: 2;
+    }
+    .dropdown-chevron-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--primary-red, #C92A2A);
+    }
+    .custom-dropdown-wrap.open .dropdown-chevron-btn {
+      transform: rotate(180deg);
+      color: var(--primary-red, #C92A2A);
+    }
+    .custom-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: #FFFFFF;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.06);
+      z-index: 1050;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      animation: dropdownSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes dropdownSlideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.99);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .dropdown-menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #F9F9FA;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 11.5px;
+      color: var(--text-muted, #86868B);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .dropdown-hint {
+      font-size: 11px;
+      color: var(--primary-red, #C92A2A);
+      font-weight: 600;
+    }
+    .dropdown-items-scroller {
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 6px;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+    .dropdown-items-scroller::-webkit-scrollbar {
+      width: 6px;
+    }
+    .dropdown-items-scroller::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .dropdown-items-scroller::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 6px;
+    }
+    .dropdown-items-scroller::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 13.5px;
+      color: var(--text-main, #1D1D1F);
+      user-select: none;
+    }
+    .dropdown-item:hover,
+    .dropdown-item.focused {
+      background: rgba(201, 42, 42, 0.06);
+      color: var(--primary-red, #C92A2A);
+    }
+    .dropdown-item.selected {
+      background: var(--primary-red, #C92A2A);
+      color: #FFFFFF;
+    }
+    .dropdown-item.selected .dropdown-item-area {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .dropdown-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .dropdown-item-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .dropdown-item-name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dropdown-item-name mark {
+      background: transparent;
+      color: var(--primary-red, #C92A2A);
+      font-weight: 800;
+      text-decoration: underline;
+    }
+    .dropdown-item.selected .dropdown-item-name mark {
+      color: #FFFFFF;
+    }
+    .dropdown-item-area {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted, #86868B);
+      background: #F0F0F2;
+      padding: 3px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+    .dropdown-empty {
+      padding: 22px 16px;
+      text-align: center;
+      color: var(--text-muted, #86868B);
+      font-size: 13px;
+    }
+    .dropdown-custom-option {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(201, 42, 42, 0.08);
+      border: 1px dashed var(--primary-red, #C92A2A);
+      border-radius: 8px;
+      color: var(--primary-red, #C92A2A);
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .dropdown-custom-option:hover {
+      background: var(--primary-red, #C92A2A);
+      color: #FFFFFF;
+    }
   </style>
   <link rel="stylesheet" href="/static/css/apple.css">
 </head>
@@ -320,21 +530,39 @@
             <input type="text" id="patient-name" class="form-input" placeholder="e.g. Ali Khan" required>
           </div>
 
-          <!-- Hospital / Location -->
-          <div class="form-group">
+          <!-- Hospital / Location (Apple HIG Interactive Dropdown) -->
+          <div class="form-group hospital-select-group">
             <label class="form-label" for="hospital-name">Hospital Name (Karachi) *</label>
-            <input type="text" id="hospital-name" class="form-input" placeholder="Search hospital name or select..." required list="karachi-hospitals">
-            <datalist id="karachi-hospitals">
-              <option value="Dr. Ruth K.M. Pfau Civil Hospital Karachi">
-              <option value="Jinnah Postgraduate Medical Centre (JPMC)">
-              <option value="The Aga Khan University Hospital (AKUH)">
-              <option value="Indus Hospital & Health Network (Korangi)">
-              <option value="Liaquat National Hospital (LNH)">
-              <option value="Abbasi Shaheed Hospital (Nazimabad)">
-              <option value="Ziauddin Hospital (Clifton Campus)">
-              <option value="Patel Hospital (Gulshan-e-Iqbal)">
-              <option value="National Institute of Cardiovascular Diseases (NICVD)">
-            </datalist>
+            <div class="custom-dropdown-wrap" id="hospital-dropdown-wrap">
+              <div class="input-with-action">
+                <span class="input-leading-icon" aria-hidden="true">🏥</span>
+                <input 
+                  type="text" 
+                  id="hospital-name" 
+                  name="hospital_name"
+                  class="form-input custom-dropdown-input" 
+                  placeholder="Search hospital or select from list..." 
+                  autocomplete="off"
+                  required
+                >
+                <button type="button" class="dropdown-chevron-btn" id="hospital-dropdown-toggle" aria-label="Toggle hospital list" tabindex="-1">
+                  <svg class="chevron-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Floating Interactive Apple-Themed Menu -->
+              <div class="custom-dropdown-menu" id="hospital-dropdown-menu" role="listbox" style="display: none;">
+                <div class="dropdown-menu-header">
+                  <span class="dropdown-count-label" id="hospital-count-label">Karachi Hospitals (A–Z)</span>
+                  <span class="dropdown-hint">Alphabetical Order</span>
+                </div>
+                <div class="dropdown-items-scroller" id="hospital-items-list" tabindex="-1">
+                  <!-- Populated dynamically via request.js in alphabetical order -->
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Blood Group Grid Selection (Wireframe pg 5) -->
