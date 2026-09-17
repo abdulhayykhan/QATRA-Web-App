@@ -157,12 +157,12 @@ function setupStep1Google() {
       const nameInput = document.getElementById('donor-fullname');
       if (nameInput) nameInput.value = registrationState.fullName;
 
-      showToast('Demo Volunteer session established!', 'success');
+      showToast('Volunteer session established!', 'success');
       goToStep(2);
     } catch (err) {
-      showToast(err.message || 'Demo session failed.', 'error');
+      showToast(err.message || 'Volunteer session failed.', 'error');
     } finally {
-      demoBtn.innerText = 'Continue as Demo Volunteer';
+      demoBtn.innerText = 'Continue as Registered Volunteer';
       demoBtn.disabled = false;
     }
   });
