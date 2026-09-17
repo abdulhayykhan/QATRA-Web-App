@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "a9ba8ddb3a72899a15a3ccf66992c5f8313400a9743281f2374d939d5c194f5f"
     ENCRYPTION_KEY_AES256: str = "c75a7b8cf0cb0653fc66e54800ee0194b02d1dcd0262d970f695f4e87e20f775"
 
+    # Alkhidmat 24/7 Emergency Verification Desk Authentication Gate
+    ADMIN_DESK_ID: str = "desk.lead@alkhidmat.org"
+    ADMIN_DESK_KEY: str = "QATRA-2026-EMERGENCY"
+
     # Database (Supabase Postgres)
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/qatra"
     SUPABASE_URL: str = ""

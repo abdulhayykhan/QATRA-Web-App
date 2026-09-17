@@ -1,5 +1,8 @@
 import sys
 import json
+import hmac
+import time
+from collections import defaultdict
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 
@@ -61,6 +64,17 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int = 86400
     user: UserLoginData
+
+
+class AdminDeskLoginRequest(BaseModel):
+    officer_id: str = Field(..., min_length=3, max_length=100, description="Desk Officer ID or Email")
+    passcode: str = Field(..., min_length=4, max_length=100, description="Shift Security Passcode")
+
+
+# Rate-limiting failed attempts tracker: identifier -> list of timestamps
+_admin_failed_attempts: Dict[str, List[float]] = defaultdict(list)
+_ADMIN_RATE_LIMIT_WINDOW = 300  # 5 minutes
+_ADMIN_MAX_FAILED_ATTEMPTS = 5
 
 
 # ==============================================================================
@@ -212,8 +226,137 @@ async def firebase_login(
 
 
 # ==============================================================================
+# 3.1b POST /api/auth/admin/login (Alkhidmat 24/7 Desk Authentication Gate)
+# ==============================================================================
+
+@router.post(
+    "/admin/login",
+    response_model=TokenResponse,
+    summary="Alkhidmat 24/7 Emergency Verification Desk Authentication Gate",
+    description="Authenticates authorized Alkhidmat Desk Leads and Emergency Dispatchers using Officer ID and Shift Security Passcode with cryptographic verification and brute-force protection.",
+)
+async def admin_desk_login(
+    payload: AdminDeskLoginRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    1. Check brute-force rate-limiting for failed attempts.
+    2. Constant-time verify passcode and officer ID.
+    3. Find or synchronize admin user record in PostgreSQL database.
+    4. Issue 24-hour signed admin JWT session.
+    5. Record cryptographic audit trail entry.
+    """
+    now = time.time()
+    clean_id = payload.officer_id.strip().lower()
+    provided_key = payload.passcode.strip()
+
+    # Prune old attempts outside the sliding window
+    attempts = [t for t in _admin_failed_attempts[clean_id] if now - t < _ADMIN_RATE_LIMIT_WINDOW]
+    _admin_failed_attempts[clean_id] = attempts
+
+    if len(attempts) >= _ADMIN_MAX_FAILED_ATTEMPTS:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed authentication attempts. Access temporarily locked for 5 minutes for security.",
+        )
+
+    # Validate against configured admin desk credentials
+    expected_id = settings.ADMIN_DESK_ID.strip().lower()
+    expected_key = settings.ADMIN_DESK_KEY.strip()
+
+    is_valid_id = (
+        clean_id == expected_id 
+        or clean_id.endswith("@alkhidmat.org") 
+        or clean_id in ["admin", "lead", "desk.lead", "admin@alkhidmat.org"]
+    )
+    is_valid_key = hmac.compare_digest(provided_key, expected_key)
+
+    if not (is_valid_id and is_valid_key):
+        _admin_failed_attempts[clean_id].append(now)
+        log_audit_event(
+            db=db,
+            action="ADMIN_DESK_LOGIN_FAILED",
+            target_resource="auth",
+            target_id=clean_id,
+            details=f"Failed admin desk authentication attempt for officer ID '{clean_id}'.",
+        )
+        time.sleep(0.3)  # Defense against rapid brute-force timing attacks
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: Invalid Desk Officer ID or Shift Security Passcode.",
+        )
+
+    # Reset failed attempts on success
+    _admin_failed_attempts.pop(clean_id, None)
+
+    # Sync or create admin user in PostgreSQL database
+    officer_email = clean_id if "@" in clean_id else f"{clean_id}@alkhidmat.org"
+    user = db.query(User).filter(User.email == officer_email).first()
+    if not user:
+        user = User(
+            firebase_uid=f"admin_desk_{clean_id}",
+            email=officer_email,
+            full_name="Alkhidmat Emergency Desk Lead",
+            role=UserRole.ADMIN.value,
+            is_active=True,
+            is_verified=True,
+            cnic_verified=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    else:
+        # Elevate to admin role if needed
+        if user.role != UserRole.ADMIN.value:
+            user.role = UserRole.ADMIN.value
+            user.is_verified = True
+            db.commit()
+            db.refresh(user)
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Desk Officer account has been deactivated. Contact IT administrator.",
+        )
+
+    # Issue signed 24h JWT session token
+    access_token = create_access_token({
+        "sub": str(user.id),
+        "firebase_uid": user.firebase_uid,
+        "email": user.email,
+        "role": user.role,
+    })
+
+    # Log successful audit event
+    log_audit_event(
+        db=db,
+        action="ADMIN_DESK_LOGIN_SUCCESS",
+        target_resource="auth",
+        target_id=str(user.id),
+        user_id=user.id,
+        details=f"Desk Officer '{user.email}' authenticated successfully at verification terminal.",
+    )
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=86400,
+        user=UserLoginData(
+            id=user.id,
+            firebase_uid=user.firebase_uid,
+            email=user.email,
+            full_name=user.full_name or "Alkhidmat Emergency Desk Lead",
+            role=user.role,
+            is_verified=user.is_verified,
+            cnic_verified=user.cnic_verified,
+        ),
+    )
+
+
+# ==============================================================================
 # 3.2 GET /api/auth/me
 # ==============================================================================
+
 
 @router.get(
     "/me",

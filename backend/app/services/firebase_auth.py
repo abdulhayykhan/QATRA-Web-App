@@ -3,20 +3,29 @@ import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-import firebase_admin
-from firebase_admin import auth as firebase_auth, credentials
+try:
+    import firebase_admin
+    from firebase_admin import auth as firebase_auth, credentials
+except ImportError:
+    firebase_admin = None
+    firebase_auth = None
+    credentials = None
+
 from fastapi import Header, HTTPException, status
 
 from app.core.config import settings
 
-_firebase_app: Optional[firebase_admin.App] = None
+_firebase_app: Optional[Any] = None
 
 
-def get_firebase_app() -> firebase_admin.App:
+def get_firebase_app() -> Optional[Any]:
     """Initialize and retrieve singleton Firebase Admin App instance."""
     global _firebase_app
     if _firebase_app is not None:
         return _firebase_app
+
+    if firebase_admin is None:
+        return None
 
     # Check if already initialized by default
     if firebase_admin._apps:
