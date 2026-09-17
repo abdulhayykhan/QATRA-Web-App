@@ -220,18 +220,69 @@
 
     <!-- Admin Authentication Gate Modal -->
     <div id="admin-gate-modal" class="modal-overlay">
-      <div class="modal-card" style="text-align: center;">
-        <div style="font-size: 40px; margin-bottom: 8px;">🛡️</div>
-        <h3 style="font-size: 18px; margin-bottom: 4px;">Alkhidmat Desk Access Required</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-lg);">
-          The 24/7 Verification Queue is restricted strictly to authorized Alkhidmat Foundation Desk Leads and System Administrators.
-        </p>
-        <button id="btn-admin-login" type="button" class="btn btn-primary" style="width: 100%; margin-bottom: var(--space-sm);">
-          Sign In as Alkhidmat Desk Lead
-        </button>
-        <a href="/index.html" class="btn btn-secondary" style="width: 100%; text-decoration: none;">
-          Return to Home
-        </a>
+      <div class="modal-card" style="max-width: 440px; text-align: left; padding: 28px 24px;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div style="font-size: 38px; line-height: 1; margin-bottom: 8px;">🛡️</div>
+          <div style="display: inline-block; padding: 3px 10px; background: rgba(201, 42, 42, 0.08); color: var(--primary-red); border-radius: 980px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+            Restricted Officer Access
+          </div>
+          <h3 style="font-size: 19px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Alkhidmat 24/7 Emergency Desk</h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin: 0 auto; line-height: 1.4;">
+            Clinical verification terminal restricted to authorized Alkhidmat Desk Leads and Dispatchers.
+          </p>
+        </div>
+
+        <form id="admin-login-form" style="margin-top: 20px;">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="admin-officer-id" style="font-size: 13px; font-weight: 600;">Desk Officer ID / Email *</label>
+            <input 
+              type="text" 
+              id="admin-officer-id" 
+              class="form-input" 
+              placeholder="e.g. desk.lead@alkhidmat.org" 
+              value="desk.lead@alkhidmat.org"
+              required 
+              autocomplete="username"
+              style="font-size: 14px; border-radius: 10px;"
+            >
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label class="form-label" for="admin-passcode" style="font-size: 13px; font-weight: 600;">Shift Security Passcode *</label>
+            <div style="position: relative;">
+              <input 
+                type="password" 
+                id="admin-passcode" 
+                class="form-input" 
+                placeholder="Enter shift security passcode" 
+                required 
+                autocomplete="current-password"
+                style="font-size: 14px; border-radius: 10px; padding-right: 40px;"
+              >
+              <button 
+                type="button" 
+                id="toggle-passcode-visibility" 
+                tabindex="-1"
+                aria-label="Toggle password visibility"
+                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; padding: 0;"
+              >
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <button id="btn-admin-submit" type="submit" class="btn btn-primary" style="width: 100%; border-radius: 980px; font-weight: 600; font-size: 15px; padding: 12px; margin-bottom: 10px;">
+            Authenticate & Open Queue 🔐
+          </button>
+
+          <a href="/index.html" class="btn btn-secondary" style="width: 100%; border-radius: 980px; text-decoration: none; text-align: center; font-size: 13px;">
+            Return to Public Home
+          </a>
+        </form>
+
+        <div style="margin-top: 18px; text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+          🔒 All verification and authorization events are cryptographically timestamped in compliance audit logs.
+        </div>
       </div>
     </div>
   </div>

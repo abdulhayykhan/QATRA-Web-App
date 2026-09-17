@@ -45,24 +45,68 @@ function showAdminGate() {
   const gateModal = document.getElementById('admin-gate-modal');
   if (gateModal) gateModal.classList.add('active');
 
-  document.getElementById('btn-admin-login')?.addEventListener('click', async () => {
+  // Toggle passcode visibility
+  const toggleBtn = document.getElementById('toggle-passcode-visibility');
+  const passcodeInput = document.getElementById('admin-passcode');
+  toggleBtn?.addEventListener('click', () => {
+    if (passcodeInput) {
+      if (passcodeInput.type === 'password') {
+        passcodeInput.type = 'text';
+        toggleBtn.innerText = '🙈';
+      } else {
+        passcodeInput.type = 'password';
+        toggleBtn.innerText = '👁️';
+      }
+    }
+  });
+
+  const form = document.getElementById('admin-login-form');
+  const submitBtn = document.getElementById('btn-admin-submit');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const officerId = document.getElementById('admin-officer-id')?.value.trim();
+    const passcode = passcodeInput?.value.trim();
+
+    if (!officerId || !passcode) {
+      showToast('Please enter both Desk Officer ID and Shift Security Passcode.', 'warning');
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Authenticating Terminal Access... ⏳';
+    }
+
     try {
-      // Authenticate with admin credentials / test token
-      const res = await apiPost('/auth/firebase-login', {
-        firebase_id_token: 'test_admin_lead_token'
+      // Authenticate against official production Admin Desk endpoint
+      const res = await apiPost('/auth/admin/login', {
+        officer_id: officerId,
+        passcode: passcode,
       });
 
-      // Elevate role to admin in session
-      res.user.role = 'admin';
+      if (!res || !res.access_token) {
+        throw new Error('Invalid authentication response from server.');
+      }
+
       setAuthToken(res.access_token);
       setCurrentUser(res.user);
 
       gateModal.classList.remove('active');
       showAdminHeader(res.user);
-      showToast('Desk Lead session initialized.', 'success');
+      showToast('Authorized: Emergency Desk Lead session active.', 'success');
       await loadQueue();
     } catch (err) {
-      showToast(err.message || 'Admin sign-in failed.', 'error');
+      showToast(err.message || 'Authentication failed: Invalid Officer ID or Passcode.', 'error');
+      if (passcodeInput) {
+        passcodeInput.value = '';
+        passcodeInput.focus();
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Authenticate & Open Queue 🔐';
+      }
     }
   });
 }
