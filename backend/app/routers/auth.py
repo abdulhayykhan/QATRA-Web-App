@@ -265,8 +265,8 @@ async def admin_desk_login(
     expected_key = settings.ADMIN_DESK_KEY.strip()
 
     is_valid_id = (
-        clean_id == expected_id 
-        or clean_id.endswith("@alkhidmat.org") 
+        clean_id == expected_id
+        or clean_id.endswith("@alkhidmat.org")
         or clean_id in ["admin", "lead", "desk.lead", "admin@alkhidmat.org"]
     )
     is_valid_key = hmac.compare_digest(provided_key, expected_key)
