@@ -3,7 +3,7 @@
  * Connects Firebase Web SDK Google Auth with backend POST /api/auth/firebase-login
  * Owner: Saghir Ahmed
  */
-import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady, showConfirmDialog } from './api.js';
+import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady, showConfirmDialog, setupActiveAppealBanner } from './api.js';
 import { firebaseConfig, signInWithGoogle, checkGoogleRedirectResult } from './firebase-config.js';
 
 onReady(async () => {
@@ -11,6 +11,7 @@ onReady(async () => {
   await checkGoogleRedirect();
   setupHeaderSession();
   setupAuthModal();
+  setupActiveAppealBanner();
 });
 
 /**
@@ -54,7 +55,8 @@ export function setupHeaderSession() {
       } else if (user.role === 'verified_donor') {
         profileLink.href = '/donor/dashboard.html';
       } else if (user.role === 'verified_seeker') {
-        profileLink.href = '/seeker/feed.html';
+        const lastReq = localStorage.getItem('last_request_id');
+        profileLink.href = lastReq ? `/seeker/status.html?request_id=${lastReq}` : '/seeker/feed.html';
       } else {
         profileLink.href = '/donor/register.html';
       }
@@ -198,7 +200,8 @@ async function handleAuthSession(firebaseToken, forceRole = null) {
     } else if (response.user.role === 'verified_donor') {
       window.location.href = '/donor/dashboard.html';
     } else if (response.user.role === 'verified_seeker') {
-      window.location.href = '/seeker/feed.html';
+      const lastReq = localStorage.getItem('last_request_id');
+      window.location.href = lastReq ? `/seeker/status.html?request_id=${lastReq}` : '/seeker/feed.html';
     } else {
       window.location.href = '/donor/register.html';
     }

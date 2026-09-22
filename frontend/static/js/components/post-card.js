@@ -34,16 +34,18 @@ export function createPostCard(req, options = {}) {
   }
 
   const requestId = req.request_id || req.id;
+  const lastReqId = localStorage.getItem('last_request_id');
+  const isMyRequest = Boolean(lastReqId && String(lastReqId) === String(requestId));
   const isRare = RARE_BLOOD_GROUPS.has((req.blood_group || '').trim().toUpperCase());
   const urgencyInfo = formatUrgency(req.urgency);
   const unitsNeeded = req.units_needed || 1;
   const unitsFulfilled = req.units_fulfilled || 0;
   const percentFulfilled = Math.min(100, Math.round((unitsFulfilled / unitsNeeded) * 100));
   const isFulfilled = req.status === 'fulfilled' || unitsFulfilled >= unitsNeeded;
-  const isOwner = currentUser && (currentUser.id === req.seeker_id || currentUser.role === 'admin');
+  const isOwner = isMyRequest || Boolean(currentUser && (currentUser.id === req.seeker_id || currentUser.role === 'admin'));
 
   // Highlight styling for high urgency or rare blood groups
-  if (req.urgency === 'within_2_hours') {
+  if (req.urgency === 'within_2_hours' || isMyRequest) {
     card.classList.add('card-highlight');
   }
 
@@ -54,6 +56,7 @@ export function createPostCard(req, options = {}) {
           <h3 style="font-size: 15.5px; font-weight: 700; margin-bottom: 0; color: var(--text-main); word-break: break-word; line-height: 1.25;">
             ${req.hospital_name || 'Hospital Karachi'}
           </h3>
+          ${isMyRequest ? '<span class="badge" style="background: rgba(201, 42, 42, 0.12); color: var(--primary-red); font-weight: 700; font-size: 10px; padding: 2px 6px; border: 1px solid rgba(201, 42, 42, 0.3);">📍 Your Appeal</span>' : ''}
           ${isRare ? '<span class="badge badge-critical" style="font-size: 10px; padding: 2px 6px;">⚡ RARE GROUP</span>' : ''}
         </div>
         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -94,6 +97,13 @@ export function createPostCard(req, options = {}) {
         <button class="btn btn-secondary btn-sm" disabled style="flex: 1 1 auto; min-width: 130px;">
           Fulfilled & Closed ✅
         </button>
+      ` : isMyRequest ? `
+        <a href="/seeker/status.html?request_id=${requestId}" class="btn btn-primary btn-sm" style="flex: 1 1 auto; min-width: 140px; text-decoration: none; text-align: center; font-weight: 700;">
+          🚨 Track Live Radar
+        </a>
+        <a href="/seeker/coordination.html?request_id=${requestId}" class="btn btn-outline btn-sm" style="flex: 0 0 auto; padding: 6px 12px; font-weight: 600; color: #10B981; border-color: #10B981; text-decoration: none;" title="Coordination & Direct Call">
+          📞 Coordination
+        </a>
       ` : `
         <button type="button" class="btn btn-primary btn-sm btn-respond" style="flex: 1 1 auto; min-width: 130px;" data-id="${requestId}">
           I Can Donate ❤️

@@ -282,3 +282,28 @@ export function formatTimeAgo(isoDate) {
   if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
   return `${Math.floor(diffSeconds / 86400)}d ago`;
 }
+
+/**
+ * Auto-populates and displays the active emergency appeal tracker banner
+ * if an active request ID is saved in localStorage.
+ */
+export function setupActiveAppealBanner() {
+  const lastReqId = localStorage.getItem('last_request_id');
+  const banner = document.getElementById('active-appeal-banner');
+  if (!lastReqId || !banner) return;
+
+  banner.style.display = 'flex';
+  const link = document.getElementById('btn-track-active-appeal');
+  if (link) link.href = `/seeker/status.html?request_id=${lastReqId}`;
+
+  try {
+    const cached = localStorage.getItem(`request_${lastReqId}_details`);
+    if (cached) {
+      const details = JSON.parse(cached);
+      const summary = document.getElementById('active-appeal-summary');
+      if (summary && details.blood_group && details.hospital_name) {
+        summary.innerText = `${details.blood_group} for ${details.patient_name || 'Patient'} at ${details.hospital_name}`;
+      }
+    }
+  } catch (e) {}
+}
