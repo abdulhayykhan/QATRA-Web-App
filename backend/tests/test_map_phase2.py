@@ -49,6 +49,7 @@ def create_test_authenticated_user(role: str = "verified_donor", blood_group: st
     db = SessionLocal()
     user = db.query(User).filter(User.id == user_id).first()
     user.role = role
+    user.phone_number = "+923001234567"
     user.is_verified = True
     user.cnic_verified = True
 

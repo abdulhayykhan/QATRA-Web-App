@@ -1,56 +1,214 @@
 """
-Tests for QATRA In-App Coordination Chat and Unidirectional Seeker Calling.
+Tests for QATRA In-App Coordination Chat and Calling Permissions.
 Verifies:
-1. Seeker receives donor's phone number and can_call is True.
-2. Donor cannot call seeker (can_call is False, phone numbers scrubbed).
-3. Bidirectional In-App Chat: Seeker and donor can exchange instant messages.
+1. When donor has NOT accepted request: Seeker CANNOT call donor (can_call is False, call_phone_number is None).
+2. When donor ACCEPTS dispatch: Seeker receives donor's phone number and can_call is True.
+3. Donor view: cannot call seeker (can_call is False, phone scrubbed).
+4. Real-time In-App Chat: Starts clean (no mock greetings), supports bidirectional chat exchange.
+5. All test fixtures are cleanly purged after test run.
 """
+import time
 import pytest
 from fastapi.testclient import TestClient
+
 from app.main import app
+from app.core.database import SessionLocal
+from app.models.user import User
+from app.models.donor import Donor
+from app.models.request import Request
+from app.schemas.enums import UserRole
 
 client = TestClient(app)
 
 
 def test_seeker_coordination_permissions_and_calling():
-    """Verify seeker receives donor phone number for direct calling."""
-    response = client.get("/api/coordination/99?as_role=seeker")
-    assert response.status_code == 200
-    data = response.json()
+    """Verify call is locked before donor acceptance, and unlocked after acceptance."""
+    db = SessionLocal()
+    created_user_ids = []
+    created_req_ids = []
 
-    assert data["viewer_role"] == "seeker"
-    assert data["can_call"] is True
-    assert data["call_phone_number"] is not None
-    assert "+92" in data["call_phone_number"]
-    assert data["matched_donor"] is not None
-    assert data["matched_donor"]["phone_number"] is not None
+    try:
+        # Create Seeker User
+        seeker_uid = f"test_seeker_{int(time.time() * 1000)}"
+        seeker = User(
+            firebase_uid=seeker_uid,
+            email=f"{seeker_uid}@example.com",
+            full_name="Emergency Recipient",
+            phone_number="+923009999999",
+            role=UserRole.VERIFIED_SEEKER.value,
+            is_verified=True,
+        )
+        db.add(seeker)
+
+        # Create Donor User
+        donor_uid = f"test_donor_{int(time.time() * 1000)}"
+        donor_user = User(
+            firebase_uid=donor_uid,
+            email=f"{donor_uid}@example.com",
+            full_name="Tariq Volunteer",
+            phone_number="+923001234567",
+            role=UserRole.VERIFIED_DONOR.value,
+            is_verified=True,
+        )
+        db.add(donor_user)
+        db.commit()
+        db.refresh(seeker)
+        db.refresh(donor_user)
+        created_user_ids.extend([seeker.id, donor_user.id])
+
+        # Create Donor Profile
+        donor_profile = Donor(
+            user_id=donor_user.id,
+            blood_group="B+",
+            is_available=True,
+            latitude=24.8607,
+            longitude=67.0011,
+        )
+        db.add(donor_profile)
+
+        # Create Blood Request (Initially Unaccepted: status="verified")
+        req = Request(
+            seeker_id=seeker.id,
+            patient_name="Fatima Bibi",
+            hospital_name="Civil Hospital Karachi",
+            hospital_address="Mission Rd, Karachi",
+            hospital_latitude=24.8569,
+            hospital_longitude=67.0112,
+            blood_group="B+",
+            units_needed=1,
+            units_fulfilled=0,
+            status="verified",
+            matched_donor_id=None,
+        )
+        db.add(req)
+        db.commit()
+        db.refresh(req)
+        created_req_ids.append(req.id)
+
+        # 1. Before Acceptance: Seeker CANNOT call donor
+        res_before = client.get(f"/api/coordination/{req.id}?as_role=seeker&donor_id={donor_profile.id}")
+        assert res_before.status_code == 200
+        data_before = res_before.json()
+        assert data_before["viewer_role"] == "seeker"
+        assert data_before["can_call"] is False
+        assert data_before["call_phone_number"] is None
+
+        # 2. Donor Accepts Request: status="matched", matched_donor_id set
+        req.status = "matched"
+        req.matched_donor_id = donor_profile.id
+        req.units_fulfilled = 1
+        db.commit()
+
+        # 3. After Acceptance: Seeker CAN call donor
+        res_after = client.get(f"/api/coordination/{req.id}?as_role=seeker")
+        assert res_after.status_code == 200
+        data_after = res_after.json()
+        assert data_after["viewer_role"] == "seeker"
+        assert data_after["can_call"] is True
+        assert data_after["call_phone_number"] == "+923001234567"
+        assert data_after["matched_donor"] is not None
+        assert data_after["matched_donor"]["phone_number"] == "+923001234567"
+
+    finally:
+        for r_id in created_req_ids:
+            db.query(Request).filter(Request.id == r_id).delete()
+        for u_id in created_user_ids:
+            db.query(Donor).filter(Donor.user_id == u_id).delete()
+            db.query(User).filter(User.id == u_id).delete()
+        db.commit()
+        db.close()
 
 
 def test_donor_coordination_permissions_and_call_prevention():
     """Verify donor CANNOT call seeker and phone number is scrubbed."""
-    response = client.get("/api/coordination/99?as_role=donor")
-    assert response.status_code == 200
-    data = response.json()
+    db = SessionLocal()
+    created_user_ids = []
+    created_req_ids = []
 
-    assert data["viewer_role"] == "donor"
-    assert data["can_call"] is False
-    assert data["call_phone_number"] is None
-    # Donor must not receive seeker's phone number
-    assert "phone_number" not in data["seeker_info"]
+    try:
+        seeker_uid = f"test_seeker_{int(time.time() * 1000)}"
+        seeker = User(
+            firebase_uid=seeker_uid,
+            email=f"{seeker_uid}@example.com",
+            full_name="Emergency Recipient",
+            phone_number="+923009999999",
+            role=UserRole.VERIFIED_SEEKER.value,
+            is_verified=True,
+        )
+        db.add(seeker)
+
+        donor_uid = f"test_donor_{int(time.time() * 1000)}"
+        donor_user = User(
+            firebase_uid=donor_uid,
+            email=f"{donor_uid}@example.com",
+            full_name="Volunteer Donor",
+            phone_number="+923001234567",
+            role=UserRole.VERIFIED_DONOR.value,
+            is_verified=True,
+        )
+        db.add(donor_user)
+        db.commit()
+        db.refresh(seeker)
+        db.refresh(donor_user)
+        created_user_ids.extend([seeker.id, donor_user.id])
+
+        donor_profile = Donor(
+            user_id=donor_user.id,
+            blood_group="O+",
+            is_available=True,
+            latitude=24.8607,
+            longitude=67.0011,
+        )
+        db.add(donor_profile)
+
+        req = Request(
+            seeker_id=seeker.id,
+            patient_name="Patient Ali",
+            hospital_name="Civil Hospital Karachi",
+            hospital_address="Mission Rd, Karachi",
+            hospital_latitude=24.8569,
+            hospital_longitude=67.0112,
+            blood_group="O+",
+            units_needed=1,
+            units_fulfilled=1,
+            status="matched",
+            matched_donor_id=donor_profile.id,
+        )
+        db.add(req)
+        db.commit()
+        db.refresh(req)
+        created_req_ids.append(req.id)
+
+        response = client.get(f"/api/coordination/{req.id}?as_role=donor")
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["viewer_role"] == "donor"
+        assert data["can_call"] is False
+        assert data["call_phone_number"] is None
+        assert "phone_number" not in data["seeker_info"]
+
+    finally:
+        for r_id in created_req_ids:
+            db.query(Request).filter(Request.id == r_id).delete()
+        for u_id in created_user_ids:
+            db.query(Donor).filter(Donor.user_id == u_id).delete()
+            db.query(User).filter(User.id == u_id).delete()
+        db.commit()
+        db.close()
 
 
 def test_bidirectional_in_app_chat_exchange():
-    """Verify donor and seeker can exchange chat messages."""
-    req_id = 101
+    """Verify clean initial chat state and bidirectional message exchange."""
+    req_id = 99999
 
-    # 1. Check initial message list (seeds greeting)
+    # 1. Initial messages must be clean (no mock greetings)
     res_initial = client.get(f"/api/coordination/{req_id}/messages")
     assert res_initial.status_code == 200
     initial_msgs = res_initial.json()
-    assert len(initial_msgs) >= 1
-    assert initial_msgs[0]["sender_role"] == "donor"
+    assert len(initial_msgs) == 0
 
-    # 2. Seeker posts a reply
+    # 2. Seeker posts a message
     seeker_payload = {
         "text": "Thank you! We are on the 2nd Floor ICU at Civil Hospital.",
         "sender_role": "seeker"
@@ -70,9 +228,11 @@ def test_bidirectional_in_app_chat_exchange():
     assert res_post_donor.status_code == 200
     assert res_post_donor.json()["sender_role"] == "donor"
 
-    # 4. Fetch full history and verify ordering
+    # 4. Fetch full history and verify count & ordering
     res_all = client.get(f"/api/coordination/{req_id}/messages")
     assert res_all.status_code == 200
     all_msgs = res_all.json()
-    assert len(all_msgs) >= 3
-    assert all_msgs[-1]["text"] == "Understood, parked outside and taking elevator now."
+    assert len(all_msgs) == 2
+    assert all_msgs[0]["sender_role"] == "seeker"
+    assert all_msgs[1]["sender_role"] == "donor"
+    assert all_msgs[1]["text"] == "Understood, parked outside and taking elevator now."
