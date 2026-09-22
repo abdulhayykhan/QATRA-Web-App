@@ -5,7 +5,12 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional, List, Union
 
-import jwt
+try:
+    import jwt
+    from jwt.exceptions import ExpiredSignatureError, PyJWTError
+except ImportError:
+    from jose import jwt
+    from jose.exceptions import ExpiredSignatureError, JWTError as PyJWTError
 from fastapi import Depends, HTTPException, Header, status
 from sqlalchemy.orm import Session
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -122,13 +127,13 @@ def decode_access_token(token: str) -> Dict[str, Any]:
     try:
         payload = jwt.decode(token, get_jwt_secret(), algorithms=[ALGORITHM], issuer="qatra-api")
         return payload
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session has expired. Please sign in again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except jwt.PyJWTError as e:
+    except PyJWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid session token: {str(e)}",
