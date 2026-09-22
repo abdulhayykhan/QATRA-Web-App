@@ -1,8 +1,13 @@
 /**
  * QATRA Emergency Blood Response Platform — PWA Installation & Service Worker Handler
  * Strictly aligned with Apple Human Interface Guidelines (HIG) & Mobile Standards.
- * Provides seamless install prompts for Android Chrome, iOS Safari, and Desktop browsers.
+ * Provides seamless auto install prompts for Android Chrome, iOS Safari, Desktop, and all browsers.
  */
+
+// Clear any legacy permanent dismissal from previous test versions
+try {
+  localStorage.removeItem('qatra_pwa_dismissed');
+} catch (_) {}
 
 let deferredPrompt = null;
 
@@ -44,13 +49,42 @@ export function getBrowserInfo() {
   return { isIos, isAndroid, isChrome, isSafari, isEdge, isMobile };
 }
 
-// 4. Show Apple HIG Install Sheet / Modal
+// 4. Render Floating Quick Install Pill
+export function renderFloatingPwaPill() {
+  if (isRunningStandalone()) return;
+  if (document.getElementById('qatra-floating-install-pill')) return;
+
+  const pill = document.createElement('button');
+  pill.id = 'qatra-floating-install-pill';
+  pill.className = 'floating-pwa-pill';
+  pill.type = 'button';
+  pill.setAttribute('aria-label', 'Install QATRA App');
+  pill.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Install App</span>
+  `;
+
+  pill.addEventListener('click', () => {
+    showPwaInstallPopup(true);
+  });
+
+  document.body.appendChild(pill);
+}
+
+export function removeFloatingPwaPill() {
+  const pill = document.getElementById('qatra-floating-install-pill');
+  if (pill) pill.remove();
+}
+
+// 5. Show Apple HIG Install Sheet / Modal
 export function showPwaInstallPopup(force = false) {
   if (isRunningStandalone()) {
     return;
   }
 
-  if (!force && (sessionStorage.getItem('qatra_pwa_dismissed') === 'true' || localStorage.getItem('qatra_pwa_dismissed') === 'true')) {
+  const urlForced = window.location.search.includes('install') || window.location.search.includes('pwa');
+  if (!force && !urlForced && sessionStorage.getItem('qatra_pwa_dismissed') === 'true') {
+    renderFloatingPwaPill();
     return;
   }
 
@@ -163,6 +197,7 @@ export function showPwaInstallPopup(force = false) {
           deferredPrompt = null;
           if (outcome === 'accepted') {
             hidePwaInstallPopup();
+            removeFloatingPwaPill();
           }
         } catch (err) {
           console.warn('[QATRA PWA] Prompt failed, showing instructions:', err);
@@ -204,22 +239,24 @@ function showInstructionGuide() {
   }
 }
 
-// 5. Hide Sheet
+// 6. Hide Sheet & Show Floating Pill
 export function hidePwaInstallPopup() {
   const overlay = document.getElementById('qatra-pwa-popup-overlay');
   if (overlay) {
     overlay.classList.remove('active');
     sessionStorage.setItem('qatra_pwa_dismissed', 'true');
-    localStorage.setItem('qatra_pwa_dismissed', 'true');
+  }
+  if (!isRunningStandalone()) {
+    renderFloatingPwaPill();
   }
 }
 
-// 6. External trigger compatibility
+// 7. External trigger compatibility
 export function triggerPwaInstall() {
   showPwaInstallPopup(true);
 }
 
-// 7. Listen for Chrome / Android beforeinstallprompt
+// 8. Listen for Chrome / Android / Edge beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
@@ -230,24 +267,24 @@ window.addEventListener('beforeinstallprompt', (e) => {
     btn.style.display = 'inline-flex';
   });
 
-  // On mobile devices, prompt the user immediately if not dismissed
-  const browser = getBrowserInfo();
-  if (browser.isMobile && !isRunningStandalone()) {
-    showPwaInstallPopup();
+  // Auto-prompt user across devices if not standalone
+  if (!isRunningStandalone()) {
+    showPwaInstallPopup(false);
   }
 });
 
-// 8. Track Successful Installation
+// 9. Track Successful Installation
 window.addEventListener('appinstalled', () => {
   console.log('[QATRA PWA] App installed successfully');
   deferredPrompt = null;
   hidePwaInstallPopup();
+  removeFloatingPwaPill();
   document.querySelectorAll('.pwa-install-trigger').forEach((btn) => {
     btn.style.display = 'none';
   });
 });
 
-// 9. Auto-initialize on DOM ready
+// 10. Auto-initialize on DOM ready
 function onReady(fn) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', fn);
@@ -261,6 +298,7 @@ onReady(() => {
     document.querySelectorAll('.pwa-install-trigger').forEach((btn) => {
       btn.style.display = 'none';
     });
+    removeFloatingPwaPill();
     return;
   }
 
@@ -272,11 +310,18 @@ onReady(() => {
     });
   });
 
-  // On mobile browsers, pop up the install sheet after a gentle 1.2s delay
-  const browser = getBrowserInfo();
-  if (browser.isMobile) {
+  // Check URL force parameter: ?install or ?pwa
+  if (window.location.search.includes('install') || window.location.search.includes('pwa')) {
     setTimeout(() => {
-      showPwaInstallPopup(false);
-    }, 1200);
+      showPwaInstallPopup(true);
+    }, 400);
+    return;
   }
+
+  // Auto-pop up the install sheet after a gentle 700ms delay across all browsers
+  setTimeout(() => {
+    if (!isRunningStandalone() && !sessionStorage.getItem('qatra_pwa_dismissed')) {
+      showPwaInstallPopup(false);
+    }
+  }, 700);
 });
