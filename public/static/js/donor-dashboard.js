@@ -381,7 +381,7 @@ function setupAvailabilityToggle() {
 
   async function syncLocation(lat, lng) {
     const user = getCurrentUser();
-    if (!user || user.role === 'guest') {
+    if (!user || (user.role !== 'verified_donor' && user.role !== 'admin')) {
       desc.innerText = 'Broadcasts your proximity to emergency blood requests in Karachi.';
       return;
     }

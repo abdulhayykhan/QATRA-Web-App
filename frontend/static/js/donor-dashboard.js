@@ -381,13 +381,13 @@ function setupAvailabilityToggle() {
 
   async function syncLocation(lat, lng) {
     const user = getCurrentUser();
-    if (!user || user.role === 'guest') {
+    if (!user || (user.role !== 'verified_donor' && user.role !== 'admin')) {
       desc.innerText = 'Broadcasts your proximity to emergency blood requests in Karachi.';
       return;
     }
 
     try {
-      await apiPost('/map/donor/location', { latitude: lat, longitude: lng });
+      await apiPost('/map/donor/location', { latitude: lat, longitude: lng }, { silent: true });
       desc.innerText = 'Broadcasts your proximity to emergency blood requests in Karachi.';
       showToast('Location updated. You are active for proximity matching! 📍', 'success');
     } catch (err) {

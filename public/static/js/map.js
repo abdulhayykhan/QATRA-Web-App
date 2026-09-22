@@ -340,8 +340,9 @@ function setupGps() {
           fillOpacity: 1
         }).addTo(map);
 
-        const isRequester = !!(urlRequestId || lastRequestId);
-        userMarker.bindTooltip(`<b>Your Location</b> (${isRequester ? 'Requester' : 'Available to Donate'})`);
+        const currentUser = getCurrentUser();
+        const isRequester = !!(urlRequestId || lastRequestId || (currentUser && currentUser.role === 'verified_seeker'));
+        userMarker.bindTooltip(`<b>Your Location</b> (${isRequester ? 'Seeker / Patient Proximity' : 'Available to Donate'})`);
 
         // Only reposition view if not explicitly viewing a focused request
         if (!silent || !urlRequestId) {
@@ -365,7 +366,8 @@ function setupGps() {
 
 async function syncDonorLocationThrottled(lat, lng) {
   const user = getCurrentUser();
-  if (!user || user.role === 'guest') return;
+  // Location synchronization to /map/donor/location is strictly for verified donors and admins
+  if (!user || (user.role !== 'verified_donor' && user.role !== 'admin')) return;
 
   const now = Date.now();
   if (now - lastLocationUpdateTs < 120000) {
@@ -373,7 +375,7 @@ async function syncDonorLocationThrottled(lat, lng) {
   }
 
   try {
-    await apiPost('/map/donor/location', { latitude: lat, longitude: lng });
+    await apiPost('/map/donor/location', { latitude: lat, longitude: lng }, { silent: true });
     lastLocationUpdateTs = now;
   } catch (err) {
     console.debug('Location sync notice:', err.message);
@@ -625,10 +627,12 @@ function openRequestSummaryCard(req) {
     directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(navDestination)}`;
   }
 
-  // Adjust Accept button for directory pins vs real emergency requests
+  // Adjust Accept button for directory pins vs real emergency requests (only donors/admins can accept)
   const acceptBtn = document.getElementById('card-accept-btn');
+  const cardUser = getCurrentUser();
+  const isDonorOrAdmin = cardUser && (cardUser.role === 'verified_donor' || cardUser.role === 'admin');
   if (acceptBtn) {
-    if (isDirectory) {
+    if (isDirectory || !isDonorOrAdmin) {
       acceptBtn.style.display = 'none';
     } else {
       acceptBtn.style.display = '';
