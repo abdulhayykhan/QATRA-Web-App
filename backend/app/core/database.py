@@ -58,13 +58,23 @@ SessionLocal = sessionmaker(
 _schema_initialized = False
 
 def init_db_schema():
-    """Ensure database schema is created on demand."""
+    """Ensure database schema is created on demand and RLS is secured."""
     global _schema_initialized
     if not _schema_initialized:
         try:
             from app.models.base import Base
             import app.models  # noqa: F401
             Base.metadata.create_all(bind=engine)
+            
+            # Enforce Row-Level Security on PostgreSQL public schema
+            if not str(engine.url).startswith("sqlite"):
+                with engine.begin() as conn:
+                    for table_name in Base.metadata.tables.keys():
+                        try:
+                            conn.execute(text(f'ALTER TABLE "{table_name}" ENABLE ROW LEVEL SECURITY;'))
+                        except Exception:
+                            pass
+
             _schema_initialized = True
         except Exception as e:
             logger.warning(f"Schema creation error: {e}")
