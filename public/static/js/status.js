@@ -125,12 +125,18 @@ async function loadProximityMatches(silent = false) {
 
     const container = document.getElementById('donors-list-container');
 
-    // Fallback sample donors if database has no active donors in test runner
+    // Display empty state when no donors have responded/available
     if (!matches || matches.length === 0) {
-      matches = [
-        { donor_id: 402, blood_group: 'B+', distance_km: 2.3, estimated_arrival_minutes: 12, is_available: true },
-        { donor_id: 519, blood_group: 'O-', distance_km: 4.8, estimated_arrival_minutes: 20, is_available: true }
-      ];
+      container.innerHTML = `
+        <div class="empty-matches-card" style="text-align: center; padding: 28px 16px; background: #FFFFFF; border-radius: 18px; border: 1.5px dashed rgba(201, 42, 42, 0.25); margin-top: 10px; box-shadow: var(--shadow-sm);">
+          <div style="font-size: 32px; margin-bottom: 8px;">📡</div>
+          <div style="font-size: 15px; font-weight: 700; color: #111827;">No Donors Available Right Now</div>
+          <div style="font-size: 12.5px; color: #6B7280; margin-top: 5px; line-height: 1.45;">
+            Radar is broadcasting your appeal to nearby compatible donors. Once a donor accepts your appeal, their live coordination status will appear here.
+          </div>
+        </div>
+      `;
+      return;
     }
 
     container.innerHTML = '';
@@ -138,6 +144,7 @@ async function loadProximityMatches(silent = false) {
     matches.forEach(donor => {
       const card = document.createElement('div');
       card.className = 'donor-match-card';
+      const isAccepted = Boolean(donor.is_accepted);
 
       card.innerHTML = `
         <div class="donor-header">
@@ -145,18 +152,36 @@ async function loadProximityMatches(silent = false) {
             <span class="donor-id">Donor #D-${donor.donor_id}</span>
             <span class="badge badge-blood" style="margin-left: 6px; font-size: 11px;">${donor.blood_group}</span>
           </div>
-          <span class="badge badge-success" style="font-size: 10px;">Compatible Match</span>
+          <span class="badge ${isAccepted ? 'badge-success' : 'badge-secondary'}" style="font-size: 10px;">
+            ${isAccepted ? '✅ Dispatch Accepted' : 'Compatible Match'}
+          </span>
         </div>
 
         <div class="donor-metrics">
-          <span>📍 <b>${donor.distance_km.toFixed(1)} km</b> away</span>
+          <span>📍 <b>${donor.distance_km ? donor.distance_km.toFixed(1) : '—'} km</b> away</span>
           <span>⏱️ ETA: <b>${donor.estimated_arrival_minutes || 15} mins</b></span>
           <span>🟢 Available</span>
         </div>
 
-        <a href="/seeker/coordination.html?request_id=${currentRequestId}&donor_id=${donor.donor_id}" class="btn btn-sm btn-primary" style="font-size: 12px; margin-top: 4px;">
-          💬 Chat & Call Donor
-        </a>
+        <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+          <a href="/seeker/coordination.html?request_id=${currentRequestId}&donor_id=${donor.donor_id}" class="btn btn-sm btn-primary" style="font-size: 12px; flex: 1; text-align: center;">
+            💬 In-App Chat
+          </a>
+          ${isAccepted ? `
+            <a href="/seeker/coordination.html?request_id=${currentRequestId}&donor_id=${donor.donor_id}" class="btn btn-sm btn-outline" style="font-size: 12px; flex: 1; text-align: center; border-color: #10B981; color: #047857;">
+              📞 Call Donor
+            </a>
+          ` : `
+            <button type="button" class="btn btn-sm btn-secondary" disabled style="font-size: 11px; opacity: 0.6; cursor: not-allowed; flex: 1;" title="Direct phone call locked until donor accepts request">
+              🔒 Call Locked
+            </button>
+          `}
+        </div>
+        ${!isAccepted ? `
+          <div style="font-size: 10.5px; color: #6B7280; margin-top: 5px; text-align: center;">
+            🔒 Direct phone call unlocks after donor accepts request.
+          </div>
+        ` : ''}
       `;
 
       container.appendChild(card);

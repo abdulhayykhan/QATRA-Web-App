@@ -121,11 +121,11 @@
 
           <div style="display: flex; justify-content: space-around; font-size: 12px; background: var(--bg-canvas); padding: 10px; border-radius: var(--radius-md);">
             <div>
-              <div style="font-size: 16px; font-weight: 700;" id="stat-alerted">8</div>
+              <div style="font-size: 16px; font-weight: 700;" id="stat-alerted">0</div>
               <div style="color: var(--text-muted);">Donors Alerted</div>
             </div>
             <div>
-              <div style="font-size: 16px; font-weight: 700;" id="stat-accepted">1</div>
+              <div style="font-size: 16px; font-weight: 700;" id="stat-accepted">0</div>
               <div style="color: var(--text-muted);">Accepted</div>
             </div>
             <div>
@@ -138,23 +138,11 @@
         <!-- Responding Donors List -->
         <h3 style="font-size: 14px; margin-bottom: var(--space-sm);">Matched Donors En Route</h3>
         <div id="matched-donors-list">
-          <div class="donor-match-card">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="font-size: 28px;">🚗</div>
-              <div>
-                <strong style="font-size: 14px;" id="matched-donor-name">Anonymous Donor #D-402</strong>
-                <div style="font-size: 12px; color: var(--text-muted);" id="matched-donor-subtext">
-                  📍 3.4 km away • ⏱️ ETA: ~14 mins
-                </div>
-              </div>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <a id="btn-match-call-donor" href="tel:+923001234567" class="btn btn-sm btn-success" style="width: auto; text-decoration: none; font-weight: 600;">
-                📞 Call Donor
-              </a>
-              <a id="btn-match-chat-donor" href="/seeker/coordination.html" class="btn btn-sm btn-primary" style="width: auto; text-decoration: none; font-weight: 600;">
-                💬 In-App Chat
-              </a>
+          <div style="text-align: center; padding: 28px 16px; background: #FFFFFF; border-radius: 18px; border: 1.5px dashed rgba(201, 42, 42, 0.25); box-shadow: var(--shadow-sm);">
+            <div style="font-size: 32px; margin-bottom: 8px;">📡</div>
+            <div style="font-size: 15px; font-weight: 700; color: #111827;">No Donors Available Right Now</div>
+            <div style="font-size: 12.5px; color: #6B7280; margin-top: 5px; line-height: 1.45; max-width: 320px; margin-left: auto; margin-right: auto;">
+              Radar is actively scanning Karachi for eligible donors. As soon as a donor confirms dispatch, their details and contact options will appear here.
             </div>
           </div>
         </div>

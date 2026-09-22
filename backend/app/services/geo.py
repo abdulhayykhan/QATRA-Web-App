@@ -196,6 +196,7 @@ def find_eligible_donors_in_radius(
 
             ranked_matches.append({
                 "donor_id": donor.id,
+                "user_id": donor.user_id,
                 "blood_group": donor.blood_group,
                 "distance_km": distance,
                 "estimated_arrival_minutes": eta_mins,

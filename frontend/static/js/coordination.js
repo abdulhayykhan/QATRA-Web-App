@@ -41,19 +41,24 @@ async function loadCoordinationSession(roleOverride = null) {
       // Update donor badge and info
       if (data.matched_donor) {
         const donorNameEl = document.getElementById('matched-donor-display-name');
-        if (donorNameEl) donorNameEl.innerText = data.matched_donor.name || 'Anonymous Donor #D-402';
+        if (donorNameEl) donorNameEl.innerText = data.matched_donor.name || 'Volunteer Donor';
 
         const bloodTagEl = document.getElementById('matched-donor-blood-tag');
-        if (bloodTagEl) bloodTagEl.innerText = data.matched_donor.blood_group || 'B+';
+        if (bloodTagEl) bloodTagEl.innerText = data.matched_donor.blood_group || '—';
 
         const navBloodBadge = document.getElementById('nav-blood-badge');
-        if (navBloodBadge) navBloodBadge.innerText = `${data.matched_donor.blood_group || 'B+'} Needed`;
+        if (navBloodBadge) navBloodBadge.innerText = `${data.matched_donor.blood_group || 'Blood'} Needed`;
 
         const distEl = document.getElementById('nav-distance');
-        if (distEl) distEl.innerText = `${data.matched_donor.distance_km || 2.4} km`;
+        if (distEl) distEl.innerText = data.matched_donor.distance_km ? `${data.matched_donor.distance_km.toFixed(1)} km` : 'Nearby';
 
         const etaEl = document.getElementById('nav-eta');
-        if (etaEl) etaEl.innerText = `${data.matched_donor.estimated_arrival_minutes || 14} mins`;
+        if (etaEl) etaEl.innerText = `${data.matched_donor.estimated_arrival_minutes || 15} mins`;
+      } else {
+        const headlineEl = document.getElementById('coordination-headline');
+        if (headlineEl) headlineEl.innerText = 'Awaiting Donor Acceptance';
+        const sublineEl = document.getElementById('coordination-subline');
+        if (sublineEl) sublineEl.innerText = 'Radar is broadcasting your appeal. No donor has accepted dispatch yet.';
       }
 
       // Update hospital details
@@ -72,19 +77,28 @@ async function loadCoordinationSession(roleOverride = null) {
 
       // Apply Unidirectional Calling Rules
       const seekerCallBox = document.getElementById('seeker-call-container');
+      const seekerCallLockedBox = document.getElementById('seeker-call-locked-container');
       const donorNoticeBox = document.getElementById('donor-advisory-container');
       const callBtn = document.getElementById('btn-call-donor');
       const numberText = document.getElementById('donor-call-number-text');
 
-      if (data.can_call && data.call_phone_number) {
-        // Seeker View: Direct calling enabled
-        if (seekerCallBox) seekerCallBox.style.display = 'block';
+      if (currentViewerRole === 'seeker') {
         if (donorNoticeBox) donorNoticeBox.style.display = 'none';
-        if (callBtn) callBtn.href = `tel:${data.call_phone_number}`;
-        if (numberText) numberText.innerText = `(${data.call_phone_number})`;
+        if (data.can_call && data.call_phone_number) {
+          // Seeker View: Direct calling enabled only after dispatch acceptance
+          if (seekerCallBox) seekerCallBox.style.display = 'block';
+          if (seekerCallLockedBox) seekerCallLockedBox.style.display = 'none';
+          if (callBtn) callBtn.href = `tel:${data.call_phone_number}`;
+          if (numberText) numberText.innerText = `(${data.call_phone_number})`;
+        } else {
+          // Seeker View: Calling locked until donor accepts
+          if (seekerCallBox) seekerCallBox.style.display = 'none';
+          if (seekerCallLockedBox) seekerCallLockedBox.style.display = 'block';
+        }
       } else {
         // Donor View: Direct calling strictly prohibited
         if (seekerCallBox) seekerCallBox.style.display = 'none';
+        if (seekerCallLockedBox) seekerCallLockedBox.style.display = 'none';
         if (donorNoticeBox) donorNoticeBox.style.display = 'block';
       }
     } else {
@@ -102,17 +116,16 @@ async function loadCoordinationSession(roleOverride = null) {
 function applyFallbackSession(roleOverride) {
   currentViewerRole = roleOverride === 'donor' ? 'donor' : 'seeker';
   const seekerCallBox = document.getElementById('seeker-call-container');
+  const seekerCallLockedBox = document.getElementById('seeker-call-locked-container');
   const donorNoticeBox = document.getElementById('donor-advisory-container');
-  const callBtn = document.getElementById('btn-call-donor');
-  const numberText = document.getElementById('donor-call-number-text');
+
+  if (seekerCallBox) seekerCallBox.style.display = 'none';
 
   if (currentViewerRole === 'seeker') {
-    if (seekerCallBox) seekerCallBox.style.display = 'block';
+    if (seekerCallLockedBox) seekerCallLockedBox.style.display = 'block';
     if (donorNoticeBox) donorNoticeBox.style.display = 'none';
-    if (callBtn) callBtn.href = 'tel:+923001234567';
-    if (numberText) numberText.innerText = '(+92 300 1234567)';
   } else {
-    if (seekerCallBox) seekerCallBox.style.display = 'none';
+    if (seekerCallLockedBox) seekerCallLockedBox.style.display = 'none';
     if (donorNoticeBox) donorNoticeBox.style.display = 'block';
   }
 }
@@ -138,18 +151,16 @@ async function pollChatMessages() {
         lastMessageCount = messages.length;
       }
     } else if (container.children.length === 0) {
-      // Fallback initial greeting
-      renderBubble({
-        id: 1,
-        sender_role: 'donor',
-        sender_name: 'Volunteer Donor',
-        text: 'Hello! I have confirmed your emergency blood alert. I am on my way to the blood bank.',
-        timestamp: new Date().toISOString()
-      }, container);
-      lastMessageCount = 1;
+      // Empty state placeholder
+      container.innerHTML = `
+        <div style="text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 13px;">
+          💬 No messages yet. Send an in-app message to coordinate hospital arrival.
+        </div>
+      `;
+      lastMessageCount = 0;
     }
   } catch (err) {
-    console.warn('Chat poll fallback:', err);
+    console.warn('Chat poll error:', err);
   }
 }
 

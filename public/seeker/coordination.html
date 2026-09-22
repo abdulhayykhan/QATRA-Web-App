@@ -174,21 +174,31 @@
           <div class="coordination-status-badge">
             <span>🚨 LIVE DISPATCH COORDINATION</span>
           </div>
-          <h2 style="font-size: 18px; margin: 0 0 4px 0; color: #ffffff;" id="coordination-headline">Matched Volunteer En Route</h2>
+          <h2 style="font-size: 18px; margin: 0 0 4px 0; color: #ffffff;" id="coordination-headline">Live Dispatch Coordination</h2>
           <p style="font-size: 13px; color: rgba(255,255,255,0.9); margin: 0 0 var(--space-md) 0;" id="coordination-subline">
-            Coordinating arrival with donor <b id="matched-donor-display-name">Anonymous Donor #D-402</b> (<span id="matched-donor-blood-tag">B+</span>)
+            Coordinating arrival with donor <b id="matched-donor-display-name">—</b> (<span id="matched-donor-blood-tag">—</span>)
           </p>
 
-          <!-- Seeker Direct Call Section (Exclusively rendered for Seekers) -->
-          <div id="seeker-call-container" style="display: block; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.25);">
+          <!-- Seeker Direct Call Section (Exclusively rendered when donor accepts dispatch) -->
+          <div id="seeker-call-container" style="display: none; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.25);">
             <div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: rgba(255,255,255,0.95);">
               📞 Emergency Direct Contact
             </div>
-            <a id="btn-call-donor" href="tel:+923001234567" class="btn btn-success" style="font-size: 15px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 12px; box-shadow: var(--shadow-sm);">
-              <span>📞 Call Donor</span> <span id="donor-call-number-text">(+92 300 1234567)</span>
+            <a id="btn-call-donor" href="#" class="btn btn-success" style="font-size: 15px; font-weight: 700; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 12px; box-shadow: var(--shadow-sm);">
+              <span>📞 Call Donor</span> <span id="donor-call-number-text"></span>
             </a>
             <p style="font-size: 11px; color: rgba(255, 255, 255, 0.85); margin: 8px 0 0 0;">
               Seeker direct phone link to coordinate critical hospital entry.
+            </p>
+          </div>
+
+          <!-- Seeker Call Locked Advisory (When donor has NOT yet accepted dispatch) -->
+          <div id="seeker-call-locked-container" style="display: none; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.25); text-align: left;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+              <span>🔒 Direct Phone Call Locked</span>
+            </div>
+            <p style="font-size: 12px; color: rgba(255, 255, 255, 0.95); margin: 0; line-height: 1.4;">
+              Direct calling unlocks automatically after the volunteer donor accepts dispatch. Please use the <b>In-App Chat</b> below to communicate.
             </p>
           </div>
 

@@ -50,3 +50,4 @@ class DonorMatchResponse(BaseModel):
     distance_km: float
     estimated_arrival_minutes: Optional[int] = None
     is_available: bool
+    is_accepted: bool = False

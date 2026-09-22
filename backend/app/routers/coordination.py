@@ -95,19 +95,9 @@ async def get_coordination_session(
 ):
     blood_request = db.query(Request).filter(Request.id == request_id).first()
     if not blood_request:
-        # Graceful fallback mock request for test IDs or demos
-        blood_request = Request(
-            id=request_id,
-            seeker_id=1,
-            patient_name="Emergency Blood Recipient",
-            hospital_name="Dr. Ruth K.M. Pfau Civil Hospital Karachi",
-            hospital_address="Mission Rd, New Karachi",
-            hospital_latitude=24.8569,
-            hospital_longitude=67.0112,
-            blood_group="B+",
-            units_needed=2,
-            units_fulfilled=1,
-            status="matched",
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Coordination session not found for this request",
         )
 
     # Determine matched donor user
@@ -115,23 +105,11 @@ async def get_coordination_session(
     target_donor_id = blood_request.matched_donor_id or donor_id
 
     if target_donor_id:
-        # Check if target_donor_id is a Donor.id or User.id
         d_record = db.query(Donor).filter((Donor.id == target_donor_id) | (Donor.user_id == target_donor_id)).first()
         if d_record:
             matched_donor_user = db.query(User).filter(User.id == d_record.user_id).first()
         else:
             matched_donor_user = db.query(User).filter(User.id == target_donor_id).first()
-
-    if not matched_donor_user:
-        # Default fallback donor for seamless coordination
-        matched_donor_user = User(
-            id=402,
-            firebase_uid="donor_402",
-            email="donor402@example.com",
-            full_name="Verified Volunteer Donor",
-            phone_number="+923001234567",
-            role=UserRole.VERIFIED_DONOR.value,
-        )
 
     # Resolve viewer role
     if as_role in ["seeker", "donor"]:
@@ -146,12 +124,24 @@ async def get_coordination_session(
         else:
             viewer_role = "seeker"
     else:
-        viewer_role = "seeker"  # Default public view to seeker
+        viewer_role = "seeker"
 
-    # Enforce Unidirectional Calling Rules:
-    # Seeker CAN call Donor. Donor CANNOT call Seeker.
-    can_call = (viewer_role == "seeker")
-    call_phone = matched_donor_user.phone_number or "+923001234567" if can_call else None
+    # Enforce Calling Rules:
+    # Seeker can ONLY call Donor IF request has been accepted by donor (status == "matched")
+    is_accepted = bool(blood_request.status == "matched" and matched_donor_user is not None)
+    can_call = bool(viewer_role == "seeker" and is_accepted)
+    call_phone = matched_donor_user.phone_number if (can_call and matched_donor_user and matched_donor_user.phone_number) else None
+
+    matched_donor_info = None
+    if matched_donor_user:
+        matched_donor_info = MatchedDonorInfo(
+            donor_id=matched_donor_user.id,
+            name=matched_donor_user.full_name or f"Donor #{matched_donor_user.id}",
+            phone_number=call_phone,
+            blood_group=blood_request.blood_group,
+            distance_km=2.4,
+            estimated_arrival_minutes=14,
+        )
 
     return CoordinationSessionResponse(
         request_id=blood_request.id,
@@ -159,14 +149,7 @@ async def get_coordination_session(
         viewer_role=viewer_role,
         can_call=can_call,
         call_phone_number=call_phone,
-        matched_donor=MatchedDonorInfo(
-            donor_id=matched_donor_user.id,
-            name=matched_donor_user.full_name,
-            phone_number=call_phone,  # Scrubbed if viewer_role != 'seeker'
-            blood_group=blood_request.blood_group,
-            distance_km=2.4,
-            estimated_arrival_minutes=14,
-        ),
+        matched_donor=matched_donor_info,
         seeker_info=SeekerInfo(
             patient_name=blood_request.patient_name,
             blood_group=blood_request.blood_group,
@@ -192,21 +175,8 @@ async def get_coordination_session(
     summary="Get In-App Chat Message History",
 )
 async def get_coordination_messages(request_id: int):
-    if request_id not in COORDINATION_CHATS or not COORDINATION_CHATS[request_id]:
-        # Initialize with standard welcome message from dispatch donor
-        COORDINATION_CHATS[request_id] = [
-            {
-                "id": 1,
-                "sender_role": "donor",
-                "sender_name": "Volunteer Donor",
-                "text": "Hello! I have confirmed your emergency blood alert. I am on my way to the blood bank.",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        ]
-
-    return [
-        ChatMessageOutput(**msg) for msg in COORDINATION_CHATS[request_id]
-    ]
+    messages = COORDINATION_CHATS.get(request_id, [])
+    return [ChatMessageOutput(**msg) for msg in messages]
 
 
 # ==============================================================================

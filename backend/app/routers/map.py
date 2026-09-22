@@ -379,6 +379,10 @@ async def get_request_matches(
             distance_km=match["distance_km"],
             estimated_arrival_minutes=match["estimated_arrival_minutes"],
             is_available=match["is_available"],
+            is_accepted=bool(
+                blood_request.status == "matched"
+                and (blood_request.matched_donor_id in [match["donor_id"], match.get("user_id")])
+            ),
         )
         for match in ranked_matches
     ]
