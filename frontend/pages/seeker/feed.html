@@ -245,6 +245,20 @@
 
     <!-- Main Content Area -->
     <main class="app-content">
+      <!-- Active Emergency Appeal Banner (Auto-populated when seeker has active request) -->
+      <div id="active-appeal-banner" style="display: none; background: #FFF5F5; border: 1.5px solid rgba(201, 42, 42, 0.35); border-radius: 16px; padding: 14px 18px; margin: 0 0 20px 0; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 4px 14px rgba(201, 42, 42, 0.08); flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 24px;">🚨</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 700; color: #991B1B;">Your Active Emergency Blood Appeal</div>
+            <div style="font-size: 12px; color: #4B5563; margin-top: 2px;" id="active-appeal-summary">Your appeal is active on the Karachi live radar.</div>
+          </div>
+        </div>
+        <a id="btn-track-active-appeal" href="/seeker/status.html" class="btn btn-sm btn-primary" style="white-space: nowrap; padding: 8px 18px; font-size: 12.5px; text-decoration: none; border-radius: 20px; font-weight: 700;">
+          Track Live Radar & Coordination →
+        </a>
+      </div>
+
       <!-- Dual Feed Tabs: Urgent vs Awareness (PRD Wireframe pg 22) -->
       <div class="feed-tabs-container">
         <button type="button" class="feed-tab-btn active" id="tab-urgent" data-type="urgent">
