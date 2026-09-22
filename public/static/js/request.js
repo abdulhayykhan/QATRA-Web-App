@@ -561,7 +561,7 @@ const KARACHI_HOSPITALS = [
   { name: 'Saifee Hospital', area: 'North Nazimabad', lat: 24.9280, lng: 67.0320 },
   { name: 'Sambros Hospital', area: 'Federal B Area', lat: 24.9390, lng: 67.0670 },
   { name: 'Services Hospital', area: 'MA Jinnah Road', lat: 24.8640, lng: 67.0190 },
-  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', area: 'Shah Faisal Colony', lat: 24.8765, lng: 67.1425, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
+  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', area: 'Shah Faisal Colony', lat: 24.8815, lng: 67.1448, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
   { name: 'Sindh Government Children Hospital', area: 'North Nazimabad', lat: 24.9380, lng: 67.0390 },
   { name: 'Sindh Government Hospital (Korangi)', area: 'Korangi #5', lat: 24.8250, lng: 67.1350 },
   { name: 'Sindh Government Hospital (Liaquatabad)', area: 'Liaquatabad', lat: 24.9020, lng: 67.0380 },
@@ -635,6 +635,8 @@ function setupHospitalDropdown() {
     const locPreviewText = document.getElementById('loc-preview-text');
     const locPreviewIcon = document.getElementById('loc-preview-icon');
 
+    const gmapVerifyBtn = document.getElementById('btn-view-on-google-maps');
+
     if (found && found.lat && found.lng) {
       if (latInput) latInput.value = found.lat;
       if (lngInput) lngInput.value = found.lng;
@@ -643,10 +645,18 @@ function setupHospitalDropdown() {
         locPreviewText.innerHTML = `Pinned: <strong>${found.name}</strong> (${found.area}) <span style="color:#2b8a3e; font-weight:600;">✓ Verified (${found.lat.toFixed(4)}, ${found.lng.toFixed(4)})</span>`;
       }
       if (locPreviewIcon) locPreviewIcon.innerText = '📍';
+      if (gmapVerifyBtn) {
+        gmapVerifyBtn.href = `https://www.google.com/maps/search/?api=1&query=${found.lat},${found.lng}`;
+        gmapVerifyBtn.style.display = 'inline-flex';
+      }
     } else {
       if (addrInput) addrInput.value = `${name}, Karachi`;
       if (locPreviewText) {
         locPreviewText.innerHTML = `Location: <strong>${name}</strong> <span style="color:#e67700;">(Tap "Use My Current GPS" if at the hospital)</span>`;
+      }
+      if (gmapVerifyBtn) {
+        gmapVerifyBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' Hospital Karachi')}`;
+        gmapVerifyBtn.style.display = 'inline-flex';
       }
     }
 
@@ -840,6 +850,11 @@ function setupHospitalDropdown() {
             locPreviewText.innerHTML = `Pinned: <strong>Current Device GPS</strong> <span style="color:#1864ab; font-weight:600;">(${lat.toFixed(4)}, ${lng.toFixed(4)})</span>`;
           }
           if (locPreviewIcon) locPreviewIcon.innerText = '🎯';
+          const gmapVerifyBtn = document.getElementById('btn-view-on-google-maps');
+          if (gmapVerifyBtn) {
+            gmapVerifyBtn.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+            gmapVerifyBtn.style.display = 'inline-flex';
+          }
           showToast('Hospital location pinned to your current GPS position!', 'success');
           gpsBtn.disabled = false;
           gpsBtn.innerHTML = origText;
