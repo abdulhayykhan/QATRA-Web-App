@@ -36,6 +36,22 @@
       "type": "image/png"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/media/screenshots/mobile-screen.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "QATRA Mobile Emergency Blood Network"
+    },
+    {
+      "src": "/media/screenshots/desktop-screen.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "QATRA Live Desktop Operations Hub"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Emergency Request",

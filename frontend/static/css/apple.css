@@ -1303,4 +1303,55 @@ body {
   .card-actions .btn {
     font-size: 12px !important;
   }
-}
+}
+
+/* ----------------------------------------------------------------------------
+   16. FLOATING QUICK INSTALL PILL
+   ---------------------------------------------------------------------------- */
+.floating-pwa-pill {
+  position: fixed;
+  bottom: calc(76px + env(safe-area-inset-bottom, 12px));
+  right: 18px;
+  z-index: 9998;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  color: var(--primary-red, #C92A2A);
+  border: 1.5px solid rgba(201, 42, 42, 0.28);
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: pwaPillFloat 3s ease-in-out infinite;
+  text-decoration: none;
+}
+
+.floating-pwa-pill:hover,
+.floating-pwa-pill:active {
+  background: var(--primary-red, #C92A2A);
+  color: #FFFFFF;
+  border-color: var(--primary-red, #C92A2A);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(201, 42, 42, 0.35);
+}
+
+.floating-pwa-pill svg {
+  flex-shrink: 0;
+}
+
+@keyframes pwaPillFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@media (min-width: 769px) {
+  .floating-pwa-pill {
+    bottom: 24px;
+    right: 24px;
+  }
+}
+
