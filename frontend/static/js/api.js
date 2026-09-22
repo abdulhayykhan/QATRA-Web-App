@@ -216,7 +216,9 @@ async function request(endpoint, options = {}) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMsg = errorData.detail || errorData.message || (response.status === 413 ? 'Uploaded image or document is too large. Please take a standard photo or attach a smaller file.' : `Request failed with status ${response.status}`);
-      showToast(errorMsg, 'error');
+      if (!options.silent) {
+        showToast(errorMsg, 'error');
+      }
       throw new Error(errorMsg);
     }
 
@@ -232,25 +234,25 @@ async function request(endpoint, options = {}) {
   }
 }
 
-export async function apiGet(endpoint, params = {}) {
+export async function apiGet(endpoint, params = {}, options = {}) {
   let queryString = '';
   const cleanParams = Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '');
   if (cleanParams.length > 0) {
     queryString = '?' + new URLSearchParams(cleanParams).toString();
   }
-  return request(`${endpoint}${queryString}`, { method: 'GET' });
+  return request(`${endpoint}${queryString}`, { method: 'GET', ...options });
 }
 
-export async function apiPost(endpoint, body = {}) {
-  return request(endpoint, { method: 'POST', body });
+export async function apiPost(endpoint, body = {}, options = {}) {
+  return request(endpoint, { method: 'POST', body, ...options });
 }
 
-export async function apiPut(endpoint, body = {}) {
-  return request(endpoint, { method: 'PUT', body });
+export async function apiPut(endpoint, body = {}, options = {}) {
+  return request(endpoint, { method: 'PUT', body, ...options });
 }
 
-export async function apiDelete(endpoint) {
-  return request(endpoint, { method: 'DELETE' });
+export async function apiDelete(endpoint, options = {}) {
+  return request(endpoint, { method: 'DELETE', ...options });
 }
 
 export async function apiUpload(endpoint, formData) {
