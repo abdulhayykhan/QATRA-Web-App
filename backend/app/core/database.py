@@ -65,7 +65,7 @@ def init_db_schema():
             from app.models.base import Base
             import app.models  # noqa: F401
             Base.metadata.create_all(bind=engine)
-            
+
             # Enforce Row-Level Security on PostgreSQL public schema
             if not str(engine.url).startswith("sqlite"):
                 with engine.begin() as conn:
