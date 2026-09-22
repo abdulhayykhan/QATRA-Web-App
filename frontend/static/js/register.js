@@ -178,9 +178,14 @@ function setupStep2Profile() {
     registrationState.bloodGroup = document.getElementById('donor-blood-group').value;
     registrationState.age = parseInt(document.getElementById('donor-age').value, 10);
     registrationState.gender = document.getElementById('donor-gender').value;
+    registrationState.phoneNumber = (document.getElementById('donor-phone')?.value || '').trim();
 
     if (!registrationState.fullName) {
       showToast('Please enter your full name.', 'warning');
+      return;
+    }
+    if (!registrationState.phoneNumber) {
+      showToast('Please enter your mobile or WhatsApp phone number.', 'warning');
       return;
     }
 
@@ -353,13 +358,18 @@ function setupStep4PreScreen() {
         weight_kg: 68.0,
         hemoglobin_g_dl: 14.0,
         has_recent_illness: !noIllness,
-        has_recent_tattoo_or_surgery: !noSurgery
+        has_recent_tattoo_or_surgery: !noSurgery,
+        phone_number: registrationState.phoneNumber || undefined,
+        blood_group: registrationState.bloodGroup || undefined,
+        full_name: registrationState.fullName || undefined,
       });
 
       // Update user role to verified_donor
       const user = getCurrentUser() || {};
       user.role = 'verified_donor';
       user.blood_group = registrationState.bloodGroup;
+      user.phone_number = registrationState.phoneNumber;
+      user.full_name = registrationState.fullName || user.full_name;
       user.is_verified = true;
       user.cnic_verified = true;
       setCurrentUser(user);

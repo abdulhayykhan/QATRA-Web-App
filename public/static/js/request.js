@@ -4,11 +4,14 @@
  *
  * Implements Wireframe pg 5 (Requirements) & pg 6 (Slip verification upload).
  */
-import { apiUpload, apiPost, showToast, onReady } from './api.js';
+import { apiUpload, apiPost, showToast, onReady, getCurrentUser, getAuthToken, setAuthToken, setCurrentUser } from './api.js';
+import { signInWithGoogle, checkGoogleRedirectResult } from './firebase-config.js';
 
 let selectedSlipFile = null;
 
-onReady(() => {
+onReady(async () => {
+  await checkSeekerRedirect();
+  setupSeekerAuthGate();
   setupBloodGroupGrid();
   setupComponentChips();
   setupUnitsStepper();
@@ -331,41 +334,99 @@ function compressImageIfNeeded(file, maxDimension = 1600, quality = 0.82) {
 }
 
 /**
- * Ensure the client has a valid session token (user session or emergency seeker session)
+ * Handle redirect result from mobile Google Sign-In for Seeker
  */
-async function ensureSeekerToken() {
-  let token = localStorage.getItem('qatra_token');
-
-  // Verify JWT expiration if token exists
-  if (token) {
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-        if (payload.exp && payload.exp * 1000 < Date.now() + 60000) {
-          // Token is expired or will expire in 60s
-          token = null;
-        }
-      }
-    } catch (e) {
-      token = null;
+async function checkSeekerRedirect() {
+  try {
+    const result = await checkGoogleRedirectResult();
+    if (result && result.idToken) {
+      const res = await apiPost('/auth/firebase-login', {
+        firebase_id_token: result.idToken
+      });
+      setAuthToken(res.access_token);
+      setCurrentUser(res.user);
+      showToast(`Welcome, ${res.user.full_name || 'Seeker'}! 🩸`, 'success');
+      const modal = document.getElementById('seeker-auth-modal');
+      if (modal) modal.style.display = 'none';
+    }
+  } catch (err) {
+    if (err.code !== 'auth/no-current-user') {
+      console.warn('[QATRA Seeker Auth] Redirect check:', err.message);
     }
   }
+}
 
-  if (!token) {
+/**
+ * Setup Seeker Auth Gate Modal & Google Sign-In Trigger
+ */
+function setupSeekerAuthGate() {
+  const modal = document.getElementById('seeker-auth-modal');
+  const closeBtn = document.getElementById('seeker-auth-close-btn');
+  const googleBtn = document.getElementById('seeker-google-signin-btn');
+
+  const token = getAuthToken();
+  const user = getCurrentUser();
+
+  // If user is not logged in, prompt modal
+  if (!token || !user) {
+    if (modal) modal.style.display = 'flex';
+  }
+
+  closeBtn?.addEventListener('click', () => {
+    if (modal) modal.style.display = 'none';
+  });
+
+  googleBtn?.addEventListener('click', async () => {
+    googleBtn.disabled = true;
+    googleBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" style="animation:spin 1s linear infinite">
+        <circle cx="12" cy="12" r="10" stroke="#4285F4" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+      </svg>
+      <span>Connecting to Google…</span>
+    `;
+
     try {
-      const emergencyToken = `demo_seeker_${Date.now()}`;
-      const authRes = await apiPost('/auth/firebase-login', {
-        firebase_id_token: emergencyToken,
+      const authResult = await signInWithGoogle();
+      if (!authResult || authResult.redirecting) return;
+
+      const res = await apiPost('/auth/firebase-login', {
+        firebase_id_token: authResult.idToken
       });
-      if (authRes && authRes.access_token) {
-        localStorage.setItem('qatra_token', authRes.access_token);
-        localStorage.setItem('qatra_user', JSON.stringify(authRes.user));
-        token = authRes.access_token;
+      setAuthToken(res.access_token);
+      setCurrentUser(res.user);
+      showToast(`Signed in as ${res.user.full_name || 'Seeker'}! 🩸`, 'success');
+      if (modal) modal.style.display = 'none';
+    } catch (err) {
+      console.error('Seeker Google login error:', err);
+      showToast(err.message || 'Google Sign-In failed. Please try again.', 'error');
+    } finally {
+      if (googleBtn) {
+        googleBtn.disabled = false;
+        googleBtn.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continue with Google</span>
+        `;
       }
-    } catch (authErr) {
-      console.warn('Emergency seeker session initialization failed:', authErr);
     }
+  });
+}
+
+/**
+ * Ensure the client has a valid authenticated session
+ */
+async function ensureSeekerToken() {
+  const token = getAuthToken();
+  const user = getCurrentUser();
+
+  if (!token || !user) {
+    const modal = document.getElementById('seeker-auth-modal');
+    if (modal) modal.style.display = 'flex';
+    throw new Error('Please sign in with Google to post your emergency request.');
   }
 
   return token;
@@ -459,6 +520,9 @@ function setupFormSubmission() {
       const isAutoApproved = res.status === 'verified';
       if (res.request_id) {
         localStorage.setItem('last_request_id', res.request_id);
+        const u = getCurrentUser() || {};
+        u.role = 'verified_seeker';
+        setCurrentUser(u);
         // Cache details for instant display on status page
         localStorage.setItem(
           `request_${res.request_id}_details`,

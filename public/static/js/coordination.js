@@ -13,9 +13,21 @@ let currentViewerRole = 'seeker';
 let lastMessageCount = 0;
 let chatPollInterval = null;
 
-onReady(() => {
+onReady(async () => {
   const params = new URLSearchParams(window.location.search);
-  currentRequestId = params.get('request_id') || '1';
+  currentRequestId = params.get('request_id') || localStorage.getItem('last_request_id');
+
+  if (!currentRequestId) {
+    try {
+      const activeData = await apiGet('/map/requests/my-active');
+      if (activeData && activeData.has_active_request && activeData.request_id) {
+        currentRequestId = String(activeData.request_id);
+        localStorage.setItem('last_request_id', currentRequestId);
+      }
+    } catch (e) {}
+  }
+  if (!currentRequestId) currentRequestId = '1';
+
   const roleOverride = params.get('as_role');
 
   loadCoordinationSession(roleOverride);
