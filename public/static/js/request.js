@@ -561,7 +561,7 @@ const KARACHI_HOSPITALS = [
   { name: 'Saifee Hospital', area: 'North Nazimabad', lat: 24.9280, lng: 67.0320 },
   { name: 'Sambros Hospital', area: 'Federal B Area', lat: 24.9390, lng: 67.0670 },
   { name: 'Services Hospital', area: 'MA Jinnah Road', lat: 24.8640, lng: 67.0190 },
-  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', area: 'Shah Faisal Colony', lat: 24.8815, lng: 67.1448, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
+  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', area: 'Shah Faisal Colony', lat: 24.8841, lng: 67.1514, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
   { name: 'Sindh Government Children Hospital', area: 'North Nazimabad', lat: 24.9380, lng: 67.0390 },
   { name: 'Sindh Government Hospital (Korangi)', area: 'Korangi #5', lat: 24.8250, lng: 67.1350 },
   { name: 'Sindh Government Hospital (Liaquatabad)', area: 'Liaquatabad', lat: 24.9020, lng: 67.0380 },
@@ -646,7 +646,10 @@ function setupHospitalDropdown() {
       }
       if (locPreviewIcon) locPreviewIcon.innerText = '📍';
       if (gmapVerifyBtn) {
-        gmapVerifyBtn.href = `https://www.google.com/maps/search/?api=1&query=${found.lat},${found.lng}`;
+        const placeSearch = (found.name.includes('SOM') || found.name.includes('Fauji'))
+          ? 'Fauji Foundation Hospital (SOMH) Karachi'
+          : `${found.name}, Karachi`;
+        gmapVerifyBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeSearch)}`;
         gmapVerifyBtn.style.display = 'inline-flex';
       }
     } else {

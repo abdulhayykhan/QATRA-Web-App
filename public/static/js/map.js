@@ -80,7 +80,7 @@ const KARACHI_HOSPITALS = [
   { name: 'Saifee Hospital', area: 'North Nazimabad', lat: 24.9280, lng: 67.0320, address: 'Block F, North Nazimabad, Karachi' },
   { name: 'Sambros Hospital', area: 'Federal B Area', lat: 24.9390, lng: 67.0670, address: 'Block 14, Federal B Area, Karachi' },
   { name: 'Services Hospital', area: 'MA Jinnah Road', lat: 24.8640, lng: 67.0190, address: 'MA Jinnah Rd, Karachi' },
-  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', area: 'Shah Faisal Colony', lat: 24.8815, lng: 67.1448, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
+  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', area: 'Shah Faisal Colony', lat: 24.8841, lng: 67.1514, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
   { name: 'Sindh Government Children Hospital', area: 'North Nazimabad', lat: 24.9380, lng: 67.0390, address: 'North Nazimabad, Karachi' },
   { name: 'Sindh Government Hospital (Korangi)', area: 'Korangi #5', lat: 24.8250, lng: 67.1350, address: 'Korangi No. 5, Karachi' },
   { name: 'Sindh Government Hospital (Liaquatabad)', area: 'Liaquatabad', lat: 24.9020, lng: 67.0380, address: 'Liaquatabad No. 4, Karachi' },
@@ -271,12 +271,15 @@ function openGoogleMapsPreview(hospitalName, lat, lng) {
     subtitle.innerText = `Verified Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)} • Karachi`;
   }
 
-  // 100% Free Google Maps embed URL with exact pin coordinates & hospital title
-  const query = `${lat},${lng}+(${encodeURIComponent(hospitalName)})`;
-  iframe.src = `https://maps.google.com/maps?q=${query}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+  // Official Google Maps Place search query so Google Maps resolves the authentic verified Hospital POI
+  const placeSearch = (hospitalName.includes('SOM') || hospitalName.includes('Fauji'))
+    ? 'Fauji Foundation Hospital (SOMH) Karachi'
+    : `${hospitalName}, Karachi`;
+
+  iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(placeSearch)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
   if (extBtn) {
-    extBtn.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    extBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeSearch)}`;
   }
 
   modal.style.display = 'flex';
@@ -616,7 +619,10 @@ function openRequestSummaryCard(req) {
   }
 
   if (directionsBtn) {
-    directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${req.latitude},${req.longitude}`;
+    const navDestination = (req.hospital_name.includes('SOM') || req.hospital_name.includes('Fauji'))
+      ? 'Fauji Foundation Hospital (SOMH) Karachi'
+      : (req.latitude && req.longitude ? `${req.latitude},${req.longitude}` : `${req.hospital_name}, Karachi`);
+    directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(navDestination)}`;
   }
 
   // Adjust Accept button for directory pins vs real emergency requests
