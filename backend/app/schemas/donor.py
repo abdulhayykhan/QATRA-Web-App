@@ -25,6 +25,9 @@ class DonorPreScreenSubmit(BaseModel):
     hemoglobin_g_dl: Optional[float] = Field(None, ge=5.0, le=25.0)
     has_recent_illness: bool = Field(False, description="Fever, flu, or antibiotic usage in past 14 days")
     has_recent_tattoo_or_surgery: bool = Field(False, description="Major surgical procedures or tattooing in last 6 months")
+    phone_number: Optional[str] = Field(None, max_length=50, description="Pakistani mobile or WhatsApp contact number")
+    blood_group: Optional[str] = Field(None, description="Donor blood group (e.g. O+, A-, B+)")
+    full_name: Optional[str] = Field(None, max_length=255, description="Full name of donor")
 
 
 class DonorResponse(DonorBase):

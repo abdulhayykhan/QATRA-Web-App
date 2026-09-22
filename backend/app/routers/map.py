@@ -94,6 +94,23 @@ class DonorCancelResponse(BaseModel):
     message: str = "Acceptance cancelled. Request re-opened to next-ranked donors."
 
 
+class ActiveSeekerRequestResponse(BaseModel):
+    has_active_request: bool
+    request_id: Optional[int] = None
+    patient_name: Optional[str] = None
+    hospital_name: Optional[str] = None
+    hospital_address: Optional[str] = None
+    hospital_latitude: Optional[float] = None
+    hospital_longitude: Optional[float] = None
+    blood_group: Optional[str] = None
+    component_type: Optional[str] = None
+    units_needed: Optional[int] = None
+    units_fulfilled: Optional[int] = None
+    urgency: Optional[str] = None
+    status: Optional[str] = None
+    created_at: Optional[str] = None
+
+
 # In-memory decline registry for session lifetime (donor_id -> Set[request_id])
 # Preserves past decliner deprioritization without violating shared DB models
 DECLINED_REQUESTS: Dict[int, set] = {}
@@ -253,6 +270,54 @@ async def get_map_requests(
         )
 
     return markers
+
+
+# ==============================================================================
+# 4.2b GET /api/map/requests/my-active (Active Seeker Request Retrieval)
+# ==============================================================================
+
+@router.get(
+    "/requests/my-active",
+    response_model=ActiveSeekerRequestResponse,
+    summary="Get Authenticated Seeker's Active Emergency Request",
+    description="Retrieves the current user's active emergency blood request for instant dashboard rendering across sessions.",
+)
+async def get_my_active_request(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Finds the latest active emergency blood request initiated by current_user.
+    Allows seamless state recovery after logout/login across browser sessions.
+    """
+    active_req = (
+        db.query(Request)
+        .filter(
+            Request.seeker_id == current_user.id,
+            Request.status.in_(["pending_verification", "verified", "matched", "in_transit"]),
+        )
+        .order_by(Request.created_at.desc())
+        .first()
+    )
+    if not active_req:
+        return ActiveSeekerRequestResponse(has_active_request=False)
+
+    return ActiveSeekerRequestResponse(
+        has_active_request=True,
+        request_id=active_req.id,
+        patient_name=active_req.patient_name,
+        hospital_name=active_req.hospital_name,
+        hospital_address=active_req.hospital_address,
+        hospital_latitude=active_req.hospital_latitude,
+        hospital_longitude=active_req.hospital_longitude,
+        blood_group=active_req.blood_group,
+        component_type=active_req.component_type,
+        units_needed=active_req.units_needed,
+        units_fulfilled=active_req.units_fulfilled,
+        urgency=active_req.urgency,
+        status=active_req.status,
+        created_at=active_req.created_at.isoformat() if active_req.created_at else None,
+    )
 
 
 # ==============================================================================

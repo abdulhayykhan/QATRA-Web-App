@@ -51,6 +51,7 @@ class UserLoginData(BaseModel):
     firebase_uid: str
     email: str
     full_name: str
+    phone_number: Optional[str] = None
     role: str
     is_verified: bool
     cnic_verified: bool
@@ -218,6 +219,7 @@ async def firebase_login(
             firebase_uid=user.firebase_uid,
             email=user.email,
             full_name=user.full_name,
+            phone_number=user.phone_number,
             role=user.role,
             is_verified=user.is_verified,
             cnic_verified=user.cnic_verified,
@@ -562,8 +564,11 @@ async def upload_hospital_slip(
         ocr_extracted_data=json.dumps(extracted_data),
     )
     db.add(blood_request)
+    if current_user.role == UserRole.GUEST.value:
+        current_user.role = UserRole.VERIFIED_SEEKER.value
     db.commit()
     db.refresh(blood_request)
+    db.refresh(current_user)
 
     # Log audit event
     log_audit_event(
@@ -876,18 +881,28 @@ async def submit_donor_prescreen(
 
     passed = eval_result["passed"]
 
+    # Update phone number and full name on user account if provided
+    if payload.phone_number:
+        current_user.phone_number = payload.phone_number.strip()
+    if payload.full_name:
+        current_user.full_name = payload.full_name.strip()
+
     # Upsert donor record for current user
     donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    chosen_blood = (payload.blood_group.strip() if payload.blood_group else None)
+
     if not donor:
         donor = Donor(
             user_id=current_user.id,
-            blood_group="O+",  # Default placeholder, updated on profile edit or donation drive
+            blood_group=chosen_blood or "O+",
             is_available=passed,
             pre_screening_passed=passed,
             pre_screening_updated_at=datetime.now(timezone.utc),
         )
         db.add(donor)
     else:
+        if chosen_blood:
+            donor.blood_group = chosen_blood
         donor.pre_screening_passed = passed
         donor.pre_screening_updated_at = datetime.now(timezone.utc)
         if not passed:

@@ -306,9 +306,11 @@ def respond_to_feed_request(
                 detail=f"Donor is currently on a 90-day cooldown ({days} days remaining) and cannot donate at this time.",
             )
 
-    # Transition to matched if verified
-    if req.status == "verified":
+    # Transition to matched if verified and bind matched donor
+    if req.status in ["verified", "pending_verification"]:
         req.status = "matched"
+    req.matched_donor_id = current_user.id
+    req.units_fulfilled = min(req.units_needed, req.units_fulfilled + 1)
 
     # Send in-app notification to seeker
     seeker_notif = Notification(

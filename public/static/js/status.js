@@ -12,9 +12,23 @@ let currentRequestId = null;
 let pollTimer = null;
 let lastKnownRadius = 10.0;
 
-onReady(() => {
+onReady(async () => {
   const urlParams = new URLSearchParams(window.location.search);
   currentRequestId = urlParams.get('request_id') || localStorage.getItem('last_request_id');
+
+  // If no ID found in URL or localStorage, query backend for active request
+  if (!currentRequestId) {
+    try {
+      const activeData = await apiGet('/map/requests/my-active');
+      if (activeData && activeData.has_active_request && activeData.request_id) {
+        currentRequestId = String(activeData.request_id);
+        localStorage.setItem('last_request_id', currentRequestId);
+        applyRequestBannerDetails(activeData);
+      }
+    } catch (e) {
+      console.warn('Could not retrieve active request:', e);
+    }
+  }
 
   if (currentRequestId) {
     // Immediate render from cache if available
@@ -34,8 +48,22 @@ onReady(() => {
       loadProximityMatches(true);
     }, 5000);
   } else {
-    // Render default compatible donors guide
-    loadProximityMatches(true);
+    // Render clean empty state with button to post request
+    const container = document.getElementById('donors-list-container');
+    if (container) {
+      container.innerHTML = `
+        <div class="empty-matches-card" style="text-align: center; padding: 36px 20px; background: #FFFFFF; border-radius: 18px; border: 1.5px dashed rgba(201, 42, 42, 0.25); margin-top: 10px; box-shadow: var(--shadow-sm);">
+          <div style="font-size: 38px; margin-bottom: 10px;">🩸</div>
+          <div style="font-size: 16px; font-weight: 700; color: #111827;">No Active Blood Appeal Found</div>
+          <div style="font-size: 13px; color: #6B7280; margin-top: 6px; margin-bottom: 18px; line-height: 1.45;">
+            You do not have an active emergency blood request linked to your account.
+          </div>
+          <a href="/seeker/request.html" class="btn btn-primary" style="display: inline-block; padding: 10px 20px; font-size: 13.5px; font-weight: 600; text-decoration: none;">
+            Request Blood Now →
+          </a>
+        </div>
+      `;
+    }
   }
 
   setupActions();

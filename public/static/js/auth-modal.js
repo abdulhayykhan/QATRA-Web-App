@@ -3,7 +3,7 @@
  * Connects Firebase Web SDK Google Auth with backend POST /api/auth/firebase-login
  * Owner: Saghir Ahmed
  */
-import { apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady, showConfirmDialog, setupActiveAppealBanner } from './api.js';
+import { apiGet, apiPost, showToast, setAuthToken, setCurrentUser, getAuthToken, getCurrentUser, logout, onReady, showConfirmDialog, setupActiveAppealBanner } from './api.js';
 import { firebaseConfig, signInWithGoogle, checkGoogleRedirectResult } from './firebase-config.js';
 
 onReady(async () => {
@@ -185,6 +185,33 @@ async function handleAuthSession(firebaseToken, forceRole = null) {
   setAuthToken(response.access_token);
   setCurrentUser(response.user);
 
+  // Check if user has an active blood appeal on their account
+  let activeReqId = null;
+  try {
+    const activeData = await apiGet('/map/requests/my-active');
+    if (activeData && activeData.has_active_request && activeData.request_id) {
+      activeReqId = activeData.request_id;
+      localStorage.setItem('last_request_id', String(activeReqId));
+      localStorage.setItem(
+        `request_${activeReqId}_details`,
+        JSON.stringify({
+          patient_name: activeData.patient_name,
+          hospital_name: activeData.hospital_name,
+          blood_group: activeData.blood_group,
+          urgency: activeData.urgency,
+          units_needed: activeData.units_needed,
+          status: activeData.status,
+        })
+      );
+      if (response.user.role === 'guest') {
+        response.user.role = 'verified_seeker';
+        setCurrentUser(response.user);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not check active request:', e);
+  }
+
   showToast(`Welcome, ${response.user.full_name || 'Volunteer'}! 🩸`, 'success');
 
   // Close modal
@@ -199,9 +226,9 @@ async function handleAuthSession(firebaseToken, forceRole = null) {
       window.location.href = '/admin/verification.html';
     } else if (response.user.role === 'verified_donor') {
       window.location.href = '/donor/dashboard.html';
-    } else if (response.user.role === 'verified_seeker') {
-      const lastReq = localStorage.getItem('last_request_id');
-      window.location.href = lastReq ? `/seeker/status.html?request_id=${lastReq}` : '/seeker/feed.html';
+    } else if (activeReqId || response.user.role === 'verified_seeker') {
+      const targetReq = activeReqId || localStorage.getItem('last_request_id');
+      window.location.href = targetReq ? `/seeker/status.html?request_id=${targetReq}` : '/seeker/feed.html';
     } else {
       window.location.href = '/donor/register.html';
     }

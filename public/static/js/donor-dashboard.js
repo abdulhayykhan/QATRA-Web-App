@@ -295,33 +295,19 @@ async function loadEmergencyAlerts() {
       return;
     }
   } catch (err) {
-    // Graceful fallback to verified Karachi emergency hospital cases
+    console.warn('Could not fetch emergency requests:', err);
   }
 
-  // Standard Karachi Emergency Seed Alerts
-  const defaultAlerts = [
-    {
-      id: 101,
-      hospital_name: 'Indus Hospital, Korangi Campus',
-      blood_group: 'O-',
-      urgency: 'critical',
-      units_needed: 2,
-      distance_km: 3.4
-    },
-    {
-      id: 102,
-      hospital_name: 'Civil Hospital Karachi (Dr. Ruth Pfau)',
-      blood_group: 'B+',
-      urgency: 'within_2_hours',
-      units_needed: 1,
-      distance_km: 5.1
-    }
-  ];
-
-  container.innerHTML = '';
-  defaultAlerts.forEach(req => {
-    container.appendChild(createAlertCard(req));
-  });
+  // Zero-Mock Rule: When DB has no active emergency requests, show peaceful live listener notice
+  container.innerHTML = `
+    <div style="text-align: center; padding: 28px 16px; background: #FFFFFF; border-radius: 16px; border: 1.5px dashed rgba(0, 0, 0, 0.12); margin-top: 8px;">
+      <div style="font-size: 28px; margin-bottom: 6px;">📡</div>
+      <div style="font-size: 14.5px; font-weight: 700; color: var(--text-main);">No Emergency Appeals Active Right Now</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+        Your availability toggle is ON. You will receive an immediate proximity alert when a nearby hospital submits a blood request matching your blood group.
+      </div>
+    </div>
+  `;
 }
 
 /**

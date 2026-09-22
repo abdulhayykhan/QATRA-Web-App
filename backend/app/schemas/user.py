@@ -23,6 +23,7 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     id: int
     firebase_uid: str
+    phone_number: Optional[str] = None
     role: UserRole
     is_active: bool
     is_verified: bool
