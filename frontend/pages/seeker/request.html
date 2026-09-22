@@ -570,9 +570,14 @@
                 <span id="loc-preview-icon">📍</span>
                 <span id="loc-preview-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Location: <em>Select a hospital to pin verified coordinates</em></span>
               </div>
-              <button type="button" id="btn-use-gps-location" class="btn btn-sm btn-outline" style="padding: 4px 10px; font-size: 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
-                🎯 <span>Use My Current GPS</span>
-              </button>
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                <a id="btn-view-on-google-maps" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline" style="padding: 4px 10px; font-size: 11px; border-radius: 20px; display: none; align-items: center; gap: 4px; flex-shrink: 0; color: #1D4ED8; border-color: #93C5FD; text-decoration: none;" title="Verify on Google Maps">
+                  🗺️ <span>Verify on Google Maps</span>
+                </a>
+                <button type="button" id="btn-use-gps-location" class="btn btn-sm btn-outline" style="padding: 4px 10px; font-size: 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                  🎯 <span>Use My Current GPS</span>
+                </button>
+              </div>
             </div>
             <input type="hidden" id="hospital-lat" name="hospital_latitude" value="24.8607">
             <input type="hidden" id="hospital-lng" name="hospital_longitude" value="67.0011">
