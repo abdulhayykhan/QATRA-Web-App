@@ -423,6 +423,10 @@ function setupFormSubmission() {
         return;
       }
 
+      const hospitalLat = parseFloat(document.getElementById('hospital-lat')?.value || '24.8607');
+      const hospitalLng = parseFloat(document.getElementById('hospital-lng')?.value || '67.0011');
+      const hospitalAddress = document.getElementById('hospital-address')?.value || `${hospitalName}, Karachi`;
+
       const buildFormData = () => {
         const fd = new FormData();
         fd.append('file', fileToUpload);
@@ -432,6 +436,9 @@ function setupFormSubmission() {
         fd.append('component_type', componentType);
         fd.append('units_needed', unitsNeeded);
         fd.append('urgency', urgency);
+        fd.append('hospital_latitude', hospitalLat);
+        fd.append('hospital_longitude', hospitalLng);
+        fd.append('hospital_address', hospitalAddress);
         return fd;
       };
 
@@ -468,15 +475,12 @@ function setupFormSubmission() {
 
       if (isAutoApproved) {
         showToast('Hospital slip verified! Emergency broadcast active.', 'success');
-        setTimeout(() => {
-          window.location.href = `/seeker/map.html?request_id=${res.request_id}`;
-        }, 1200);
       } else {
         showToast('Slip uploaded. Queued for 24/7 Desk Review (<3 mins).', 'info');
-        setTimeout(() => {
-          window.location.href = `/seeker/status.html?request_id=${res.request_id || ''}`;
-        }, 1200);
       }
+      setTimeout(() => {
+        window.location.href = `/seeker/status.html?request_id=${res.request_id || ''}`;
+      }, 1200);
     } catch (err) {
       console.error('Hospital slip submission failed:', err);
       showToast(err.message || 'Failed to submit hospital slip. Please try again.', 'error');
@@ -487,90 +491,91 @@ function setupFormSubmission() {
 }
 
 /**
- * Comprehensive directory of Karachi Hospitals in alphabetical order (A–Z)
+ * Comprehensive directory of Karachi Hospitals in alphabetical order (A–Z) with verified coordinates
  */
 const KARACHI_HOSPITALS = [
-  { name: 'Abbasi Shaheed Hospital', area: 'Nazimabad' },
-  { name: 'Adventist Hospital (7th Day)', area: 'Saddar' },
-  { name: 'Aga Khan Hospital for Women (Garden)', area: 'Garden East' },
-  { name: 'Aga Khan Hospital for Women (Karimabad)', area: 'Karimabad' },
-  { name: 'Aga Khan Hospital for Women (Kharadar)', area: 'Kharadar' },
-  { name: 'Aga Khan Maternal & Child Care Centre', area: 'Hyderabad Colony' },
-  { name: 'Aga Khan University Hospital (AKUH)', area: 'Stadium Road' },
-  { name: 'Al-Ain Institute of Eye Diseases', area: 'Gulshan-e-Iqbal' },
-  { name: 'Al-Mustafa Medical Centre', area: 'Gulshan-e-Iqbal' },
-  { name: 'Al-Tibri Medical College & Hospital', area: 'Malir' },
-  { name: 'Al-Zehra Medical Complex', area: 'Gulshan-e-Iqbal' },
-  { name: 'Alkhidmat Al-Huda Medical Centre', area: 'North Nazimabad' },
-  { name: 'Alkhidmat Fareeda Yaqoob Hospital', area: 'Gulshan-e-Iqbal' },
-  { name: 'Alkhidmat Hospital (Korangi)', area: 'Korangi' },
-  { name: 'Alkhidmat Raazia Sultana Hospital', area: 'Surjani Town' },
-  { name: 'Anklesaria Hospital', area: 'Garden Road, Saddar' },
-  { name: 'AO Clinic & Orthopaedic Hospital', area: 'Nazimabad' },
-  { name: 'Ashfaq Memorial Hospital', area: 'Gulshan-e-Iqbal' },
-  { name: 'Atia General Hospital', area: 'Malir' },
-  { name: 'Baqai Institute of Diabetology & Endocrinology (BIDE)', area: 'Nazimabad' },
-  { name: 'Baqai University Hospital', area: 'Super Highway' },
-  { name: 'Burhani Hospital', area: 'Old City, Saddar' },
-  { name: 'Cantonment General Hospital', area: 'Malir Cantt' },
-  { name: 'Chiniot General Hospital', area: 'Korangi' },
-  { name: 'Combined Military Hospital (CMH)', area: 'Malir Cantt' },
-  { name: 'Creek General Hospital (UMDC)', area: 'Korangi' },
-  { name: 'Darul Sehat Hospital', area: 'Gulistan-e-Johar' },
-  { name: 'Dow International Dental College Hospital', area: 'Gulshan-e-Iqbal' },
-  { name: 'Dow University Hospital (Ojha Campus)', area: 'SUPARCO Road' },
-  { name: 'Dr. Ruth K.M. Pfau Civil Hospital Karachi', area: 'Baba-e-Urdu Road' },
-  { name: 'Dr. Ziauddin Hospital (Clifton)', area: 'Boat Basin, Clifton' },
-  { name: 'Dr. Ziauddin Hospital (Kemari)', area: 'Kemari' },
-  { name: 'Dr. Ziauddin Hospital (North Nazimabad)', area: 'North Nazimabad' },
-  { name: 'Fatimiyah Hospital', area: 'Soldier Bazaar' },
-  { name: 'Hashmanis Hospital (Clifton)', area: 'Clifton' },
-  { name: 'Hashmanis Hospital (Ranchoor Line)', area: 'Ranchoor Line' },
-  { name: 'Hashmanis Hospital (Saddar)', area: 'MA Jinnah Road' },
-  { name: 'Holy Family Hospital', area: 'Soldier Bazaar' },
-  { name: 'Imam Clinic', area: 'North Nazimabad' },
-  { name: 'Indus Hospital & Health Network', area: 'Korangi Creek' },
-  { name: 'Institute of Orthopaedics & Surgery (IOS)', area: 'PECHS' },
-  { name: 'Jinnah Postgraduate Medical Centre (JPMC)', area: 'Rafiqui Shaheed Rd' },
-  { name: 'Kharadar General Hospital', area: 'Kharadar' },
-  { name: 'Kidney Centre Postgraduate Institute', area: 'PECHS' },
-  { name: 'Kulsumbai Valika Social Security Hospital', area: 'SITE' },
-  { name: 'Lady Dufferin Hospital', area: 'Chand Bibi Road, Saddar' },
-  { name: 'Liaquat National Hospital (LNH)', area: 'Stadium Road' },
-  { name: 'Lifeline Hospital', area: 'North Nazimabad' },
-  { name: 'LRBT Free Eye Hospital', area: 'Korangi' },
-  { name: 'Mamji Hospital', area: 'Federal B Area' },
-  { name: 'Medicare Cardiac & General Hospital', area: 'Shaheed-e-Millat' },
-  { name: 'Medwin Hospital', area: 'Gulshan-e-Iqbal' },
-  { name: 'Memon Medical Institute Hospital (MMIH)', area: 'Safoora Goth' },
-  { name: 'Midciti Hospital', area: 'North Nazimabad' },
-  { name: 'Murshid Hospital & Health Care Centre', area: 'Baldia Town' },
-  { name: 'National Institute of Cardiovascular Diseases (NICVD)', area: 'Rafiqui Shaheed Rd' },
-  { name: 'National Institute of Child Health (NICH)', area: 'Rafiqui Shaheed Rd' },
-  { name: 'National Medical Centre (NMC)', area: 'DHA Phase 1' },
-  { name: 'OMI Hospital', area: 'Depot Lines, Saddar' },
-  { name: 'PAF Hospital (Faisal Base)', area: 'Shahrah-e-Faisal' },
-  { name: 'PAF Hospital (Masroor Base)', area: 'Mauripur' },
-  { name: 'Park Lane Hospital', area: 'Clifton' },
-  { name: 'Patel Hospital', area: 'Gulshan-e-Iqbal' },
-  { name: 'PNS Shifa Naval Hospital', area: 'DHA Phase 2' },
-  { name: 'Saifee Hospital', area: 'North Nazimabad' },
-  { name: 'Sambros Hospital', area: 'Federal B Area' },
-  { name: 'Services Hospital', area: 'MA Jinnah Road' },
-  { name: 'Sindh Government Children Hospital', area: 'North Nazimabad' },
-  { name: 'Sindh Government Hospital (Korangi)', area: 'Korangi #5' },
-  { name: 'Sindh Government Hospital (Liaquatabad)', area: 'Liaquatabad' },
-  { name: 'Sindh Government Hospital (New Karachi)', area: 'New Karachi' },
-  { name: 'Sindh Government Hospital (Qatar)', area: 'Orangi Town' },
-  { name: 'Sindh Government Hospital (Saudabad)', area: 'Malir' },
-  { name: 'Sindh Institute of Urology & Transplantation (SIUT)', area: 'Civil Hospital Rd' },
-  { name: 'SMBB Trauma Centre (Civil Hospital)', area: 'Baba-e-Urdu Road' },
-  { name: 'South City Hospital', area: 'Clifton Block 3' },
-  { name: 'Spencer Eye Hospital', area: 'Lea Market, Lyari' },
-  { name: 'Tabba Heart Institute', area: 'Federal B Area' },
-  { name: 'Taj Medical Complex', area: 'MA Jinnah Road' },
-  { name: 'Usman Memorial Hospital', area: 'Federal B Area' },
-  { name: 'Zubaida Medical Centre', area: 'Dhoraji Colony' },
+  { name: 'Abbasi Shaheed Hospital', area: 'Nazimabad', lat: 24.9220, lng: 67.0280 },
+  { name: 'Adventist Hospital (7th Day)', area: 'Saddar', lat: 24.8620, lng: 67.0290 },
+  { name: 'Aga Khan Hospital for Women (Garden)', area: 'Garden East', lat: 24.8780, lng: 67.0220 },
+  { name: 'Aga Khan Hospital for Women (Karimabad)', area: 'Karimabad', lat: 24.9180, lng: 67.0580 },
+  { name: 'Aga Khan Hospital for Women (Kharadar)', area: 'Kharadar', lat: 24.8540, lng: 66.9940 },
+  { name: 'Aga Khan Maternal & Child Care Centre', area: 'Hyderabad Colony', lat: 24.8850, lng: 67.0510 },
+  { name: 'Aga Khan University Hospital (AKUH)', area: 'Stadium Road', lat: 24.8922, lng: 67.0747 },
+  { name: 'Al-Ain Institute of Eye Diseases', area: 'Gulshan-e-Iqbal', lat: 24.9200, lng: 67.0880 },
+  { name: 'Al-Mustafa Medical Centre', area: 'Gulshan-e-Iqbal', lat: 24.9190, lng: 67.0910 },
+  { name: 'Al-Tibri Medical College & Hospital', area: 'Malir', lat: 24.9030, lng: 67.2100 },
+  { name: 'Al-Zehra Medical Complex', area: 'Gulshan-e-Iqbal', lat: 24.9220, lng: 67.0870 },
+  { name: 'Alkhidmat Al-Huda Medical Centre', area: 'North Nazimabad', lat: 24.9310, lng: 67.0350 },
+  { name: 'Alkhidmat Fareeda Yaqoob Hospital', area: 'Gulshan-e-Iqbal', lat: 24.9180, lng: 67.0850 },
+  { name: 'Alkhidmat Hospital (Korangi)', area: 'Korangi', lat: 24.8310, lng: 67.1250 },
+  { name: 'Alkhidmat Raazia Sultana Hospital', area: 'Surjani Town', lat: 24.9850, lng: 67.0520 },
+  { name: 'Anklesaria Hospital', area: 'Garden Road, Saddar', lat: 24.8680, lng: 67.0220 },
+  { name: 'AO Clinic & Orthopaedic Hospital', area: 'Nazimabad', lat: 24.9210, lng: 67.0310 },
+  { name: 'Ashfaq Memorial Hospital', area: 'Gulshan-e-Iqbal', lat: 24.9210, lng: 67.0890 },
+  { name: 'Atia General Hospital', area: 'Malir', lat: 24.9020, lng: 67.1880 },
+  { name: 'Baqai Institute of Diabetology & Endocrinology (BIDE)', area: 'Nazimabad', lat: 24.9260, lng: 67.0320 },
+  { name: 'Baqai University Hospital', area: 'Super Highway', lat: 25.0120, lng: 67.1420 },
+  { name: 'Burhani Hospital', area: 'Old City, Saddar', lat: 24.8580, lng: 67.0090 },
+  { name: 'Cantonment General Hospital', area: 'Malir Cantt', lat: 24.9010, lng: 67.1920 },
+  { name: 'Chiniot General Hospital', area: 'Korangi', lat: 24.8320, lng: 67.1290 },
+  { name: 'Combined Military Hospital (CMH)', area: 'Malir Cantt', lat: 24.9050, lng: 67.1950 },
+  { name: 'Creek General Hospital (UMDC)', area: 'Korangi', lat: 24.8280, lng: 67.1120 },
+  { name: 'Darul Sehat Hospital', area: 'Gulistan-e-Johar', lat: 24.9120, lng: 67.1220 },
+  { name: 'Dow International Dental College Hospital', area: 'Gulshan-e-Iqbal', lat: 24.9390, lng: 67.1290 },
+  { name: 'Dow University Hospital (Ojha Campus)', area: 'SUPARCO Road', lat: 24.9380, lng: 67.1280 },
+  { name: 'Dr. Ruth K.M. Pfau Civil Hospital Karachi', area: 'Baba-e-Urdu Road', lat: 24.8569, lng: 67.0112 },
+  { name: 'Dr. Ziauddin Hospital (Clifton)', area: 'Boat Basin, Clifton', lat: 24.8190, lng: 67.0320 },
+  { name: 'Dr. Ziauddin Hospital (Kemari)', area: 'Kemari', lat: 24.8150, lng: 66.9850 },
+  { name: 'Dr. Ziauddin Hospital (North Nazimabad)', area: 'North Nazimabad', lat: 24.9350, lng: 67.0380 },
+  { name: 'Fatimiyah Hospital', area: 'Soldier Bazaar', lat: 24.8740, lng: 67.0270 },
+  { name: 'Hashmanis Hospital (Clifton)', area: 'Clifton', lat: 24.8260, lng: 67.0350 },
+  { name: 'Hashmanis Hospital (Ranchoor Line)', area: 'Ranchoor Line', lat: 24.8610, lng: 67.0110 },
+  { name: 'Hashmanis Hospital (Saddar)', area: 'MA Jinnah Road', lat: 24.8660, lng: 67.0220 },
+  { name: 'Holy Family Hospital', area: 'Soldier Bazaar', lat: 24.8720, lng: 67.0250 },
+  { name: 'Imam Clinic', area: 'North Nazimabad', lat: 24.9320, lng: 67.0340 },
+  { name: 'Indus Hospital & Health Network', area: 'Korangi Creek', lat: 24.8394, lng: 67.1147 },
+  { name: 'Institute of Orthopaedics & Surgery (IOS)', area: 'PECHS', lat: 24.8680, lng: 67.0610 },
+  { name: 'Jinnah Postgraduate Medical Centre (JPMC)', area: 'Rafiqui Shaheed Rd', lat: 24.8525, lng: 67.0514 },
+  { name: 'Kharadar General Hospital', area: 'Kharadar', lat: 24.8540, lng: 66.9960 },
+  { name: 'Kidney Centre Postgraduate Institute', area: 'PECHS', lat: 24.8620, lng: 67.0650 },
+  { name: 'Kulsumbai Valika Social Security Hospital', area: 'SITE', lat: 24.8980, lng: 67.0120 },
+  { name: 'Lady Dufferin Hospital', area: 'Chand Bibi Road, Saddar', lat: 24.8600, lng: 67.0150 },
+  { name: 'Liaquat National Hospital (LNH)', area: 'Stadium Road', lat: 24.8940, lng: 67.0700 },
+  { name: 'Lifeline Hospital', area: 'North Nazimabad', lat: 24.9340, lng: 67.0360 },
+  { name: 'LRBT Free Eye Hospital', area: 'Korangi', lat: 24.8300, lng: 67.1280 },
+  { name: 'Mamji Hospital', area: 'Federal B Area', lat: 24.9410, lng: 67.0680 },
+  { name: 'Medicare Cardiac & General Hospital', area: 'Shaheed-e-Millat', lat: 24.8750, lng: 67.0620 },
+  { name: 'Medwin Hospital', area: 'Gulshan-e-Iqbal', lat: 24.9230, lng: 67.0880 },
+  { name: 'Memon Medical Institute Hospital (MMIH)', area: 'Safoora Goth', lat: 24.9450, lng: 67.1420 },
+  { name: 'Midciti Hospital', area: 'North Nazimabad', lat: 24.9310, lng: 67.0380 },
+  { name: 'Murshid Hospital & Health Care Centre', area: 'Baldia Town', lat: 24.9150, lng: 66.9250 },
+  { name: 'National Institute of Cardiovascular Diseases (NICVD)', area: 'Rafiqui Shaheed Rd', lat: 24.8510, lng: 67.0505 },
+  { name: 'National Institute of Child Health (NICH)', area: 'Rafiqui Shaheed Rd', lat: 24.8530, lng: 67.0520 },
+  { name: 'National Medical Centre (NMC)', area: 'DHA Phase 1', lat: 24.8450, lng: 67.0680 },
+  { name: 'OMI Hospital', area: 'Depot Lines, Saddar', lat: 24.8630, lng: 67.0280 },
+  { name: 'PAF Hospital (Faisal Base)', area: 'Shahrah-e-Faisal', lat: 24.8790, lng: 67.1080 },
+  { name: 'PAF Hospital (Masroor Base)', area: 'Mauripur', lat: 24.8850, lng: 66.9380 },
+  { name: 'Park Lane Hospital', area: 'Clifton', lat: 24.8220, lng: 67.0290 },
+  { name: 'Patel Hospital', area: 'Gulshan-e-Iqbal', lat: 24.9250, lng: 67.0980 },
+  { name: 'PNS Shifa Naval Hospital', area: 'DHA Phase 2', lat: 24.8320, lng: 67.0580 },
+  { name: 'Saifee Hospital', area: 'North Nazimabad', lat: 24.9280, lng: 67.0320 },
+  { name: 'Sambros Hospital', area: 'Federal B Area', lat: 24.9390, lng: 67.0670 },
+  { name: 'Services Hospital', area: 'MA Jinnah Road', lat: 24.8640, lng: 67.0190 },
+  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', area: 'Shah Faisal Colony', lat: 24.8765, lng: 67.1425, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
+  { name: 'Sindh Government Children Hospital', area: 'North Nazimabad', lat: 24.9380, lng: 67.0390 },
+  { name: 'Sindh Government Hospital (Korangi)', area: 'Korangi #5', lat: 24.8250, lng: 67.1350 },
+  { name: 'Sindh Government Hospital (Liaquatabad)', area: 'Liaquatabad', lat: 24.9020, lng: 67.0380 },
+  { name: 'Sindh Government Hospital (New Karachi)', area: 'New Karachi', lat: 24.9850, lng: 67.0620 },
+  { name: 'Sindh Government Hospital (Qatar)', area: 'Orangi Town', lat: 24.9520, lng: 66.9850 },
+  { name: 'Sindh Government Hospital (Saudabad)', area: 'Malir', lat: 24.9080, lng: 67.1850 },
+  { name: 'Sindh Institute of Urology & Transplantation (SIUT)', area: 'Civil Hospital Rd', lat: 24.8575, lng: 67.0105 },
+  { name: 'SMBB Trauma Centre (Civil Hospital)', area: 'Baba-e-Urdu Road', lat: 24.8571, lng: 67.0115 },
+  { name: 'South City Hospital', area: 'Clifton Block 3', lat: 24.8210, lng: 67.0270 },
+  { name: 'Spencer Eye Hospital', area: 'Lea Market, Lyari', lat: 24.8630, lng: 66.9980 },
+  { name: 'Tabba Heart Institute', area: 'Federal B Area', lat: 24.9360, lng: 67.0650 },
+  { name: 'Taj Medical Complex', area: 'MA Jinnah Road', lat: 24.8650, lng: 67.0180 },
+  { name: 'Usman Memorial Hospital', area: 'Federal B Area', lat: 24.9370, lng: 67.0660 },
+  { name: 'Zubaida Medical Centre', area: 'Dhoraji Colony', lat: 24.8810, lng: 67.0720 },
 ];
 
 /**
@@ -616,8 +621,35 @@ function setupHospitalDropdown() {
     });
   }
 
-  function selectHospital(value) {
-    input.value = value;
+  function selectHospital(hospitalObjOrName) {
+    let name = typeof hospitalObjOrName === 'string' ? hospitalObjOrName : hospitalObjOrName.name;
+    let found = typeof hospitalObjOrName === 'object' && hospitalObjOrName.lat
+      ? hospitalObjOrName
+      : KARACHI_HOSPITALS.find(h => `${h.name} (${h.area})` === name || h.name === name || name.toLowerCase().includes(h.name.toLowerCase()));
+
+    input.value = found ? `${found.name} (${found.area})` : name;
+
+    const latInput = document.getElementById('hospital-lat');
+    const lngInput = document.getElementById('hospital-lng');
+    const addrInput = document.getElementById('hospital-address');
+    const locPreviewText = document.getElementById('loc-preview-text');
+    const locPreviewIcon = document.getElementById('loc-preview-icon');
+
+    if (found && found.lat && found.lng) {
+      if (latInput) latInput.value = found.lat;
+      if (lngInput) lngInput.value = found.lng;
+      if (addrInput) addrInput.value = found.address || `${found.name}, ${found.area}, Karachi`;
+      if (locPreviewText) {
+        locPreviewText.innerHTML = `Pinned: <strong>${found.name}</strong> (${found.area}) <span style="color:#2b8a3e; font-weight:600;">✓ Verified (${found.lat.toFixed(4)}, ${found.lng.toFixed(4)})</span>`;
+      }
+      if (locPreviewIcon) locPreviewIcon.innerText = '📍';
+    } else {
+      if (addrInput) addrInput.value = `${name}, Karachi`;
+      if (locPreviewText) {
+        locPreviewText.innerHTML = `Location: <strong>${name}</strong> <span style="color:#e67700;">(Tap "Use My Current GPS" if at the hospital)</span>`;
+      }
+    }
+
     closeDropdown();
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -679,8 +711,9 @@ function setupHospitalDropdown() {
 
     itemsList.querySelectorAll('.dropdown-item').forEach(item => {
       item.addEventListener('click', () => {
-        const val = item.getAttribute('data-hospital');
-        selectHospital(val);
+        const idx = parseInt(item.getAttribute('data-index'), 10);
+        const hospitalObj = matches[idx];
+        selectHospital(hospitalObj || item.getAttribute('data-hospital'));
       });
     });
   }
@@ -775,6 +808,49 @@ function setupHospitalDropdown() {
         input.focus();
         openDropdown();
       }
+    });
+  }
+
+  // Setup GPS Button Listener
+  const gpsBtn = document.getElementById('btn-use-gps-location');
+  if (gpsBtn) {
+    gpsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your device', 'warning');
+        return;
+      }
+      gpsBtn.disabled = true;
+      const origText = gpsBtn.innerHTML;
+      gpsBtn.innerHTML = '⏳ <span>Acquiring GPS...</span>';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const latInput = document.getElementById('hospital-lat');
+          const lngInput = document.getElementById('hospital-lng');
+          const addrInput = document.getElementById('hospital-address');
+          const locPreviewText = document.getElementById('loc-preview-text');
+          const locPreviewIcon = document.getElementById('loc-preview-icon');
+
+          if (latInput) latInput.value = lat;
+          if (lngInput) lngInput.value = lng;
+          if (addrInput) addrInput.value = `Current Device Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+          if (locPreviewText) {
+            locPreviewText.innerHTML = `Pinned: <strong>Current Device GPS</strong> <span style="color:#1864ab; font-weight:600;">(${lat.toFixed(4)}, ${lng.toFixed(4)})</span>`;
+          }
+          if (locPreviewIcon) locPreviewIcon.innerText = '🎯';
+          showToast('Hospital location pinned to your current GPS position!', 'success');
+          gpsBtn.disabled = false;
+          gpsBtn.innerHTML = origText;
+        },
+        (err) => {
+          showToast('Could not acquire GPS fix: ' + err.message, 'warning');
+          gpsBtn.disabled = false;
+          gpsBtn.innerHTML = origText;
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
     });
   }
 

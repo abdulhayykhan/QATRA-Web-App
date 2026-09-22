@@ -563,6 +563,20 @@
                 </div>
               </div>
             </div>
+
+            <!-- Interactive Hospital Location & GPS Binding Badge -->
+            <div id="hospital-location-preview" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px; font-size: 12px;">
+              <div style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); min-width: 0; flex: 1;">
+                <span id="loc-preview-icon">📍</span>
+                <span id="loc-preview-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Location: <em>Select a hospital to pin verified coordinates</em></span>
+              </div>
+              <button type="button" id="btn-use-gps-location" class="btn btn-sm btn-outline" style="padding: 4px 10px; font-size: 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                🎯 <span>Use My Current GPS</span>
+              </button>
+            </div>
+            <input type="hidden" id="hospital-lat" name="hospital_latitude" value="24.8607">
+            <input type="hidden" id="hospital-lng" name="hospital_longitude" value="67.0011">
+            <input type="hidden" id="hospital-address" name="hospital_address" value="">
           </div>
 
           <!-- Blood Group Grid Selection (Wireframe pg 5) -->

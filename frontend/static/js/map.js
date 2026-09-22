@@ -15,11 +15,16 @@ const KARACHI_HOSPITALS = [
   { name: 'Jinnah Postgraduate Medical Centre (JPMC)', blood: 'O-', lat: 24.8525, lng: 67.0514, address: 'Rafiqui Shaheed Rd, Karachi' },
   { name: 'The Aga Khan University Hospital (AKUH)', blood: 'A+', lat: 24.8922, lng: 67.0747, address: 'Stadium Road, Karachi' },
   { name: 'Liaquat National Hospital (LNH)', blood: 'O+', lat: 24.8940, lng: 67.0700, address: 'National Stadium Rd, Karachi' },
+  { name: 'Shaukat Omar Memorial (SOM) Fauji Foundation Hospital', blood: 'O+', lat: 24.8765, lng: 67.1425, address: 'Shah Faisal Colony No. 2, Near Drigh Road, Karachi' },
   { name: 'Indus Hospital & Health Network (Korangi)', blood: 'AB-', lat: 24.8394, lng: 67.1147, address: 'Korangi Sector 39, Karachi' },
   { name: 'Abbasi Shaheed Hospital (Nazimabad)', blood: 'A+', lat: 24.9220, lng: 67.0280, address: 'Paposh Nagar, Karachi' },
   { name: 'Ziauddin Hospital (Clifton Campus)', blood: 'B-', lat: 24.8190, lng: 67.0320, address: 'Clifton Block 6, Karachi' },
   { name: 'Alkhidmat Hospital No. 5 (Nazimabad)', blood: 'O-', lat: 24.8712, lng: 67.0594, address: 'Block 5, Nazimabad, Karachi' }
 ];
+
+const urlParams = new URLSearchParams(window.location.search);
+const urlRequestId = urlParams.get('request_id');
+const lastRequestId = localStorage.getItem('last_request_id');
 
 let map = null;
 let userMarker = null;
@@ -138,10 +143,15 @@ function setupGps() {
           weight: 3,
           fillOpacity: 1
         }).addTo(map);
-        userMarker.bindTooltip('<b>Your Location</b> (Available to Donate)');
 
-        map.setView([userCoords.lat, userCoords.lng], 13);
-        renderConcentricRings(userCoords.lat, userCoords.lng, currentRadiusKm);
+        const isRequester = !!(urlRequestId || lastRequestId);
+        userMarker.bindTooltip(`<b>Your Location</b> (${isRequester ? 'Requester' : 'Available to Donate'})`);
+
+        // Only reposition view if not explicitly viewing a focused request
+        if (!silent || !urlRequestId) {
+          map.setView([userCoords.lat, userCoords.lng], 13);
+          renderConcentricRings(userCoords.lat, userCoords.lng, currentRadiusKm);
+        }
 
         // Sync with backend if donor profile exists (throttled 120s)
         syncDonorLocationThrottled(userCoords.lat, userCoords.lng);
@@ -223,31 +233,50 @@ async function loadLiveEmergencyRequests() {
     requestMarkers = [];
 
     let nearbyUrgentCandidate = null;
+    let ownActiveRequest = null;
+    const targetReqId = urlRequestId ? parseInt(urlRequestId, 10) : (lastRequestId ? parseInt(lastRequestId, 10) : null);
 
     requests.forEach(req => {
       const lat = req.latitude;
       const lng = req.longitude;
       const isUrgent = req.marker_color === 'red' || req.urgency === 'within_2_hours';
-      const color = isUrgent ? '#E03131' : (req.marker_color === 'gray' ? '#868E96' : '#E67700');
+      const isOwnRequest = targetReqId !== null && parseInt(req.request_id, 10) === targetReqId;
+
+      if (isOwnRequest) {
+        ownActiveRequest = req;
+      }
+
+      const color = isOwnRequest ? '#C92A2A' : (isUrgent ? '#E03131' : (req.marker_color === 'gray' ? '#868E96' : '#E67700'));
 
       const marker = L.circleMarker([lat, lng], {
-        radius: isUrgent ? 10 : 8,
+        radius: isOwnRequest ? 14 : (isUrgent ? 10 : 8),
         fillColor: color,
         color: '#FFFFFF',
-        weight: 2,
+        weight: isOwnRequest ? 3 : 2,
         opacity: 1,
-        fillOpacity: 0.95
+        fillOpacity: isOwnRequest ? 1 : 0.95
       }).addTo(map);
 
-      marker.bindTooltip(`
-        <div style="font-family: inherit; font-size: 12px;">
-          <b>${req.hospital_name}</b><br>
-          Blood: <span style="color:#C92A2A; font-weight:700;">${req.blood_group}</span> (${req.units_needed} units)<br>
-          <span style="font-size: 10px; color:${isUrgent ? '#E03131' : '#E67700'}; font-weight:600;">
-            ${isUrgent ? '● Within 2 Hours' : '● Within 24 Hours'}
-          </span>
-        </div>
-      `);
+      if (isOwnRequest) {
+        marker.bindTooltip(`
+          <div style="font-family: inherit; font-size: 12.5px;">
+            <b style="color:#C92A2A;">🏥 ${req.hospital_name}</b><br>
+            <span style="background:#FFE3E3; color:#C92A2A; padding:2px 6px; border-radius:4px; font-weight:700; font-size:11px;">
+              🚨 YOUR ACTIVE APPEAL (${req.blood_group} • ${req.units_needed} units)
+            </span>
+          </div>
+        `, { permanent: true, direction: 'top' });
+      } else {
+        marker.bindTooltip(`
+          <div style="font-family: inherit; font-size: 12px;">
+            <b>${req.hospital_name}</b><br>
+            Blood: <span style="color:#C92A2A; font-weight:700;">${req.blood_group}</span> (${req.units_needed} units)<br>
+            <span style="font-size: 10px; color:${isUrgent ? '#E03131' : '#E67700'}; font-weight:600;">
+              ${isUrgent ? '● Within 2 Hours' : '● Within 24 Hours'}
+            </span>
+          </div>
+        `);
+      }
 
       marker.on('click', () => {
         openRequestSummaryCard(req);
@@ -256,19 +285,53 @@ async function loadLiveEmergencyRequests() {
       requestMarkers.push(marker);
 
       // Check distance for push alert trigger (< 5 km and urgent)
+      // CRITICAL: NEVER trigger donor proximity alert for the seeker's own request!
       const dist = calculateHaversine(userCoords.lat, userCoords.lng, lat, lng);
-      if (isUrgent && dist <= 5.0 && !nearbyUrgentCandidate) {
+      if (isUrgent && dist <= 5.0 && !nearbyUrgentCandidate && !isOwnRequest) {
         nearbyUrgentCandidate = { ...req, distance_km: dist };
       }
     });
 
-    // If a high-urgency request is within 5 km, surface Geo-Fenced Push Alert Modal (Wireframe pg. 15)
+    // If user is viewing their active request, focus hospital on map and show banner
+    if (ownActiveRequest) {
+      map.setView([ownActiveRequest.latitude, ownActiveRequest.longitude], 14);
+      renderConcentricRings(ownActiveRequest.latitude, ownActiveRequest.longitude, currentRadiusKm);
+      renderSeekerBanner(ownActiveRequest);
+    }
+
+    // If a high-urgency request from ANOTHER user is within 5 km, surface Geo-Fenced Push Alert Modal (Wireframe pg. 15)
     if (nearbyUrgentCandidate && !sessionStorage.getItem(`alert_seen_${nearbyUrgentCandidate.request_id}`)) {
       triggerGeoFencedPushAlert(nearbyUrgentCandidate);
     }
   } catch (err) {
     console.warn('Error loading map requests:', err);
   }
+}
+
+/**
+ * Top floating banner for Seeker when inspecting their active appeal on the map
+ */
+function renderSeekerBanner(req) {
+  let banner = document.getElementById('seeker-map-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'seeker-map-banner';
+    banner.style.cssText = 'position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 92%; max-width: 480px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1.5px solid #C92A2A; border-radius: 14px; padding: 10px 14px; box-shadow: 0 8px 24px rgba(201, 42, 42, 0.2); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: inherit; font-size: 13px;';
+    const container = document.querySelector('.map-container') || document.body;
+    container.appendChild(banner);
+  }
+  banner.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+      <span style="font-size: 20px; flex-shrink: 0;">🚨</span>
+      <div style="min-width: 0;">
+        <strong style="color: #C92A2A; font-size: 13px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Your Blood Appeal is Active</strong>
+        <div style="font-size: 11px; color: #495057; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${req.hospital_name} (${req.blood_group})</div>
+      </div>
+    </div>
+    <a href="/seeker/status.html?request_id=${req.request_id}" class="btn btn-sm btn-primary" style="padding: 6px 12px; font-size: 11px; white-space: nowrap; border-radius: 20px; text-decoration: none; flex-shrink: 0;">
+      Status Radar →
+    </a>
+  `;
 }
 
 /**
