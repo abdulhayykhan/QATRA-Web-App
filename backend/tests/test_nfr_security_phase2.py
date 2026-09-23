@@ -199,13 +199,24 @@ def test_audit_logging_persistence_and_query():
     """Verify audit events are written to the database and queryable with filters."""
     db = SessionLocal()
     try:
+        # Create a test user to satisfy foreign key constraint
+        test_user = User(
+            firebase_uid=f"audit_user_{int(time.time())}",
+            email=f"audit_{int(time.time())}@example.com",
+            full_name="Audit Tester",
+            role=UserRole.ADMIN.value,
+        )
+        db.add(test_user)
+        db.commit()
+        db.refresh(test_user)
+
         action_name = f"TEST_AUDIT_{int(time.time())}"
         log_entry = log_audit_event(
             db=db,
             action=action_name,
             target_resource="users",
             target_id="101",
-            user_id=1,
+            user_id=test_user.id,
             details="Test audit event for compliance verification",
             ip_address="127.0.0.1",
         )

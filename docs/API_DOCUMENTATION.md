@@ -2,6 +2,11 @@
 
 ### *Complete Endpoint Contract, Request/Response Schemas, and Authentication Protocol*
 
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Official%20Demo%20Video-FF0000?style=flat&logo=youtube&logoColor=white)](https://youtu.be/CXsLxy56ghA)
+[![Figma Design](https://img.shields.io/badge/Figma-Design%20System-F24E1E?style=flat&logo=figma&logoColor=white)](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA)
+[![Live Production](https://img.shields.io/badge/Vercel-Live%20API-000000?style=flat&logo=vercel)](https://qatra-web-app.vercel.app/api/docs)
+[![Supabase RLS](https://img.shields.io/badge/Supabase%20RLS-Enforced-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
+
 ---
 
 ## 📑 Table of Contents
@@ -10,6 +15,7 @@
   - [Base URLs](#base-urls)
   - [Authentication Scheme (Bearer JWT)](#authentication-scheme-bearer-jwt)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
+  - [Row-Level Security (RLS) & Zero-Mock Guarantee](#row-level-security-rls--zero-mock-guarantee)
   - [Standard HTTP Status Codes](#standard-http-status-codes)
   - [Error Response Format (RFC 7807)](#error-response-format-rfc-7807)
 - [2. System & Health Diagnostics](#2-system--health-diagnostics)
@@ -27,10 +33,12 @@
 - [4. Live Map & Proximity Matching API (Hareem Israr)](#4-live-map--proximity-matching-api-hareem-israr)
   - [`POST /api/map/donor/location`](#post-apimapdonorlocation)
   - [`GET /api/map/requests`](#get-apimaprequests)
+  - [`GET /api/map/requests/my-active`](#get-apimaprequestsmy-active)
   - [`GET /api/map/requests/{id}/status`](#get-apimaprequestsidstatus)
   - [`GET /api/map/requests/{id}/matches`](#get-apimaprequestsidmatches)
   - [`POST /api/map/requests/{id}/accept`](#post-apimaprequestsidaccept)
   - [`POST /api/map/requests/{id}/decline`](#post-apimaprequestsiddecline)
+  - [`POST /api/map/requests/{id}/cancel`](#post-apimaprequestsidcancel)
   - [`GET /api/coordination/{id}`](#get-apicoordinationid)
   - [`GET /api/coordination/{id}/messages`](#get-apicoordinationidmessages)
   - [`POST /api/coordination/{id}/messages`](#post-apicoordinationidmessages)
@@ -65,10 +73,14 @@ Tokens are issued upon calling `POST /api/auth/firebase-login`.
 
 ### Role-Based Access Control (RBAC)
 - `guest`: Unverified visitor.
-- `verified_seeker`: Verified identity + CNIC. Can upload admission slips and create emergency appeals.
-- `verified_donor`: Verified identity + CNIC + passed pre-screening checklist. Receives proximity alerts.
+- `verified_seeker`: Authenticated Google identity (+ CNIC for emergency creation). Can upload hospital admission slips and create emergency appeals.
+- `verified_donor`: Authenticated Google identity + CNIC + passed pre-screening checklist. Receives proximity alerts and reports spatial telemetry.
 - `organizer`: Campus or community drive coordinator. Can schedule events.
-- `admin`: Alkhidmat Foundation Desk Lead / System Administrator. Full access to verification queues.
+- `admin`: Alkhidmat Foundation Desk Lead / System Administrator. Full access to verification queues and security audit logs.
+
+### Row-Level Security (RLS) & Zero-Mock Guarantee
+1. **Supabase PostgreSQL RLS**: All 9 database tables enforce PostgreSQL Row-Level Security (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`). Unauthenticated requests attempting to query public database APIs are rejected, ensuring all data mutations flow strictly through FastAPI's authenticated business logic layer.
+2. **Zero-Mock Policy**: The entire platform operates strictly against persistent database models. Mock data, hardcoded dummy donors, and fake responses have been eradicated. When no donors or requests exist, the API returns authentic empty lists with HTTP 200 status.
 
 ### Standard HTTP Status Codes
 - `200 OK`: Request succeeded.
@@ -324,7 +336,8 @@ Scores donor medical pre-screening questionnaire.
 
 ### `POST /api/map/donor/location`
 Pings donor's current coarse geolocation coordinates.
-- **Access**: Required (`verified_donor`)
+- **Access**: Required (`verified_donor`, `admin`)
+- **Throttling**: 120-second cooldown per FR 1.1.2 unless significant geographic displacement ($\ge 0.1\text{ km}$) occurs. Bypassable via `?force=true` query parameter during emergency tests.
 - **Request Payload**:
 ```json
 {
@@ -361,6 +374,36 @@ Returns verified active emergency requests formatted as map markers for Leaflet.
     "marker_color": "red"
   }
 ]
+```
+
+### `GET /api/map/requests/my-active`
+Retrieves the currently authenticated user's active emergency blood request for instant dashboard rendering, live radar resumption, and persistent alert banner display across browser sessions.
+- **Access**: Required (`Bearer JWT` session)
+- **Matching Criteria**: Latest request created by `current_user.id` with status in `["pending_verification", "verified", "matched", "in_transit"]`.
+- **Response (When Active Request Exists)**: `200 OK`
+```json
+{
+  "has_active_request": true,
+  "request_id": 101,
+  "patient_name": "Fatima Bibi",
+  "hospital_name": "Som Fauji Foundation Hospital, Shah Faisal Colony",
+  "hospital_address": "Shah Faisal Colony, Karachi",
+  "hospital_latitude": 24.8783,
+  "hospital_longitude": 67.1458,
+  "blood_group": "B+",
+  "component_type": "Whole Blood",
+  "units_needed": 2,
+  "units_fulfilled": 0,
+  "urgency": "within_2_hours",
+  "status": "verified",
+  "created_at": "2026-09-23T12:00:00Z"
+}
+```
+- **Response (When No Active Request Exists)**: `200 OK`
+```json
+{
+  "has_active_request": false
+}
 ```
 
 ### `GET /api/map/requests/{id}/status`

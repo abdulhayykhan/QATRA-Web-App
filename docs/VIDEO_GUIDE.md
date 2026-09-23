@@ -8,20 +8,41 @@ This guide provides exact timestamps, camera/screen focus, on-screen actions, an
 
 ---
 
+## 🎥 Official Demonstration Video & UI/UX Design
+
+- 📺 **Official YouTube Demonstration**: [https://youtu.be/CXsLxy56ghA](https://youtu.be/CXsLxy56ghA)
+- 🎨 **Official Figma UI/UX Design System**: [https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA)
+- 🚀 **Live Production Deployment**: [https://qatra-web-app.vercel.app](https://qatra-web-app.vercel.app)
+
+---
+
+## 🎬 Published Video Structure (5 Core Production Scenes)
+
+The published YouTube demonstration ([https://youtu.be/CXsLxy56ghA](https://youtu.be/CXsLxy56ghA)) condenses QATRA into 5 high-impact, verified production flows with 100% zero-mock data integrity:
+
+| Scene | Duration | Module / Persona | Production Flow Showcased |
+| :---: | :---: | :--- | :--- |
+| **Scene 1** | ~1.5 min | **Platform & PWA Shell** | Apple HIG slide-up bottom sheet, 1-tap mobile installation prompt, standalone PWA execution, pure white design system. |
+| **Scene 2** | ~2.5 min | **Emergency Seeker** | Seeker Google Auth Gate, 28+ Karachi hospital directory, real GPS pinning, admission slip upload & automated OCR analysis. |
+| **Scene 3** | ~2.0 min | **Verified Donor** | Donor onboarding, 13-digit Pakistani CNIC Mod-10 checksum validation, WHO medical pre-screening, and real-time dispatch availability toggle. |
+| **Scene 4** | ~3.0 min | **Radar & Coordination** | Proximity dispatch alert, donor acceptance, dynamic call unlocking (`🔒 Call Locked` $\rightarrow$ `📞 Call Donor`), strict donor privacy shield, and real-time in-app chat. |
+| **Scene 5** | ~2.0 min | **Alkhidmat Desk Admin** | 24/7 Verification Desk queue, split-screen hospital slip review (94% OCR confidence), campus drive QR check-in terminal, and tamper-evident audit logs. |
+
+---
+
 ## 📋 Production Specifications
 
 | Attribute | Specification |
 | :--- | :--- |
-| **Target Video Length** | 10 to 12 Minutes |
+| **Official Demo URL** | `https://youtu.be/CXsLxy56ghA` |
 | **Live Production URL** | `https://qatra-web-app.vercel.app` |
+| **Design System** | `https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA` |
 | **Recording Viewports** | Mobile Device / Chrome DevTools Mobile Viewport (`390 x 844`, iPhone 14) + Desktop (`1920 x 1080`) |
-| **Audio** | Clear Voiceover (Microphone 48kHz, Noise-suppressed) |
-| **Recording Software** | OBS Studio / Loom / Chrome Screen Recorder |
-| **Visual Highlights** | Apple HIG Design, Smooth Spring Animations, Real Location GPS, Strict Call Locking, Zero Mock Data |
+| **Visual Highlights** | Apple HIG Design, Smooth Spring Animations, Real Location GPS, Strict Call Locking, Supabase RLS, Zero Mock Data |
 
 ---
 
-## ⏱️ Video Timeline & Scene Directory
+## ⏱️ Detailed Scene Directory & Bilingual Recording Scripts
 
 - **[Scene 1: Introduction & PWA Auto-Install Prompt](#scene-1-introduction--pwa-auto-install-prompt-000---050)** (0:00 - 0:50)
 - **[Scene 2: Navigation & Real Google Sign-In](#scene-2-navigation--real-google-sign-in-050---145)** (0:50 - 1:45)

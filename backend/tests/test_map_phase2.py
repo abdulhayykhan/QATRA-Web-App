@@ -43,7 +43,6 @@ def create_test_authenticated_user(role: str = "verified_donor", blood_group: st
     """Helper to register and configure a test user with a donor profile and return (token, user_id, donor_id)."""
     uid = f"test_map_user_{role}_{int(time.time() * 1000) % 10000000}"
     res = client.post("/api/auth/firebase-login", json={"firebase_id_token": uid})
-    token = res.json()["access_token"]
     user_id = res.json()["user"]["id"]
 
     db = SessionLocal()

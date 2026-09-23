@@ -2,6 +2,11 @@
 
 ### *Comprehensive Guide for Vercel Serverless, Supabase, Firebase, and CI/CD Automation*
 
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Official%20Demo%20Video-FF0000?style=flat&logo=youtube&logoColor=white)](https://youtu.be/CXsLxy56ghA)
+[![Figma Design](https://img.shields.io/badge/Figma-Design%20System-F24E1E?style=flat&logo=figma&logoColor=white)](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA)
+[![Live Production](https://img.shields.io/badge/Vercel-Live%20Deployment-000000?style=flat&logo=vercel)](https://qatra-web-app.vercel.app/)
+[![Supabase RLS](https://img.shields.io/badge/Supabase%20RLS-Enforced-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
+
 ---
 
 ## 📑 Table of Contents
@@ -93,6 +98,29 @@ OCR_SPACE_API_KEY="your-ocr-space-api-key"
 4. Replace the protocol prefix `postgresql://` with `postgresql+psycopg://` to use the high-performance Psycopg 3 binary driver.
 5. In the **SQL Editor**, execute the database initialization schema or rely on FastAPI's automatic SQLAlchemy lifespan table creation (`Base.metadata.create_all`).
 6. Enable SSL connection mode (enforced by default on Supabase).
+
+### Supabase Row-Level Security (RLS) Hardening
+To eliminate the Supabase Security Advisor advisory `rls_disabled_in_public` and ensure zero unauthenticated data leaks through Supabase PostgREST endpoints, every public schema table has Row-Level Security explicitly activated:
+```sql
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE donors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE registrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE awareness_contents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE health_feedbacks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+```
+*Note: The FastAPI application backend connects as a trusted service role using the direct connection string, preserving full administrative read/write access while disallowing arbitrary direct queries from unauthenticated public clients.*
+
+### Database Maintenance & Safe Reset Utility
+For administrative database cleanup or fresh testing cycles, run the project's interactive reset script:
+```bash
+# From repository root:
+python -m backend.scripts.reset_db
+```
+This script cleanly drops all public tables, recreates schema definitions via SQLAlchemy, and automatically reapplies `ENABLE ROW LEVEL SECURITY` across all 9 tables.
 
 ---
 

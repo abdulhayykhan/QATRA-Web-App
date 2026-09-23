@@ -2,6 +2,11 @@
 
 ### *Comprehensive Architectural Blueprint for Emergency Blood Response*
 
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Official%20Demo%20Video-FF0000?style=flat&logo=youtube&logoColor=white)](https://youtu.be/CXsLxy56ghA)
+[![Figma Design](https://img.shields.io/badge/Figma-Design%20System-F24E1E?style=flat&logo=figma&logoColor=white)](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA)
+[![Live Production](https://img.shields.io/badge/Vercel-Live%20App-000000?style=flat&logo=vercel)](https://qatra-web-app.vercel.app/)
+[![Supabase RLS](https://img.shields.io/badge/Supabase%20RLS-Enforced%20(9%2F9%20Tables)-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
+
 ---
 
 ## 📑 Table of Contents
@@ -33,6 +38,12 @@
   - [PostgreSQL Relational Schema](#postgresql-relational-schema)
   - [In-Memory TTL Caching Engine (NFR 1.3)](#in-memory-ttl-caching-engine-nfr-13)
   - [Graceful Fallback Mode (NFR 1.2)](#graceful-fallback-mode-nfr-12)
+- [10. Hospital Slip Resilient Upload & OCR Pipeline (FR 2.2)](#10-hospital-slip-resilient-upload--ocr-pipeline-fr-22)
+- [11. Authentication & OAuth Architecture (Firebase Web SDK)](#11-authentication--oauth-architecture-firebase-web-sdk)
+- [12. Supabase PostgreSQL Row-Level Security (RLS) Hardening](#12-supabase-postgresql-row-level-security-rls-hardening)
+- [13. Seeker Authentication Gate & Cross-Session Request Recovery](#13-seeker-authentication-gate--cross-session-request-recovery)
+- [14. Role-Gated Spatial Telemetry & Donor Privacy Shield](#14-role-gated-spatial-telemetry--donor-privacy-shield)
+- [15. Demonstration Video & Figma Design Architecture](#15-demonstration-video--figma-design-architecture)
 
 ---
 
@@ -340,6 +351,85 @@ QATRA provides zero-friction, passwordless authentication using Google OAuth via
    - **Desktop / Standard Browsers**: Executes `signInWithPopup(auth, provider)` for an in-place modal experience.
    - **Mobile Browsers with Strict Popup Blockers (iOS Safari / Android Chrome)**: Automatically falls back to `signInWithRedirect(auth, provider)` and resolves credentials on redirect back via `getRedirectResult(auth)`.
 3. **Backend Session Exchange**: The validated Firebase ID token is transmitted to `POST /api/auth/firebase-login`, which validates cryptographic signatures and issues an HMAC-SHA256 session JWT.
+
+---
+
+## 12. Supabase PostgreSQL Row-Level Security (RLS) Hardening
+
+To maintain strict data integrity, eliminate database scraping, and prevent unauthenticated data exfiltration via Supabase's client-side PostgREST APIs, QATRA implements comprehensive Row-Level Security (RLS):
+
+```mermaid
+flowchart TD
+    Client["Public Client Browser"] -->|Attempts Direct Query| SupabaseAPI["Supabase PostgREST API (/rest/v1/*)"]
+    SupabaseAPI --> RLSCheck{"PostgreSQL RLS Active?"}
+    RLSCheck -->|Yes| DenyDirect["403 Forbidden / Empty Result Set<br>(Blocked at Database Engine Layer)"]
+    
+    Client -->|Authenticated REST API| VercelAPI["FastAPI Backend (Vercel Serverless)"]
+    VercelAPI --> JWTAuth{"Validate Bearer JWT & Role"}
+    JWTAuth -->|Authorized| DirectPool["Direct SQLAlchemy Pool (Service Credentials)"]
+    DirectPool --> PostgresTables[("Supabase PostgreSQL<br>9 Tables Protected with RLS")]
+```
+
+1. **Mandatory Table RLS Activation**:
+   Row-Level Security is explicitly activated across all 9 public tables in Supabase:
+   ```sql
+   ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE donors ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE registrations ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE awareness_contents ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE health_feedbacks ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+   ```
+2. **Automated Schema Provisioning Hook**:
+   The database engine initializer (`init_db_schema()` in `backend/app/core/database.py`) automatically discovers newly generated tables and executes `ALTER TABLE <table_name> ENABLE ROW LEVEL SECURITY;` upon system boot, ensuring zero security regressions when new database migrations are deployed.
+3. **Database Maintenance & Safe Reset Utility**:
+   For database operational hygiene and administrative testing, a standalone reset utility is provided at `backend/scripts/reset_db.py` (`python -m backend.scripts.reset_db`). It securely drops and recreates schema tables while automatically enforcing RLS without developer manual intervention.
+
+---
+
+## 13. Seeker Authentication Gate & Cross-Session Request Recovery
+
+To eliminate malicious dummy appeals while ensuring an uninterrupted emergency coordination experience:
+
+### 1. Seeker Google Authentication Gate
+- Emergency blood broadcast creation (`POST /api/map/requests`) strictly requires an authenticated user token (`Depends(get_current_user)`).
+- When a guest or unauthenticated user taps **"Broadcast Emergency Appeal"**, client-side validation detects the absence of session credentials, opens the Apple HIG Google Sign-In modal in place, and preserves the form payload.
+- Upon successful authentication, the submission completes seamlessly without data loss.
+
+### 2. Cross-Session Active Appeal Recovery (`GET /api/map/requests/my-active`)
+- When a seeker navigates between pages, refreshes their browser, or logs back in across devices, the frontend triggers `GET /api/map/requests/my-active`.
+- If an active request with status in `["pending_verification", "verified", "matched", "in_transit"]` exists:
+  - A persistent, high-contrast Apple HIG emergency alert banner (`#active-appeal-banner`) appears at the top of the map and dashboard.
+  - The banner displays patient name, hospital, blood group, and status, with an immediate 1-tap navigation button back to the live coordination radar (`/seeker/status.html`).
+- **Clean Session Teardown**: Upon user sign-out, all active request caches are purged from `localStorage`, and the banner element is cleanly unmounted from the DOM.
+
+---
+
+## 14. Role-Gated Spatial Telemetry & Donor Privacy Shield
+
+Emergency coordination requires strict balance between real-time responsiveness and volunteer donor privacy:
+
+### 1. Role-Gated Donor Telemetry
+- Donor spatial updates (`POST /api/map/donor/location`) are gated strictly to users with roles `verified_donor` and `admin` (`require_role([UserRole.VERIFIED_DONOR.value, UserRole.ADMIN.value])`).
+- Guests and seekers browsing the map canvas never trigger background location pings, completely eliminating `403 Access Denied` toast notifications.
+
+### 2. Dynamic Unidirectional Calling Protocol
+- **Before Dispatch Acceptance**: The donor's mobile phone number is completely scrubbed from all API responses (`call_phone_number: null`). The call button displays `🔒 Call Locked` with an explanatory toast: *"Direct phone call unlocks after donor accepts request"*.
+- **After Dispatch Acceptance**:
+  - The seeker's interface reveals the green `📞 Call Donor` button with a direct cellular dialing link (`tel:+923...`).
+  - **Donor Privacy Guard**: The seeker's telephone number is permanently withheld from the donor's interface. The donor coordinates strictly through bidirectional in-app chat, shielding volunteer donors from commercial brokering and unauthorized follow-up contact.
+
+---
+
+## 15. Demonstration Video & Figma Design Architecture
+
+- 📺 **Official 5-Scene Demonstration Video**: [https://youtu.be/CXsLxy56ghA](https://youtu.be/CXsLxy56ghA)
+  Showcases the end-to-end production pipeline from mobile PWA install, authenticated seeker appeal creation, real-time donor dispatch, unidirectional calling, and 24/7 verification desk review.
+- 🎨 **Official Interactive Figma Design System**: [https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA)
+  Documents Apple Human Interface design tokens, squircle component hierarchies, responsive 320px–1920px grids, and frosted glass navigation layers.
 
 ---
 
