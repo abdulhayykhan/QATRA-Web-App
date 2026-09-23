@@ -15,6 +15,8 @@
 | **Document Status** | **100% Implemented, Verified & Released in Production** |
 | **Target Repository** | [https://github.com/abdulhayykhan/QATRA-Web-App](https://github.com/abdulhayykhan/QATRA-Web-App) |
 | **Live Production App** | [https://qatra-web-app.vercel.app](https://qatra-web-app.vercel.app) |
+| **Official Demo Video** | [https://youtu.be/CXsLxy56ghA](https://youtu.be/CXsLxy56ghA) |
+| **Figma Design System** | [https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA) |
 
 ---
 

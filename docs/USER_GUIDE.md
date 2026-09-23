@@ -2,6 +2,10 @@
 
 ### *Every Drop Connects. Every Second Counts.*
 
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Official%20Demo%20Video-FF0000?style=flat&logo=youtube&logoColor=white)](https://youtu.be/CXsLxy56ghA)
+[![Figma Design](https://img.shields.io/badge/Figma-Design%20System-F24E1E?style=flat&logo=figma&logoColor=white)](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA)
+[![Live Production](https://img.shields.io/badge/Vercel-Live%20App-000000?style=flat&logo=vercel)](https://qatra-web-app.vercel.app/)
+
 Welcome to the official operational user guide for **QATRA**, Pakistan’s premier emergency blood response Progressive Web Application. Whether you are an emergency seeker navigating a critical medical urgency, a volunteer donor ready to save a life, a hospital desk reviewer, or a community volunteer, this guide provides complete, step-by-step instructions.
 
 ---
@@ -93,13 +97,15 @@ When a family member or patient requires urgent blood, follow these steps to mob
 
 ### Step 1: Accessing the Emergency Portal
 1. Open QATRA on your smartphone or computer.
-2. On the home landing screen, tap the prominent primary button: **"Need Blood Urgently"** or navigate directly to `/seeker/request.html`.
+2. Ensure you are signed in with your Google account via the top-right profile icon. *(Note: QATRA requires seekers to be authenticated before broadcasting emergency appeals to protect volunteer donors from fraudulent requests and ensure reliable coordination).*
+3. On the home landing screen, tap the prominent primary button: **"Need Blood Urgently"** or navigate directly to `/seeker/request.html`.
 
 ### Step 2: Entering Patient & Hospital Requirements
 Complete the emergency request form:
 - **Patient Full Name**: Legal name of the patient as recorded on the hospital chart.
 - **Patient Hospital MRN**: Medical Record Number or Admission Number (e.g., `MRN-99201`).
-- **Hospital Selection**: Start typing your hospital name (e.g., *Civil Hospital Karachi*, *JPMC*, *Aga Khan University Hospital*, *Indus Hospital*). The system provides automatic autocomplete suggestions with verified coordinates.
+- **Hospital Selection**: Start typing your hospital name (e.g., *Som Fauji Foundation Hospital*, *Civil Hospital Karachi*, *JPMC*, *Aga Khan University Hospital*, *Indus Hospital*). The system provides automatic autocomplete suggestions with verified coordinates.
+- **GPS Coordinates**: Tap **"📍 Use Current GPS Location"** to automatically pin your emergency room coordinates for maximum proximity dispatch precision.
 - **Blood Group & Component**: Select the required blood group (`A+`, `A-`, `B+`, `B-`, `AB+`, `AB-`, `O+`, `O-`) and component type (*Whole Blood*, *Packed Red Blood Cells*, *Platelets / Mega-units*, *Fresh Frozen Plasma*).
 - **Units Needed**: Number of blood pints requested (1 to 6 units).
 - **Urgency Level**:
@@ -127,6 +133,8 @@ Complete the emergency request form:
 
 ### Step 5: Live Geospatial Radar & Concentric Radius Expansion
 Once verified, you will be redirected to the **Live Status Radar** (`/seeker/status.html`):
+- **Persistent Emergency Banner**: If you navigate away to explore the live map or feed, a high-visibility Apple HIG emergency alert banner (`#active-appeal-banner`) appears at the top of your screen showing your active appeal's status and hospital name. Tapping **"Track Emergency"** returns you immediately to your radar.
+- **Cross-Session State Recovery**: If you close your browser, switch devices, or log back in, QATRA automatically queries `GET /api/map/requests/my-active` to restore your active coordination state.
 - **Phase 1 (0 to 15 minutes)**: Alerts donors within a **5 km** radius.
 - **Phase 2 (15 to 30 minutes)**: If units remain unfulfilled, the radius automatically expands to **10 km**.
 - **Phase 3 (30+ minutes)**: Automatic expansion to **15 km** across the metropolitan area.
@@ -155,11 +163,13 @@ As a voluntary donor, your participation saves lives every day. Here is how to r
 ### Step 1: Quick Onboarding with Google Sign-In
 1. Go to `/donor/register.html` and tap **"Continue with Google"**.
 2. Sign in with your standard Google account. Your email and full name will be authenticated securely via Firebase.
+3. Provide your personal mobile phone number (formatted as `03XXXXXXXXX` or `+923XXXXXXXXX`).
+   - *Privacy Protection*: Your phone number is encrypted at rest and permanently locked behind cryptographic privacy rules. It is **never** shown publicly, and unlocks strictly for a verified seeker **after** you explicitly accept an emergency dispatch.
 
 ### Step 2: 13-Digit Pakistani CNIC Verification
 1. Enter your 13-digit National Identity Card number formatted as `XXXXX-XXXXXXX-X` (e.g., `42101-1234567-1`).
-2. The platform performs an instant Mod-10 mathematical checksum to verify formatting integrity.
-3. *Privacy Guarantee*: Your CNIC number is encrypted at rest with military-grade **AES-256-GCM** encryption. It is never displayed publicly or shared with seekers.
+2. The platform performs an instant Mod-10 mathematical checksum to verify formatting integrity and automatically detects the origin province (e.g., Sindh).
+3. *Privacy Guarantee*: Your CNIC number is encrypted at rest with authenticated **AES-256-GCM** encryption. It is never displayed publicly or shared with seekers.
 
 ### Step 3: Medical Pre-Screening Questionnaire
 Complete the brief pre-screening checklist:
@@ -306,8 +316,10 @@ For students, first-time donors, and community members:
 
 QATRA has been engineered from the ground up with a privacy-first posture:
 - **AES-256-GCM Encryption**: All sensitive identity documents and National Identity Card (CNIC) numbers are encrypted using authenticated symmetric ciphers before writing to disk or database.
-- **Strict Role-Based Access Control (RBAC)**: Only verified administrators with signed JWT tokens can access backend verification queues.
-- **Unidirectional Calling & Donor Privacy**: Only emergency seekers are authorized to place direct calls to accepted donors (`tel:+92...`) for rapid arrival coordination. Donors cannot call seekers directly and communicate via real-time In-App Chat, protecting patient numbers from exposure.
+- **Supabase Row-Level Security (RLS)**: Enforced across all 9 public database tables (`users`, `donors`, `requests`, `notifications`, `events`, `registrations`, `awareness_contents`, `health_feedbacks`, `audit_logs`), preventing unauthorized public scraping or direct database queries.
+- **100% Zero-Mock Integrity**: Real database state guarantees without simulated mock donors, dummy appeals, or simulated matches.
+- **Strict Role-Based Access Control (RBAC)**: Only verified administrators with signed JWT tokens can access backend verification queues and security audit trails.
+- **Unidirectional Calling & Donor Privacy**: Only emergency seekers are authorized to place direct calls to accepted donors (`tel:+92...`) for rapid arrival coordination. Donors cannot call seekers directly and coordinate strictly via real-time In-App Chat, protecting patient numbers from exposure.
 - **No Commercial Monetization**: QATRA is strictly non-profit and humanitarian. Data is never sold, traded, or shared with commercial entities.
 
 ---

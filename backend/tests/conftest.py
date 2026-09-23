@@ -22,7 +22,7 @@ def anyio_backend():
 @pytest.fixture(autouse=True)
 def reset_rate_limiter_before_each_test():
     """Reset the sliding window rate limiter before every single test.
-    
+
     Prevents 429 Too Many Requests errors from accumulating across test files
     when multiple tests hit protected endpoints (e.g. /api/auth/firebase-login).
     """

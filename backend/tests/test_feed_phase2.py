@@ -118,7 +118,7 @@ def test_get_feed_public_access_no_auth():
 def test_get_feed_filtering_by_blood_group():
     """Verify blood group filter matches only requested blood group."""
     _, seeker_id = get_test_token_and_user(UserRole.VERIFIED_SEEKER.value)
-    req_id = create_test_request(seeker_id, blood_group="AB-")
+    _ = create_test_request(seeker_id, blood_group="AB-")
 
     res = client.get("/api/feed?blood_group=AB-")
     assert res.status_code == 200

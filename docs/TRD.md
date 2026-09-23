@@ -20,6 +20,8 @@
 | **CI/CD Quality Control** | GitHub Actions with [Ruff](https://github.com/astral-sh/ruff) Linter & [Pytest](https://docs.pytest.org/) (80/80 Automated Tests + Playwright DOM Suite) |
 | **Target Repository** | [https://github.com/abdulhayykhan/QATRA-Web-App](https://github.com/abdulhayykhan/QATRA-Web-App) |
 | **Live Production Endpoint** | `https://qatra-web-app.vercel.app/api` |
+| **Official Demo Video** | [https://youtu.be/CXsLxy56ghA](https://youtu.be/CXsLxy56ghA) |
+| **Figma Design System** | [https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA) |
 
 ---
 

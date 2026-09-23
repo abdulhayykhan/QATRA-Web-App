@@ -6,19 +6,23 @@
 
 [![QATRA CI Pipeline](https://github.com/abdulhayykhan/QATRA-Web-App/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/abdulhayykhan/QATRA-Web-App/actions/workflows/ci.yml)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Production-000000?style=flat&logo=vercel)](https://qatra-web-app.vercel.app/)
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Official%20Demo%20Video-FF0000?style=flat&logo=youtube&logoColor=white)](https://youtu.be/CXsLxy56ghA)
+[![Figma Design](https://img.shields.io/badge/Figma-Design%20System-F24E1E?style=flat&logo=figma&logoColor=white)](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![PostgreSQL](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
+[![Supabase RLS](https://img.shields.io/badge/Supabase%20RLS-Enforced%20(9%2F9%20Tables)-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Certified%20Installable-C92A2A?style=flat&logo=pwa&logoColor=white)](https://qatra-web-app.vercel.app/manifest.json)
 [![Apple HIG Design](https://img.shields.io/badge/Design-Apple%20HIG%20Pure%20White-000000?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/design/human-interface-guidelines/)
 [![Code Style: Ruff](https://img.shields.io/badge/Linter-Ruff%20Clean-FFD43B?style=flat&logo=python)](https://github.com/astral-sh/ruff)
 [![Tests: Pytest](https://img.shields.io/badge/Pytest-80%2F80%20Passed-4CAF50?style=flat&logo=pytest&logoColor=white)](https://github.com/abdulhayykhan/QATRA-Web-App)
 [![DOM Tests](https://img.shields.io/badge/DOM%20Tests-16%2F16%20Pages%20Verified-blue)](https://github.com/abdulhayykhan/QATRA-Web-App)
+[![Zero-Mock Integrity](https://img.shields.io/badge/Integrity-100%25%20Zero--Mock%20Data-blue)](https://github.com/abdulhayykhan/QATRA-Web-App)
 
 **QATRA (قطرہ)** is an ultra-reliable, production-grade, humanitarian Progressive Web Application engineered to eliminate preventable fatalities resulting from emergency blood shortages across Pakistan. By replacing chaotic, unverified WhatsApp broadcasts with hyper-localized geospatial matching, automated OCR hospital slip verification, zero-exposure privacy masking, and an authentic Apple Human Interface Design system, QATRA reduces emergency donor response times from hours to under 15 minutes.
 
-[🚀 **Launch Live Production App**](https://qatra-web-app.vercel.app/) • [📖 **Interactive API Documentation**](https://qatra-web-app.vercel.app/api/docs) • [📘 **Complete User Guide**](docs/USER_GUIDE.md) • [🏗️ **System Architecture**](docs/ARCHITECTURE.md)
+[🚀 **Launch Live Production App**](https://qatra-web-app.vercel.app/) • [🎬 **Watch Video Demonstration**](https://youtu.be/CXsLxy56ghA) • [🎨 **Figma UI/UX Design System**](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA) • [📖 **Interactive API Documentation**](https://qatra-web-app.vercel.app/api/docs) • [📘 **Complete User Guide**](docs/USER_GUIDE.md) • [🏗️ **System Architecture**](docs/ARCHITECTURE.md)
 
 </div>
 
@@ -63,12 +67,14 @@ Pakistan faces an acute healthcare crisis where demand for safe, screened blood 
 
 QATRA provides an integrated end-to-end digital infrastructure partnering with organizations like **Alkhidmat Foundation**:
 1. **15-Minute Hyper-Local Proximity Radar**: Concentric geospatial dispatch (5 km $\rightarrow$ 10 km $\rightarrow$ 15 km) connects hospital emergency rooms directly to pre-screened, verified donors currently within transit distance.
-2. **Automated Hospital Admission Slip OCR**: High-confidence machine vision scans hospital stamps, Medical Record Numbers (MRN), and attending physician signatures. Flagged low-confidence uploads escalate instantly to a 24/7 Human Verification Desk.
-3. **Real-Time In-App Coordination & Direct Seeker Calling**: Seekers and donors coordinate emergency logistics via real-time in-app chat. Emergency seekers can directly call accepted dispatch donors (`tel:+92XXXXXXXXXX`) while donor privacy is strictly protected (donors cannot call seekers; seeker phone numbers are never exposed).
-4. **90-Day Medical Cooldown Safeguards**: Automated biological cooldown trackers prevent donor exploitation and maintain physiological well-being.
-5. **Real-Time Social Appeals Feed**: Direct WhatsApp link generation provides structured, verified cards with progress meters (`units_fulfilled / units_needed`) that automatically close when filled.
-6. **Stateless 4-Step Eligibility & Awareness Hub**: Educational content debunking donation myths alongside campus blood drive scheduling.
-7. **Native PWA on Apple HIG Foundation**: Zero installation friction with an Apple-standard slide-up bottom sheet, offline app shell caching, and pure white aesthetic.
+2. **Authenticated Seeker Gating & Automated OCR Verification**: Hospital slip submission requires an authenticated seeker Google session to eliminate malicious/spam entries. High-confidence machine vision scans hospital stamps, Medical Record Numbers (MRN), and attending physician signatures, escalating low-confidence uploads instantly to the 24/7 Human Verification Desk.
+3. **Active Request Persistence & Cross-Session Restoration**: Seekers never lose their live emergency coordination state (`GET /api/map/requests/my-active`). A persistent Apple HIG emergency alert banner renders dynamically across pages and map canvases with 1-tap radar re-navigation.
+4. **Real-Time In-App Coordination & Direct Seeker Calling**: Seekers and donors coordinate emergency logistics via real-time in-app chat. Emergency seekers can directly call accepted dispatch donors (`tel:+92XXXXXXXXXX`) while donor privacy is strictly protected (donors cannot call seekers; seeker phone numbers are never exposed).
+5. **90-Day Medical Cooldown Safeguards**: Automated biological cooldown trackers prevent donor exploitation and maintain physiological well-being.
+6. **Real-Time Social Appeals Feed**: Direct WhatsApp link generation provides structured, verified cards with progress meters (`units_fulfilled / units_needed`) that automatically close when filled.
+7. **Supabase Row-Level Security (RLS) & Zero-Mock Architecture**: All 9 database tables strictly enforce Row-Level Security (`ENABLE ROW LEVEL SECURITY`), blocking unauthenticated public PostgREST queries while serving 100% genuine data with zero dummy fallbacks.
+8. **Stateless 4-Step Eligibility & Awareness Hub**: Educational content debunking donation myths alongside campus blood drive scheduling.
+9. **Native PWA on Apple HIG Foundation**: Zero installation friction with an Apple-standard slide-up bottom sheet, offline app shell caching, and pure white aesthetic.
 
 ---
 
@@ -76,11 +82,11 @@ QATRA provides an integrated end-to-end digital infrastructure partnering with o
 
 | Feature Module | PRD Ref | Primary Owner | Architectural Implementation |
 | :--- | :---: | :---: | :--- |
-| **Live Map & Proximity Matching** | FR 1 | **Hareem Israr** | Leaflet.js interactive canvas, Karachi hospital autocomplete, Haversine geospatial radius expansion (5–15 km), real-time donor location pinging, in-app chat, and unidirectional seeker calling. |
-| **Authentication & Verification Desk** | FR 2 | **Saghir Ahmed** | Google Sign-In via Firebase Auth, 13-digit Pakistani CNIC Mod-10 checksum validation, hospital admission slip OCR parsing, 24/7 desk review queue, and 90-day cooldown tracking. |
+| **Live Map & Proximity Matching** | FR 1 | **Hareem Israr** | Leaflet.js interactive canvas, Karachi hospital autocomplete, Haversine geospatial radius expansion (5–15 km), role-gated donor spatial telemetry, in-app chat, active request persistence (`/requests/my-active`), and unidirectional seeker calling. |
+| **Authentication & Verification Desk** | FR 2 | **Saghir Ahmed** | Google Sign-In via Firebase Auth, Seeker authentication gate, 13-digit Pakistani CNIC Mod-10 checksum validation, hospital admission slip OCR parsing, 24/7 desk review queue, and 90-day cooldown tracking. |
 | **Social & Urgent Request Feed** | FR 3 | **Mahrukh Baig** | Public appeals feed with instant filter chips, "I Can Donate" one-tap response, structured WhatsApp share generator, and automatic request auto-close upon unit fulfillment. |
 | **Awareness & Eligibility Module** | FR 4 | **Yumna Abbasi** | 4-step medical pre-screening quiz, categorized educational content library (Myths vs. Facts), campus blood drive management, and post-donation health guidelines. |
-| **Security, Cryptography & NFRs** | NFR 1-3 | **Nimra Iftikhar** | Sliding-window memory rate limiting, AES-256-GCM encryption for CNIC and medical records, tamper-evident security audit logging, and proxy masking. |
+| **Security, Cryptography & NFRs** | NFR 1-3 | **Nimra Iftikhar** | Sliding-window memory rate limiting, AES-256-GCM encryption for CNIC and medical records, tamper-evident security audit logging, Supabase Row-Level Security (RLS across all 9 tables), and zero-mock data integrity. |
 | **Design, PWA & DevOps Architecture** | Foundation | **Abdul Hayy Khan** | Apple Human Interface Design layer (`apple.css`), Motion One spring interactions, PWA Service Worker (`sw.js`), Vercel Serverless Lambda deployment, and GitHub Actions CI/CD. |
 
 ---
@@ -502,36 +508,53 @@ Open your browser to:
 
 ## 11. Database Schema & Data Models
 
-QATRA utilizes a relational PostgreSQL schema managed by SQLAlchemy:
+QATRA utilizes an enterprise relational schema deployed on **Supabase Managed PostgreSQL 15** and managed by SQLAlchemy 2.0:
 
 ```
 ┌──────────────────┐       ┌──────────────────────┐       ┌───────────────────┐
-│      users       │       │    donor_profiles    │       │  blood_requests   │
+│      users       │       │        donors        │       │     requests      │
 ├──────────────────┤       ├──────────────────────┤       ├───────────────────┤
 │ id (PK)          │1     1│ id (PK)              │1     *│ id (PK)           │
 │ firebase_uid     │◄─────►│ user_id (FK)         │       │ seeker_id (FK)    │
 │ email            │       │ blood_group          │       │ patient_name      │
-│ full_name        │       │ last_latitude        │       │ hospital_name     │
-│ cnic_encrypted   │       │ last_longitude       │       │ hospital_lat/lon  │
-│ role             │       │ is_available         │       │ blood_group       │
-│ is_verified      │       │ last_donation_date   │       │ units_needed      │
-│ cnic_verified    │       │ cooldown_until       │       │ units_fulfilled   │
-└────────┬─────────┘       └──────────────────────┘       │ status            │
-         │1                                               │ urgency           │
-         │                                                └─────────┬─────────┘
-         │*                                                         │1
-┌────────▼─────────┐                                                │1
-│  hospital_slips  │                                                ▼
-├──────────────────┤                                      ┌───────────────────┐
-│ id (PK)          │                                      │ proxy_call_logs   │
-│ request_id (FK)  │                                      ├───────────────────┤
-│ uploader_id (FK) │                                      │ id (PK)           │
-│ file_url         │                                      │ request_id (FK)   │
-│ ocr_confidence   │                                      │ virtual_number    │
-│ status           │                                      │ status            │
-│ review_notes     │                                      │ expires_at        │
+│ full_name        │       │ latitude             │       │ hospital_name     │
+│ phone_number     │       │ longitude            │       │ hospital_lat/lon  │
+│ cnic_encrypted   │       │ is_available         │       │ blood_group       │
+│ role             │       │ location_updated_at  │       │ units_needed      │
+│ is_verified      │       │ cooldown_until       │       │ units_fulfilled   │
+│ cnic_verified    │       │ pre_screening_passed │       │ status            │
+└────────┬─────────┘       └──────────────────────┘       │ urgency           │
+         │1                                               └─────────┬─────────┘
+         │                                                          │1
+         │*                                                         │*
+┌────────▼─────────┐                                      ┌─────────▼─────────┐
+│    audit_logs    │                                      │   notifications   │
+├──────────────────┤                                      ├───────────────────┤
+│ id (PK)          │                                      │ id (PK)           │
+│ user_id (FK)     │                                      │ user_id (FK)      │
+│ action           │                                      │ request_id (FK)   │
+│ target_resource  │                                      │ type              │
+│ details          │                                      │ message           │
+│ timestamp        │                                      │ is_read           │
 └──────────────────┘                                      └───────────────────┘
 ```
+
+### Complete 9-Table Public Schema & RLS Security Hardening
+
+| Table Name | Core Purpose | RLS Policy Status | Access Control Model |
+| :--- | :--- | :---: | :--- |
+| `users` | Primary user identity, Firebase UID, encrypted CNIC, phone number, and roles | **ENFORCED** | Authenticated FastAPI service role |
+| `donors` | Donor blood group, spatial telemetry, availability toggle, and cooldown | **ENFORCED** | Authenticated FastAPI service role |
+| `requests` | Emergency blood requests, hospital geolocation, units needed/fulfilled | **ENFORCED** | Authenticated FastAPI service role |
+| `notifications` | Proximity dispatch alerts, real-time coordination notices | **ENFORCED** | Authenticated FastAPI service role |
+| `events` | Campus and community blood donation drive schedules | **ENFORCED** | Authenticated FastAPI service role |
+| `audit_logs` | Tamper-evident immutable security and administrative audit trail | **ENFORCED** | Authenticated FastAPI service role |
+| `registrations` | Volunteer and donor registrations for campus blood drives | **ENFORCED** | Authenticated FastAPI service role |
+| `awareness_contents`| Curated health educational library (Articles, Myth vs. Fact) | **ENFORCED** | Authenticated FastAPI service role |
+| `health_feedbacks` | Post-donation recovery guidelines, physiological health tracking | **ENFORCED** | Authenticated FastAPI service role |
+
+> [!IMPORTANT]
+> **Supabase Row-Level Security (RLS) Enforced**: Every public PostgreSQL table strictly enforces Row-Level Security (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`). This resolves Supabase Security Advisor advisory `rls_disabled_in_public`, prevents unauthorized client-side PostgREST bypass via public API keys, and channels all database operations through the authenticated FastAPI backend.
 
 ---
 
@@ -546,12 +569,14 @@ All routes are mounted under the base `/api` prefix:
 - `POST /api/auth/hospital-slip/upload`: Uploads admission slip and runs automated OCR extraction.
 - `GET /api/auth/admin/verification-queue`: Retrieves slips flagged for 24/7 human desk review.
 - `POST /api/auth/admin/verify-slip/{id}`: Approves or rejects flagged slip with medical notes.
+- `GET /api/auth/admin/audit-logs`: Retrieves immutable security compliance logs (Admin role required).
 - `GET /api/auth/donor/cooldown`: Checks donor 90-day cooldown and remaining days.
 - `POST /api/auth/donor/pre-screen`: Evaluates donor physical vitals and screening responses.
 
 ### Live Map & Proximity Radar (Hareem Israr)
-- `POST /api/map/donor/location`: Pings donor real-time geolocation coordinates.
+- `POST /api/map/donor/location`: Pings donor real-time geolocation coordinates (strictly role-gated to `verified_donor` and `admin`).
 - `GET /api/map/requests`: Returns nearby verified emergency requests formatted for Leaflet.
+- `GET /api/map/requests/my-active`: Retrieves authenticated seeker's active blood request for instant dashboard and banner rendering across sessions.
 - `GET /api/map/requests/{id}/status`: Real-time fulfillment polling and radius expansion radar.
 - `GET /api/map/requests/{id}/matches`: Haversine proximity-ranked donor candidate list.
 - `POST /api/map/requests/{id}/accept`: Donor accepts proximity alert; assigns matched donor.
@@ -630,7 +655,11 @@ QATRA is deployed continuously on Vercel at [https://qatra-web-app.vercel.app/](
 ### Edge Architecture
 - **Static Assets & App Shell**: Served directly from global edge caches via `/public/**` with HTTP 200 headers (`Cache-Control: public, max-age=86400`).
 - **Serverless API Lambda**: All `/api/*` traffic routes dynamically to `/api/index.py`, packaged using `@vercel/python` with full access to backend modules (`includeFiles: ["backend/**"]`).
+- **Database Security & RLS**: Supabase PostgreSQL 15 strictly isolates tables using Row-Level Security (RLS) on all 9 public tables, preventing data scraping and unauthenticated PostgREST abuse.
+- **Database Maintenance Utility**: Safe database provisioning and reset script available at `backend/scripts/reset_db.py` (`python -m backend.scripts.reset_db`) with interactive confirmation and dry-run safety.
 - **Live Health Status**: Production monitoring endpoint `https://qatra-web-app.vercel.app/api/health` reports live degraded/healthy telemetry with HTTP 200 status.
+- **Video Walkthrough**: Official 5-scene demonstration available on YouTube at [https://youtu.be/CXsLxy56ghA](https://youtu.be/CXsLxy56ghA).
+- **Figma Design System**: Official interactive UI/UX architecture accessible at [https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA](https://www.figma.com/design/XEFLbC0zv3ZM8NPRF53oHm/QATRA).
 
 ---
 
